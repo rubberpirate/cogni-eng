@@ -12,6 +12,13 @@ import {
   type EducationClient,
   type A,
 } from "../../../clients/academic";
+import {
+  LearningHome,
+  GenerationFlow,
+  SamplesFlow,
+  ResultsFlow,
+} from "./academic-flows";
+import { type LearningView } from "./learning-navigation";
 import { FormField as Field } from "./form-field";
 type Q = A<"AcademicQuestion">;
 type Paper = A<"AcademicPaperRecord">;
@@ -63,31 +70,87 @@ export function AcademicStudio({
   campus,
   csrf,
   staff,
+  view,
+  onNavigate,
+  refreshToken,
 }: {
+  refreshToken: number;
+  view: LearningView;
+  onNavigate: (view: LearningView) => void;
   org: string;
   campus: string;
   csrf: string;
   staff: boolean;
 }) {
   const api = useMemo(() => educationClient(org, csrf), [org, csrf]);
-  const [tab, setTab] = useState("curriculum");
+  const tab = view;
+  const setTab = (next: LearningView) => {
+    setSitting(null);
+    onNavigate(next);
+  };
+  const [bankQuery, setBankQuery] = useState("");
+  const [bankFilter, setBankFilter] = useState("all");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [courses, setCourses] = useState<A<"AcademicCourse">[]>([]);
   const [topic, setTopic] = useState("");
+  const topicRef = useRef(topic);
+  topicRef.current = topic;
   const [bank, setBank] = useState<Q[]>([]);
   const [papers, setPapers] = useState<Paper[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
-  const [paper, setPaper] = useState<Paper | null>(null);
+  const [paper, setPaperState] = useState<Paper | null>(null);
+  const setPaper = (p: Paper | null) => {
+    setPaperState(p);
+    if (p) {
+      const [route, query] = window.location.hash.split("?");
+      const params = new URLSearchParams(query);
+      params.set("paper", p.id);
+      window.location.hash = route + "?" + params;
+    }
+  };
+  useEffect(() => {
+    const restore = () => {
+      const params = new URLSearchParams(window.location.hash.split("?")[1]);
+      const id = params.get("paper");
+      const found = papers.find((p) => p.id === id);
+      if (found) setPaperState(found);
+    };
+    restore();
+    window.addEventListener("hashchange", restore);
+    return () => window.removeEventListener("hashchange", restore);
+  }, [papers]);
   const [imports, setImports] = useState<A<"AcademicImport">[]>([]);
   const [preview, setPreview] = useState<A<"AcademicImport"> | null>(null);
   const [edit, setEdit] = useState<Q | null>(null);
+  const editorRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (edit) {
+      editorRef.current?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+      editorRef.current
+        ?.querySelector("textarea")
+        ?.focus({ preventScroll: true });
+    }
+  }, [edit]);
   const [importIndex, setImportIndex] = useState<number | null>(null);
   const [jobs, setJobs] = useState<A<"AcademicJob">[]>([]);
   const [assignments, setAssignments] = useState<A<"AcademicAssigned">[]>([]);
   const [sitting, setSitting] = useState<Sitting | null>(null);
   const [error, setError] = useState("");
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ block: "center" });
+      errorRef.current?.focus({ preventScroll: true });
+    }
+  }, [error]);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
   const refresh = useCallback(async () => {
     if (staff) {
       const [t, c, p, j] = await Promise.all([
@@ -104,13 +167,17 @@ export function AcademicStudio({
   }, [api, campus, staff]);
   useEffect(() => {
     let active = true;
-    refresh().catch((e) => {
-      if (active) setError(String(e.message));
-    });
+    refresh()
+      .then(() => {
+        if (active) setDataReady(true);
+      })
+      .catch((e) => {
+        if (active) setError(String(e.message));
+      });
     return () => {
       active = false;
     };
-  }, [refresh]);
+  }, [refresh, refreshToken]);
   useEffect(() => {
     if (!topic || !staff) {
       setBank([]);
@@ -134,7 +201,7 @@ export function AcademicStudio({
     return () => {
       active = false;
     };
-  }, [api, topic, staff]);
+  }, [api, topic, staff, refreshToken]);
   const run = async (fn: () => Promise<unknown>, message = "Saved.") => {
     setBusy(true);
     setError("");
@@ -143,9 +210,16 @@ export function AcademicStudio({
       await fn();
       setNotice(message);
       await refresh();
-      if (topic && staff) {
-        setBank(await api.list("questions", { topic }));
-        setImports(await api.list("imports", { topic }));
+      const activeTopic = topicRef.current;
+      if (activeTopic && staff) {
+        const [nextBank, nextImports] = await Promise.all([
+          api.list("questions", { topic: activeTopic }),
+          api.list("imports", { topic: activeTopic }),
+        ]);
+        if (topicRef.current === activeTopic) {
+          setBank(nextBank);
+          setImports(nextImports);
+        }
       }
     } catch (e) {
       setError(
@@ -157,7 +231,39 @@ export function AcademicStudio({
       setBusy(false);
     }
   };
+  useEffect(() => {
+    if (!topic && topics.length) setTopic(topics[0].id);
+  }, [topics, topic]);
+  useEffect(() => {
+    setSitting(null);
+  }, [view]);
   const chosen = topics.find((t) => t.id === topic);
+  if (!dataReady)
+    return (
+      <section className="card" aria-busy={!error}>
+        {error ? (
+          <>
+            <p className="error" role="alert">
+              {error}
+            </p>
+            <button
+              onClick={() => {
+                setError("");
+                void refresh()
+                  .then(() => setDataReady(true))
+                  .catch((e) => setError(e.message));
+              }}
+            >
+              Retry loading workspace
+            </button>
+          </>
+        ) : (
+          <p role="status">
+            Loading your {staff ? "teaching workspace" : "assessments"}…
+          </p>
+        )}
+      </section>
+    );
   if (sitting)
     return (
       <AssessmentWork
@@ -178,7 +284,7 @@ export function AcademicStudio({
       aria-busy={busy}
     >
       {error && (
-        <p className="error" role="alert">
+        <p className="error" role="alert" ref={errorRef} tabIndex={-1}>
           {error}
         </p>
       )}
@@ -189,27 +295,66 @@ export function AcademicStudio({
       )}
       {staff ? (
         <>
-          <nav className="academic-tabs" aria-label="Academic work">
-            {[
-              ["curriculum", "Topics & questions"],
-              ["papers", "Prepare assessment"],
-              ["scan", "Paper evidence"],
-              ["jobs", "Job recovery"],
-            ].map(([id, title]) => (
-              <button
-                key={id}
-                aria-current={tab === id ? "page" : undefined}
-                onClick={() => setTab(id)}
-              >
-                {title}
-              </button>
-            ))}
-          </nav>
-          {tab === "curriculum" && (
+          {tab === "home" && (
+            <LearningHome
+              openPaper={(p) => {
+                setPaper(p);
+                setTab("papers");
+              }}
+              navigate={setTab}
+              topics={topics}
+              papers={papers}
+              jobs={jobs}
+            />
+          )}
+          {tab === "generate" && (
+            <GenerationFlow
+              initialTopic={topic}
+              api={api}
+              topics={topics}
+              courses={courses}
+              onTopic={(id) => {
+                setTopic(id);
+                void refresh().catch((e) => setError(e.message));
+              }}
+              onReview={(id) =>
+                void run(async () => {
+                  setTopic(id);
+                  setBank(await api.list("questions", { topic: id }));
+                  setTab("curriculum");
+                }, "")
+              }
+            />
+          )}
+          {tab === "samples" && (
+            <SamplesFlow
+              api={api}
+              courses={courses}
+              onOpen={(kit) =>
+                void run(async () => {
+                  setPaper(await api.detail("papers", kit.paper_id));
+                  setTab("scan");
+                }, "")
+              }
+            />
+          )}
+          {tab === "results" && (
+            <ResultsFlow
+              initialPaper={paper?.id ?? ""}
+              api={api}
+              papers={papers}
+              onSitting={setSitting}
+            />
+          )}
+          {(tab === "curriculum" || tab === "import") && (
             <>
-              <div className="academic-columns">
+              <div
+                className={
+                  tab === "import" ? "academic-columns" : "topic-toolbar"
+                }
+              >
                 <section className="card">
-                  <h2>Learning outcomes</h2>
+                  <h2>Choose a topic</h2>
                   <Field name="Topic">
                     <select
                       value={topic}
@@ -284,80 +429,83 @@ export function AcademicStudio({
                     </form>
                   </details>
                 </section>
-                <section className="card">
-                  <h2>Bring in questions and keys</h2>
-                  <p>
-                    Upload CSV, XLSX or JSON. Preview errors, correct rows, then
-                    commit drafts for review. Repeated files and questions are
-                    detected.
-                  </p>
-                  <a href="/demo/questions.csv" download>
-                    Download original mathematics CSV
-                  </a>
-                  <p className="actions">
-                    {["physics", "chemistry", "biology"].map((subject) => (
-                      <a key={subject} href={`/demo/${subject}.csv`} download>
-                        {subject} example
-                      </a>
-                    ))}
-                  </p>
-                  <form
-                    onSubmit={(e) => {
-                      const f = values(e);
-                      f.set("topic_id", topic);
-                      void run(
-                        async () => setPreview(await api.uploadImport(f)),
-                        "Import preview saved; no questions have been approved.",
-                      );
-                    }}
-                  >
-                    <Field name="Question file">
-                      <input
-                        name="file"
-                        type="file"
-                        accept=".csv,.xlsx,.json,.pdf,.png,.jpg,.jpeg"
-                        required
-                      />
-                    </Field>
-                    <Field name="Source / provenance">
-                      <input
-                        name="provenance"
-                        required
-                        defaultValue="Original teacher material"
-                      />
-                    </Field>
-                    <Field name="Usage rights">
-                      <input
-                        name="license"
-                        required
-                        defaultValue="Institution-owned"
-                      />
-                    </Field>
-                    <button disabled={busy || !topic}>
-                      Upload for preview
-                    </button>
-                  </form>
-                  <Field name="Saved imports">
-                    <select
-                      value={preview?.id ?? ""}
-                      onChange={(e) =>
-                        setPreview(
-                          imports.find((i) => i.id === e.target.value) ?? null,
-                        )
-                      }
-                    >
-                      <option value="">Select saved preview</option>
-                      {imports.map((i) => (
-                        <option key={i.id} value={i.id}>
-                          {i.created_at.slice(0, 16)} · {i.state} ·{" "}
-                          {i.rows.length} rows
-                        </option>
+                {tab === "import" && (
+                  <section className="card">
+                    <h2>Upload your question paper</h2>
+                    <p>
+                      Use a PDF, photo, CSV, XLSX or JSON file. We will save a
+                      preview first so you can check the questions and answers
+                      before adding them to the bank.
+                    </p>
+                    <a href="/demo/questions.csv" download>
+                      Download original mathematics CSV
+                    </a>
+                    <p className="actions">
+                      {["physics", "chemistry", "biology"].map((subject) => (
+                        <a key={subject} href={`/demo/${subject}.csv`} download>
+                          {subject} example
+                        </a>
                       ))}
-                    </select>
-                  </Field>
-                </section>
+                    </p>
+                    <form
+                      onSubmit={(e) => {
+                        const f = values(e);
+                        f.set("topic_id", topic);
+                        void run(
+                          async () => setPreview(await api.uploadImport(f)),
+                          "Import preview saved; no questions have been approved.",
+                        );
+                      }}
+                    >
+                      <Field name="Question file">
+                        <input
+                          name="file"
+                          type="file"
+                          accept=".csv,.xlsx,.json,.pdf,.png,.jpg,.jpeg"
+                          required
+                        />
+                      </Field>
+                      <Field name="Source / provenance">
+                        <input
+                          name="provenance"
+                          required
+                          defaultValue="Original teacher material"
+                        />
+                      </Field>
+                      <Field name="Usage rights">
+                        <input
+                          name="license"
+                          required
+                          defaultValue="Institution-owned"
+                        />
+                      </Field>
+                      <button disabled={busy || !topic}>
+                        Upload for preview
+                      </button>
+                    </form>
+                    <Field name="Saved imports">
+                      <select
+                        value={preview?.id ?? ""}
+                        onChange={(e) =>
+                          setPreview(
+                            imports.find((i) => i.id === e.target.value) ??
+                              null,
+                          )
+                        }
+                      >
+                        <option value="">Select saved preview</option>
+                        {imports.map((i) => (
+                          <option key={i.id} value={i.id}>
+                            {i.created_at.slice(0, 16)} · {i.state} ·{" "}
+                            {i.rows.length} rows
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </section>
+                )}
               </div>
-              {preview && (
+              {tab === "import" && preview && (
                 <section className="card">
                   <h2>Import review · {preview.state}</h2>
                   <button
@@ -448,140 +596,8 @@ export function AcademicStudio({
                   </button>
                 </section>
               )}
-              <section className="card">
-                <div className="section-heading">
-                  <h2>Question bank {chosen ? `/ ${chosen.name}` : ""}</h2>
-                  <button
-                    disabled={!topic}
-                    onClick={() => {
-                      setEdit(emptyQuestion(topic));
-                      setImportIndex(null);
-                    }}
-                  >
-                    Author question
-                  </button>
-                </div>
-                <details>
-                  <summary>Generate topic questions with AI</summary>
-                  <p>
-                    Only the curriculum outcome is sent. Output is a proposal
-                    until a teacher verifies the key and solution. Missing
-                    provider configuration is shown in Job recovery.
-                  </p>
-                  <form
-                    onSubmit={(e) => {
-                      const f = values(e);
-                      void run(async () => {
-                        await api.generate({
-                          topic_id: topic,
-                          count: Number(str(f, "count")),
-                          difficulty: str(f, "difficulty"),
-                        });
-                        setTab("jobs");
-                      }, "Generation queued; the worker will retain its progress and output.");
-                    }}
-                  >
-                    <Field name="Question count">
-                      <input
-                        type="number"
-                        name="count"
-                        min={1}
-                        max={20}
-                        defaultValue={5}
-                      />
-                    </Field>
-                    <Field name="Difficulty">
-                      <select name="difficulty">
-                        <option>introductory</option>
-                        <option>standard</option>
-                        <option>challenging</option>
-                      </select>
-                    </Field>
-                    <button disabled={!topic || busy}>
-                      Queue question generation
-                    </button>
-                  </form>
-                </details>
-                {bank.length === 0 && (
-                  <p className="muted">No questions in this topic yet.</p>
-                )}
-                {bank.map((q) => (
-                  <article className="question-card" key={q.id}>
-                    <div className="section-heading">
-                      <strong>
-                        {q.reference} · {q.state}
-                      </strong>
-                      <span>
-                        {q.type} · +{q.marks} / −{q.penalty}
-                      </span>
-                    </div>
-                    <QuestionContent q={q} api={api} />
-                    <details>
-                      <summary>Key, solution and provenance</summary>
-                      <p>
-                        Key:{" "}
-                        {q.key?.join(", ") ||
-                          JSON.stringify(q.numeric ?? q.rubric)}
-                      </p>
-                      <p>{q.solution}</p>
-                      <p className="muted">
-                        {q.origin} · {q.provenance} · {q.license}
-                      </p>
-                    </details>
-                    <div className="actions">
-                      <button
-                        onClick={() => {
-                          setEdit(q);
-                          setImportIndex(null);
-                        }}
-                      >
-                        Revise {q.reference}
-                      </button>
-                      {q.state !== "approved" && (
-                        <button
-                          disabled={busy}
-                          onClick={() =>
-                            void run(
-                              () =>
-                                api.review(q.id!, {
-                                  version: q.version!,
-                                  state: "approved",
-                                  note: "Teacher checked wording, answer key, solution and rights",
-                                }),
-                              "Approved for assessment composition.",
-                            )
-                          }
-                        >
-                          Approve {q.reference}
-                        </button>
-                      )}
-                      {q.state === "approved" && (
-                        <label className="check">
-                          <input
-                            type="checkbox"
-                            checked={selected.includes(q.id!)}
-                            onChange={(e) =>
-                              setSelected(
-                                e.target.checked
-                                  ? [...selected, q.id!]
-                                  : selected.filter((id) => id !== q.id),
-                              )
-                            }
-                          />
-                          Select for paper
-                        </label>
-                      )}
-                    </div>
-                  </article>
-                ))}
-                {selected.length > 0 && (
-                  <button onClick={() => setTab("papers")}>
-                    Compose with {selected.length} selected questions
-                  </button>
-                )}
-              </section>
               {edit && (
-                <section className="card">
+                <section className="card" ref={editorRef}>
                   <h2>
                     {importIndex !== null
                       ? `Correct import row ${importIndex}`
@@ -622,13 +638,156 @@ export function AcademicStudio({
                   />
                 </section>
               )}
+              {tab === "curriculum" && (
+                <section className="card">
+                  <div className="section-heading">
+                    <h2>Question bank {chosen ? `/ ${chosen.name}` : ""}</h2>
+                    <button
+                      disabled={!topic}
+                      onClick={() => {
+                        setEdit(emptyQuestion(topic));
+                        setImportIndex(null);
+                      }}
+                    >
+                      Author question
+                    </button>
+                  </div>
+                  <div className="bank-tools">
+                    <Field name="Search questions">
+                      <input
+                        type="search"
+                        value={bankQuery}
+                        onChange={(e) => setBankQuery(e.target.value)}
+                        placeholder="Search question wording"
+                      />
+                    </Field>
+                    <Field name="Question status">
+                      <select
+                        value={bankFilter}
+                        onChange={(e) => setBankFilter(e.target.value)}
+                      >
+                        <option value="all">All questions</option>
+                        <option value="draft">Needs review</option>
+                        <option value="approved">Approved for tests</option>
+                      </select>
+                    </Field>
+                    <button onClick={() => setTab("generate")}>
+                      Create with AI
+                    </button>
+                    <button onClick={() => setTab("import")}>
+                      Upload questions
+                    </button>
+                  </div>
+                  {bank.length === 0 && (
+                    <p className="muted">No questions in this topic yet.</p>
+                  )}
+                  {bank
+                    .filter(
+                      (q) =>
+                        (bankFilter === "all" || q.state === bankFilter) &&
+                        q.stem.toLowerCase().includes(bankQuery.toLowerCase()),
+                    )
+                    .map((q) => (
+                      <article className="question-card" key={q.id}>
+                        <div className="section-heading">
+                          <strong>
+                            {q.reference} · {q.state}
+                          </strong>
+                          <span>
+                            {q.type} · +{q.marks} / −{q.penalty}
+                          </span>
+                        </div>
+                        <details className="question-preview">
+                          <summary>{q.stem}</summary>
+                          <QuestionContent q={q} api={api} showStem={false} />
+                          <details>
+                            <summary>Key, solution and provenance</summary>
+                            <p>Key: {q.key?.join(", ") || answerRuleText(q)}</p>
+                            <p>{q.solution}</p>
+                            <p className="muted">
+                              {q.origin} · {q.provenance} · {q.license}
+                            </p>
+                          </details>
+                        </details>
+                        <div className="actions">
+                          <button
+                            onClick={() => {
+                              setEdit(q);
+                              setImportIndex(null);
+                            }}
+                          >
+                            Revise {q.reference}
+                          </button>
+                          {q.state !== "approved" && (
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                void run(
+                                  () =>
+                                    api.review(q.id!, {
+                                      version: q.version!,
+                                      state: "approved",
+                                      note: "Teacher checked wording, answer key, solution and rights",
+                                    }),
+                                  "Approved for assessment composition.",
+                                )
+                              }
+                            >
+                              Approve {q.reference}
+                            </button>
+                          )}
+                          {q.state === "approved" && (
+                            <label className="check">
+                              <input
+                                type="checkbox"
+                                checked={selected.includes(q.id!)}
+                                onChange={(e) =>
+                                  setSelected(
+                                    e.target.checked
+                                      ? [...selected, q.id!]
+                                      : selected.filter((id) => id !== q.id),
+                                  )
+                                }
+                              />
+                              Select for paper
+                            </label>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  {selected.length > 0 && (
+                    <button onClick={() => setTab("papers")}>
+                      Compose with {selected.length} selected questions
+                    </button>
+                  )}
+                </section>
+              )}
+              {tab === "import" &&
+                preview?.rows.some((r) => r.committed_id) && (
+                  <button
+                    className="primary"
+                    onClick={() => setTab("curriculum")}
+                  >
+                    Next: review imported questions
+                  </button>
+                )}
             </>
           )}
           {tab === "papers" && (
             <>
               <div className="academic-columns">
                 <section className="card">
-                  <h2>Compose an assessment</h2>
+                  {selected.length === 0 && (
+                    <div className="empty-message">
+                      <p>
+                        Start by selecting the questions you want to include.
+                      </p>
+                      <button onClick={() => setTab("curriculum")}>
+                        Choose questions from the bank
+                      </button>
+                    </div>
+                  )}
+                  <h2>Create a new assessment</h2>
                   <p>
                     Select approved questions in Topics & questions. Their order
                     below is the printed and online order.
@@ -734,31 +893,36 @@ export function AcademicStudio({
                         </option>
                       </select>
                     </Field>
-                    <Field name="Section contribution">
-                      <select name="policy">
-                        <option value="all">All questions</option>
-                        <option value="first">First N attempted</option>
-                        <option value="best">Best N attempted</option>
-                      </select>
-                    </Field>
-                    <Field name="Required contribution count for optional section">
-                      <input
-                        type="number"
-                        name="count"
-                        min={1}
-                        defaultValue={1}
-                      />
-                    </Field>
-                    <Field name="Optional section mark cap">
-                      <input name="cap" inputMode="decimal" />
-                    </Field>
+                    <details>
+                      <summary>
+                        Advanced scoring: optional questions and section cap
+                      </summary>{" "}
+                      <Field name="Section contribution">
+                        <select name="policy">
+                          <option value="all">All questions</option>
+                          <option value="first">First N attempted</option>
+                          <option value="best">Best N attempted</option>
+                        </select>
+                      </Field>
+                      <Field name="Required contribution count for optional section">
+                        <input
+                          type="number"
+                          name="count"
+                          min={1}
+                          defaultValue={1}
+                        />
+                      </Field>
+                      <Field name="Optional section mark cap">
+                        <input name="cap" inputMode="decimal" />
+                      </Field>
+                    </details>{" "}
                     <button disabled={busy || selected.length === 0}>
                       Save paper draft
                     </button>
                   </form>
                 </section>
                 <section className="card">
-                  <h2>Assessment papers</h2>
+                  <h2>Your assessments</h2>
                   {papers.map((p) => (
                     <button
                       className="paper-choice"
@@ -798,7 +962,10 @@ export function AcademicStudio({
                   }
                 >
                   <option value="">Select paper</option>
-                  {papers
+                  {(paper && !papers.some((p) => p.id === paper.id)
+                    ? [paper, ...papers]
+                    : papers
+                  )
                     .filter((p) => p.state === "published")
                     .map((p) => (
                       <option key={p.id} value={p.id}>
@@ -822,9 +989,9 @@ export function AcademicStudio({
           {tab === "jobs" && (
             <section className="card">
               <div className="section-heading">
-                <h2>Academic jobs</h2>
+                <h2>Processing & recovery</h2>
                 <button disabled={busy} onClick={() => void run(refresh, "")}>
-                  Refresh jobs
+                  Refresh tasks
                 </button>
               </div>
               <p>
@@ -836,7 +1003,15 @@ export function AcademicStudio({
               {jobs.map((j) => (
                 <article className="question-card" key={j.id}>
                   <strong>
-                    {j.kind} · {j.state}
+                    {(
+                      {
+                        generate_questions: "Question generation",
+                        recognize_scan: "Answer-sheet reading",
+                        extract_document: "Paper extraction",
+                        tutor: "Tutor reply",
+                      } as Record<string, string>
+                    )[j.kind] ?? j.kind}{" "}
+                    · {j.state.replaceAll("_", " ")}
                   </strong>
                   <progress
                     max={100}
@@ -907,7 +1082,7 @@ export function AcademicStudio({
               <div>
                 <strong>{a.title}</strong>
                 <p>
-                  {a.reference} · {a.state}
+                  {a.reference} · {a.state.replaceAll("_", " ")}
                 </p>
                 <small>
                   {new Date(a.opens_at).toLocaleString()} →{" "}
@@ -1000,18 +1175,38 @@ function DocumentMapping({
     </details>
   );
 }
+function answerRuleText(q: Q): string {
+  if (q.key?.length) return q.key.join(" + ");
+  if (q.numeric) {
+    const rule = q.numeric;
+    const parts: string[] = [];
+    if (rule.values?.length)
+      parts.push("Accepted: " + rule.values.join(" or "));
+    if (rule.min !== undefined && rule.min !== "")
+      parts.push(`Range: ${rule.min} to ${rule.max}`);
+    if (rule.absolute) parts.push("allowed difference " + rule.absolute);
+    if (rule.relative) parts.push("relative tolerance " + rule.relative);
+    if (rule.integer) parts.push("whole numbers only");
+    return parts.join("; ");
+  }
+  return (q.rubric ?? [])
+    .map((c) => `${c.description} (${c.marks} marks)`)
+    .join("; ");
+}
 function QuestionContent({
   q,
   api,
   options = true,
+  showStem = true,
 }: {
+  showStem?: boolean;
   q: Q;
   api: EducationClient;
   options?: boolean;
 }) {
   return (
     <>
-      <p className="question-stem">{q.stem}</p>
+      {showStem && <p className="question-stem">{q.stem}</p>}
       {q.asset_id && (
         <img
           className="question-image"
@@ -1058,34 +1253,41 @@ function QuestionEditor({
   const [q, setQ] = useState(initial);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [rubric, setRubric] = useState(
-    JSON.stringify(
-      q.rubric?.length
-        ? q.rubric
-        : [{ id: "reason", description: "Correct reasoning", marks: q.marks }],
-      null,
-      2,
-    ),
+  const [rubric, setRubric] = useState<A<"AcademicCriterion">[]>(
+    q.rubric?.length
+      ? q.rubric
+      : [{ id: "reason", description: "Correct reasoning", marks: q.marks }],
   );
-  const [numeric, setNumeric] = useState(
-    JSON.stringify(q.numeric ?? { values: ["0"], integer: false }, null, 2),
+  const [numeric, setNumeric] = useState<A<"AcademicNumericRule">>(
+    q.numeric ?? { values: [], integer: false },
   );
+  const [accepted, setAccepted] = useState(
+    q.numeric?.values?.join(" | ") ?? "",
+  );
+  const [useRange, setUseRange] = useState(!!q.numeric?.min);
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        try {
-          const written = ["short", "extended"].includes(q.type);
-          onSave({
-            ...q,
-            options: ["single", "multiple"].includes(q.type) ? q.options : [],
-            key: ["single", "multiple"].includes(q.type) ? q.key : [],
-            numeric: q.type === "numerical" ? JSON.parse(numeric) : undefined,
-            rubric: written ? JSON.parse(rubric) : [],
-          });
-        } catch {
-          setError("Check the numerical rule or rubric JSON.");
-        }
+        const written = ["short", "extended"].includes(q.type);
+        onSave({
+          ...q,
+          options: ["single", "multiple"].includes(q.type) ? q.options : [],
+          key: ["single", "multiple"].includes(q.type) ? q.key : [],
+          numeric:
+            q.type === "numerical"
+              ? {
+                  ...numeric,
+                  values: accepted
+                    .split("|")
+                    .map((v) => v.trim())
+                    .filter(Boolean),
+                  min: useRange ? numeric.min : undefined,
+                  max: useRange ? numeric.max : undefined,
+                }
+              : undefined,
+          rubric: written ? rubric : [],
+        });
       }}
     >
       {error && (
@@ -1098,8 +1300,16 @@ function QuestionEditor({
           value={q.type}
           onChange={(e) => setQ({ ...q, type: e.target.value })}
         >
-          {["single", "multiple", "numerical", "short", "extended"].map((v) => (
-            <option key={v}>{v}</option>
+          {[
+            ["single", "Single choice"],
+            ["multiple", "Multiple choices"],
+            ["numerical", "Number answer"],
+            ["short", "Short written answer"],
+            ["extended", "Extended written answer"],
+          ].map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
           ))}
         </select>
       </Field>
@@ -1157,7 +1367,11 @@ function QuestionEditor({
                 <input
                   type={q.type === "single" ? "radio" : "checkbox"}
                   name="question-key"
-                  checked={q.key?.includes(o.id) ?? false}
+                  checked={
+                    q.type === "single" && (q.key?.length ?? 0) > 1
+                      ? false
+                      : (q.key?.includes(o.id) ?? false)
+                  }
                   onChange={(e) =>
                     setQ({
                       ...q,
@@ -1177,23 +1391,144 @@ function QuestionEditor({
         </>
       )}
       {q.type === "numerical" && (
-        <Field name="Numerical acceptance rule (JSON: values, min/max, absolute, relative, integer)">
-          <textarea
-            required
-            value={numeric}
-            onChange={(e) => setNumeric(e.target.value)}
-            rows={5}
-          />
-        </Field>
+        <section className="answer-rule-editor">
+          <h3>Accepted numerical answer</h3>
+          <Field name="Accepted answer(s)">
+            <input
+              required={!useRange}
+              inputMode="decimal"
+              value={accepted}
+              onChange={(e) => setAccepted(e.target.value)}
+              placeholder="For example, 0.3"
+            />
+          </Field>
+          <p className="muted">
+            Use a dot for decimals. Separate alternative accepted values with |.
+          </p>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={useRange}
+              onChange={(e) => setUseRange(e.target.checked)}
+            />
+            Accept any number in a range
+          </label>
+          {useRange && (
+            <div className="academic-columns">
+              <Field name="Lowest accepted value">
+                <input
+                  required
+                  inputMode="decimal"
+                  value={numeric.min ?? ""}
+                  onChange={(e) =>
+                    setNumeric({ ...numeric, min: e.target.value })
+                  }
+                />
+              </Field>
+              <Field name="Highest accepted value">
+                <input
+                  required
+                  inputMode="decimal"
+                  value={numeric.max ?? ""}
+                  onChange={(e) =>
+                    setNumeric({ ...numeric, max: e.target.value })
+                  }
+                />
+              </Field>
+            </div>
+          )}
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={numeric.integer}
+              onChange={(e) =>
+                setNumeric({ ...numeric, integer: e.target.checked })
+              }
+            />
+            Accept whole numbers only
+          </label>
+          <details>
+            <summary>Allow a tolerance around accepted values</summary>
+            <Field name="Allowed absolute difference">
+              <input
+                inputMode="decimal"
+                value={numeric.absolute ?? ""}
+                onChange={(e) =>
+                  setNumeric({ ...numeric, absolute: e.target.value })
+                }
+                placeholder="0 means exact"
+              />
+            </Field>
+            <Field name="Allowed relative difference (0.01 = 1%)">
+              <input
+                inputMode="decimal"
+                value={numeric.relative ?? ""}
+                onChange={(e) =>
+                  setNumeric({ ...numeric, relative: e.target.value })
+                }
+              />
+            </Field>
+          </details>
+        </section>
       )}
       {["short", "extended"].includes(q.type) && (
-        <Field name="Rubric criteria (JSON: id, description, marks)">
-          <textarea
-            value={rubric}
-            onChange={(e) => setRubric(e.target.value)}
-            rows={6}
-          />
-        </Field>
+        <section className="answer-rule-editor">
+          <h3>How should this written answer be marked?</h3>
+          <p>
+            Describe each criterion and its available marks. Criterion marks
+            must add up to the question's total marks.
+          </p>
+          {rubric.map((c, i) => (
+            <div className="rubric-row" key={c.id}>
+              <Field name={`Criterion ${i + 1}: what earns marks?`}>
+                <textarea
+                  required
+                  value={c.description}
+                  onChange={(e) =>
+                    setRubric(
+                      rubric.map((r, j) =>
+                        j === i ? { ...r, description: e.target.value } : r,
+                      ),
+                    )
+                  }
+                />
+              </Field>
+              <Field name={`Marks for criterion ${i + 1}`}>
+                <input
+                  required
+                  inputMode="decimal"
+                  value={c.marks}
+                  onChange={(e) =>
+                    setRubric(
+                      rubric.map((r, j) =>
+                        j === i ? { ...r, marks: e.target.value } : r,
+                      ),
+                    )
+                  }
+                />
+              </Field>
+              <button
+                type="button"
+                disabled={rubric.length === 1}
+                onClick={() => setRubric(rubric.filter((_, j) => j !== i))}
+              >
+                Remove criterion {i + 1}
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            disabled={rubric.length >= 20}
+            onClick={() =>
+              setRubric([
+                ...rubric,
+                { id: crypto.randomUUID(), description: "", marks: "1" },
+              ])
+            }
+          >
+            Add marking criterion
+          </button>
+        </section>
       )}
       <div className="academic-columns">
         <Field name="Marks">
@@ -1357,10 +1692,7 @@ function PaperOperations({
             {s.questions.map((q) => (
               <article className="question-card" key={q.id}>
                 <QuestionContent q={q} api={api} />
-                <p>
-                  Key:{" "}
-                  {q.key?.join(", ") || JSON.stringify(q.numeric ?? q.rubric)}
-                </p>
+                <p>Key: {q.key?.join(", ") || answerRuleText(q)}</p>
                 <p>{q.solution}</p>
               </article>
             ))}
@@ -1505,7 +1837,10 @@ function ScanDesk({
   const [batches, setBatches] = useState<A<"AcademicBatch">[]>([]);
   const [batch, setBatch] = useState("");
   const [sheets, setSheets] = useState<A<"AcademicScanSheet">[]>([]);
+  const [job, setJob] = useState<A<"AcademicJob"> | null>(null);
   const [error, setError] = useState("");
+  const [loadingSheets, setLoadingSheets] = useState(true);
+  const [scanAt, setScanAt] = useState(nowLocal());
   const refresh = useCallback(async () => {
     const [l, a, b] = await Promise.all([
       api.list("layouts", { paper: paper.id }),
@@ -1513,8 +1848,15 @@ function ScanDesk({
       api.list("batches", { paper: paper.id }),
     ]);
     setLayouts(l);
+    setLayout((current) =>
+      l.some((v) => v.id === current) ? current : (l[0]?.id ?? ""),
+    );
     setAssignments(a);
+    setAssignment((current) =>
+      a.some((v) => v.id === current) ? current : a.length === 1 ? a[0].id : "",
+    );
     setBatches(b);
+    setLoadingSheets(false);
   }, [api, paper.id]);
   useEffect(() => {
     refresh().catch((e) => setError(e.message));
@@ -1525,6 +1867,35 @@ function ScanDesk({
   useEffect(() => {
     load().catch((e) => setError(e.message));
   }, [load]);
+  useEffect(() => {
+    if (!job || !["queued", "running"].includes(job.state)) return;
+    let active = true;
+    let pending = false;
+    const timer = setInterval(async () => {
+      if (pending) return;
+      pending = true;
+      try {
+        const next = await api.detail("jobs", job.id);
+        if (active) {
+          setJob(next);
+          if (next.state === "completed") await load();
+        }
+      } catch (e) {
+        if (active)
+          setError(
+            e instanceof Error
+              ? e.message
+              : "Connection interrupted; your upload is saved.",
+          );
+      } finally {
+        pending = false;
+      }
+    }, 2500);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [api, job?.id, job?.state, load]);
   return (
     <>
       {error && (
@@ -1532,58 +1903,57 @@ function ScanDesk({
           {error}
         </p>
       )}
+      <ol className="scan-steps" aria-label="Scan workflow">
+        <li>Get matching sheet</li>
+        <li>Upload completed sheet</li>
+        <li>Check and save result</li>
+      </ol>
       <div className="academic-columns">
         <section className="card">
-          <h2>Print registered sheets</h2>
+          <h2>1. Get a matching answer sheet</h2>
+          {loadingSheets && (
+            <p role="status">Loading the assigned learners and sheet format…</p>
+          )}
           <p>
-            Use the selected layout's personalized sheets. The reader measures
-            these printed circles and registration squares. Other sheet designs
-            require explicit transcription; they are never silently marked.
+            The sheet must match this assessment and its assigned learner. Keep
+            the black corner squares visible when scanning.
           </p>
-          <form
-            onSubmit={(e) => {
-              const f = values(e);
-              void run(async () => {
-                const l = await api.layout({
-                  paper_id: paper.id,
-                  columns: Number(str(f, "columns")),
-                });
-                await refresh();
-                setLayout(l.id);
-              }, "Versioned layout created.");
-            }}
-          >
-            <Field name="Sheet arrangement">
-              <select name="columns">
-                <option value="1">One column / up to 40 questions</option>
-                <option value="2">Two columns / up to 80 questions</option>
-              </select>
-            </Field>
-            <button disabled={busy}>Create sheet layout</button>
-          </form>
-          <Field name="Registered layout">
-            <select value={layout} onChange={(e) => setLayout(e.target.value)}>
-              <option value="">Select layout</option>
-              {layouts.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name} / {l.fingerprint.slice(0, 8)}
-                </option>
-              ))}
-            </select>
-          </Field>
+          {!loadingSheets && assignments.length === 0 && (
+            <p className="notice">
+              Assign this test to a learner from Assessments before printing or
+              uploading.
+            </p>
+          )}
           <Field name="Assigned learner">
             <select
               value={assignment}
               onChange={(e) => setAssignment(e.target.value)}
             >
-              <option value="">Select learner</option>
+              <option value="">Choose learner</option>
               {assignments.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.learner} / {a.state}
+                  {a.learner} / {a.state.replaceAll("_", " ")}
                 </option>
               ))}
             </select>
           </Field>
+          {layouts.length > 0 && (
+            <Field name="Sheet format">
+              <select
+                value={layout}
+                onChange={(e) => {
+                  setLayout(e.target.value);
+                  setBatch("");
+                }}
+              >
+                {layouts.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           {layout && assignment && (
             <a
               className="button-link"
@@ -1594,52 +1964,83 @@ function ScanDesk({
               Open printable answer sheet
             </a>
           )}
+          {paper.spec.title.startsWith("Sample:") && assignment && (
+            <a
+              href={api.url(
+                `sample-files/${paper.id}?assignment=${assignment}`,
+              )}
+              download
+            >
+              Download matching filled sample sheets (.zip)
+            </a>
+          )}
+          <details open={layouts.length === 0 || undefined}>
+            <summary>
+              {layouts.length
+                ? "Change or create another sheet format"
+                : "Prepare the sheet format"}
+            </summary>
+            <form
+              onSubmit={(e) => {
+                const f = values(e);
+                void run(async () => {
+                  const l = await api.layout({
+                    paper_id: paper.id,
+                    columns: Number(str(f, "columns")),
+                  });
+                  await refresh();
+                  setLayout(l.id);
+                  setBatch("");
+                }, "Sheet format ready. Choose the learner, then open the printable sheet.");
+              }}
+            >
+              <Field name="Sheet arrangement">
+                <select name="columns">
+                  <option value="1">One column / up to 40 questions</option>
+                  <option value="2">Two columns / up to 80 questions</option>
+                </select>
+              </Field>
+              <button disabled={busy}>Create sheet layout</button>
+            </form>
+          </details>
         </section>
         <section className="card">
-          <h2>Receive paper evidence</h2>
+          <h2>2. Upload a completed sheet</h2>
+          <p>
+            Use a scanned PDF or a clear PNG/JPEG photograph. We will read the
+            marks and ask you to check anything uncertain.
+          </p>
           <form
             onSubmit={(e) => {
               const f = values(e);
               void run(async () => {
-                const b = await api.batch({
-                  paper_id: paper.id,
-                  layout_id: layout,
-                  sitting_at: new Date(str(f, "at")).toISOString(),
-                });
-                await refresh();
-                setBatch(b.id);
-              }, "Batch created. The sitting time is retained separately from upload time.");
+                let id = batch;
+                const existing = batches.find((b) => b.id === id);
+                if (!existing || existing.layout_id !== layout) {
+                  const b = await api.batch({
+                    paper_id: paper.id,
+                    layout_id: layout,
+                    sitting_at: new Date(scanAt).toISOString(),
+                  });
+                  id = b.id;
+                  setBatch(id);
+                  await refresh();
+                }
+                setJob(await api.scanUpload(id, f));
+              }, "Upload saved. Reading the sheet; the review will appear below when it is ready.");
             }}
           >
-            <Field name="Actual paper sitting time">
+            <Field name="Actual test date and time">
               <input
-                name="at"
                 type="datetime-local"
+                value={scanAt}
                 required
-                defaultValue={nowLocal()}
+                onChange={(e) => {
+                  setScanAt(e.target.value);
+                  setBatch("");
+                }}
               />
             </Field>
-            <button disabled={busy || !layout}>Create intake batch</button>
-          </form>
-          <Field name="Intake batch">
-            <select value={batch} onChange={(e) => setBatch(e.target.value)}>
-              <option value="">Select batch</option>
-              {batches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {new Date(b.sitting_at).toLocaleString()} / {b.id.slice(0, 8)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <form
-            onSubmit={(e) => {
-              const f = values(e);
-              void run(async () => {
-                await api.scanUpload(batch, f);
-                await load();
-              }, "Scan queued. Refresh the batch after processing, or inspect Job recovery.");
-            }}
-          >
             <Field name="Scanned PDF or page image">
               <input
                 name="file"
@@ -1648,25 +2049,100 @@ function ScanDesk({
                 required
               />
             </Field>
-            <p className="muted">
-              Maximum 50 MiB; PDFs up to 50 pages. Keep all four corner squares
-              visible.
-            </p>
-            <button disabled={!batch || busy}>Upload scan</button>
+            <small className="muted">
+              Up to 50 MiB. PDFs may contain up to 50 pages.
+            </small>
+            <button
+              className="primary"
+              disabled={
+                !layout ||
+                busy ||
+                (!!job && ["queued", "running"].includes(job.state))
+              }
+            >
+              Upload and read sheet
+            </button>
           </form>
+          {job && (
+            <div
+              className={
+                job.state === "failed" || job.state === "configuration_required"
+                  ? "error"
+                  : "notice"
+              }
+              role="status"
+            >
+              <strong>
+                {job.state === "completed"
+                  ? "Sheet reading finished — review below"
+                  : job.state === "running"
+                    ? "Reading your uploaded sheet…"
+                    : job.state === "queued"
+                      ? "Upload saved — waiting to read"
+                      : `Reading ${job.state.replaceAll("_", " ")}`}
+              </strong>
+              {job.error && <p>{job.error}</p>}
+              {["failed", "configuration_required", "cancelled"].includes(
+                job.state,
+              ) && (
+                <button
+                  disabled={busy}
+                  onClick={() =>
+                    void run(async () => {
+                      await api.jobAction(job.id, "retry");
+                      setJob(await api.detail("jobs", job.id));
+                    }, "Reading queued again. Your original upload is retained.")
+                  }
+                >
+                  Retry reading this upload
+                </button>
+              )}
+            </div>
+          )}
+          <details>
+            <summary>Resume an earlier upload group</summary>
+            <Field name="Earlier upload group">
+              <select
+                value={batch}
+                onChange={(e) => {
+                  setBatch(e.target.value);
+                  setJob(null);
+                  const b = batches.find((b) => b.id === e.target.value);
+                  if (b) {
+                    setLayout(b.layout_id);
+                    const d = new Date(b.sitting_at);
+                    setScanAt(
+                      new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                        .toISOString()
+                        .slice(0, 16),
+                    );
+                  }
+                }}
+              >
+                <option value="">Start a new upload group</option>
+                {batches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {new Date(b.sitting_at).toLocaleString()} /{" "}
+                    {b.id.slice(0, 8)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </details>
         </section>
       </div>
       <section className="card">
         <div className="section-heading">
-          <h2>Review detected evidence</h2>
+          <h2>3. Check answers and save the result</h2>
           <button disabled={!batch || busy} onClick={() => void run(load, "")}>
-            Refresh scan batch
+            Refresh scan review
           </button>
         </div>
-        {batch && sheets.length === 0 && (
-          <p>
-            No processed pages yet. Check the job status; a failed source can be
-            retried without duplicate sheets.
+        {sheets.length === 0 && (
+          <p className="empty-message">
+            {job && ["queued", "running"].includes(job.state)
+              ? "Your uploaded sheet is being processed. This review updates automatically."
+              : "Upload a completed sheet to see the original page and detected answers here."}
           </p>
         )}
         {sheets.map((sheet) => (
@@ -1686,8 +2162,8 @@ function ScanDesk({
                     onSitting(await api.detail("sittings", result.sitting_id));
                 },
                 data.commit
-                  ? "Paper evidence committed once and graded with the pinned key."
-                  : "Review saved with a correction audit.",
+                  ? "Result saved and graded using the published answer key."
+                  : "Review saved. You can continue later.",
               )
             }
           />
@@ -1874,7 +2350,11 @@ function AnswerControl({
             <input
               type={q.type === "single" ? "radio" : "checkbox"}
               name={"answer-" + q.id}
-              checked={answer.selection?.includes(o.id) ?? false}
+              checked={
+                q.type === "single" && (answer.selection?.length ?? 0) > 1
+                  ? false
+                  : (answer.selection?.includes(o.id) ?? false)
+              }
               onChange={(e) =>
                 onChange({
                   ...answer,
@@ -2257,10 +2737,7 @@ function AssessmentWork({
               </p>
               <h4>Worked solution</h4>
               <p>{q.solution}</p>
-              <p>
-                Answer rule:{" "}
-                {q.key?.join(", ") || JSON.stringify(q.numeric ?? q.rubric)}
-              </p>
+              <p>Answer rule: {q.key?.join(", ") || answerRuleText(q)}</p>
             </>
           )}
           {staff &&

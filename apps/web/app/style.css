@@ -959,3 +959,341 @@ details p {
   flex: 0 0 1.15rem;
   margin: 0.2rem 0 0;
 }
+
+/* Everyday work has one clear navigation level; setup is progressively disclosed. */
+.nav-group-title {
+  color: var(--rail-fg);
+  opacity: 0.65;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 1.1rem 0.75rem 0.35rem;
+  margin: 0;
+}
+.rail .nav-group {
+  margin: 0.8rem 0;
+  border-top: 1px solid oklch(0.65 0.02 165 / 0.28);
+  padding-top: 0.7rem;
+}
+.rail summary {
+  cursor: pointer;
+  padding: 0.65rem 0.75rem;
+  color: var(--rail-fg);
+  font-size: 0.85rem;
+}
+.rail .account-navigation {
+  margin-top: 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid oklch(0.65 0.02 165 / 0.28);
+}
+.rail nav button {
+  width: 100%;
+  text-align: left;
+}
+.mobile-menu-toggle {
+  display: none;
+}
+.context-bar {
+  align-items: center;
+}
+.display-preferences {
+  margin-left: auto;
+  position: relative;
+}
+.display-preferences summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.65rem;
+  white-space: nowrap;
+}
+.display-preferences-panel {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 12;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  padding: 1rem;
+  min-width: 15rem;
+  display: grid;
+  gap: 0.8rem;
+}
+.page-heading h1:focus {
+  outline: none;
+}
+.learning-welcome {
+  padding: 0.7rem 0 1.4rem;
+  max-width: 55rem;
+}
+.learning-welcome h2,
+.sample-intro h2 {
+  font-size: 1.75rem;
+  letter-spacing: -0.025em;
+  margin: 0.3rem 0 0.8rem;
+}
+.learning-welcome p,
+.sample-intro p {
+  max-width: 48rem;
+  color: var(--muted);
+}
+.primary,
+.academic .primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.primary:hover {
+  filter: brightness(1.08);
+}
+.learning-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1.3rem;
+}
+.task-path {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1.6rem;
+}
+.task-path li {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.step-number {
+  display: grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.text-action,
+.academic .text-action {
+  padding: 0;
+  border: 0;
+  min-height: 1.75rem;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.task-path p {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+}
+.workspace-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.generation-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 1.3rem;
+}
+.generation-status {
+  min-height: 20rem;
+}
+.topic-context {
+  padding: 1rem;
+  background: var(--bg);
+  border-radius: var(--radius);
+  margin: 0;
+}
+.sample-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin: 1.5rem 0;
+}
+.sample-instructions {
+  padding-left: 1.2rem;
+}
+.sample-instructions li {
+  padding: 0.5rem 0;
+}
+.sample-instructions p {
+  margin: 0.35rem 0;
+  color: var(--muted);
+}
+.empty-message {
+  padding: 1.5rem;
+  background: var(--bg);
+  border-radius: var(--radius);
+}
+.bank-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.8rem;
+  padding: 0.8rem 0 1.2rem;
+}
+.bank-tools .field {
+  flex: 1;
+  min-width: 12rem;
+}
+.question-preview summary {
+  font-size: 1.06rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+@media (max-width: 950px) {
+  .learning-home-grid,
+  .generation-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .rail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 1rem;
+    gap: 0.7rem;
+  }
+  .rail .wordmark {
+    font-size: 0.95rem;
+    margin: 0;
+    flex: 1;
+  }
+  .mobile-menu-toggle {
+    display: block;
+    min-height: 2.75rem;
+  }
+  .rail nav {
+    display: none;
+    width: 100%;
+  }
+  .rail.menu-open nav {
+    display: block;
+  }
+  .rail .rail-bottom {
+    width: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  .rail-bottom p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  .rail-bottom p span {
+    display: none;
+  }
+  .context-bar {
+    padding: 0.8rem 1rem;
+    gap: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .display-preferences {
+    grid-column: 1/-1;
+    margin: 0;
+  }
+  .display-preferences summary {
+    padding: 0.3rem 0;
+  }
+  .display-preferences-panel {
+    left: 0;
+    right: auto;
+  }
+  .workmain {
+    padding: 1.2rem 1rem;
+  }
+  .page-heading {
+    align-items: start;
+  }
+  .page-heading h1 {
+    font-size: 1.6rem;
+  }
+  .learning-welcome h2,
+  .sample-intro h2 {
+    font-size: 1.45rem;
+  }
+}
+.answer-rule-editor {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 0.8rem;
+}
+.rubric-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 9rem;
+  gap: 0.8rem;
+  align-items: start;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--border);
+}
+.rubric-row button {
+  grid-column: 1/-1;
+  justify-self: start;
+}
+.scan-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 2rem;
+  list-style-position: inside;
+  margin: 0.3rem 0 1rem;
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+@media (max-width: 760px) {
+  .rubric-row {
+    grid-template-columns: 1fr;
+  }
+  .scan-steps {
+    display: grid;
+    gap: 0.6rem;
+  }
+}
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.button-link:hover {
+  background: var(--bg);
+}
+.academic .card > a:not(.button-link) {
+  display: block;
+  margin-top: 0.8rem;
+}
+.rail summary {
+  min-height: 44px;
+}
+@media (max-width: 760px) {
+  .rail {
+    flex-direction: row;
+  }
+  .display-preferences summary {
+    padding: 0.7rem 0;
+    min-height: 44px;
+  }
+}

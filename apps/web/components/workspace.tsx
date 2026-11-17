@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { learningViews, type LearningView } from "./learning-navigation";
 import { AcademicStudio } from "./academic-studio";
 import { AdmissionPanel } from "./admission-panel";
 import { AccountPanel } from "./account-panel";
@@ -197,11 +198,7 @@ export function Workspace({
     [campuses, setCampuses] = useState<Campus[]>([]),
     [people, setPeople] = useState<Person[]>([]),
     [courses, setCourses] = useState<Course[]>([]),
-    [pane, setPane] = useState<Pane>(
-      initialContexts.some((x) => ["owner", "coordinator"].includes(x.role))
-        ? "people"
-        : "account",
-    ),
+    [pane, setPane] = useState<Pane>("education"),
     [dataset, setDataset] = useState<{ key: string; rows: Row[] }>({
       key: "",
       rows: [],
@@ -217,6 +214,58 @@ export function Workspace({
     [mfa, setMfa] = useState<{ secret: string; url: string } | null>(null),
     [codes, setCodes] = useState<string[]>([]),
     [sessions, setSessions] = useState<components["schemas"]["Session"][]>([]);
+  const [learningView, setLearningView] = useState<LearningView>("home");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const navigate = (next: Pane, view: LearningView = "home") => {
+    setPane(next);
+    setLearningView(view);
+    setMenuOpen(false);
+    setNotice("");
+    setQuery("");
+    window.location.hash =
+      next === "education"
+        ? `education/${view}${window.location.hash.includes("?") ? "?" + window.location.hash.split("?")[1] : ""}`
+        : next;
+  };
+  useEffect(() => {
+    const restore = () => {
+      const [next, rawView] = window.location.hash.slice(1).split("/");
+      const view = rawView?.split("?")[0];
+      if (next === "education") {
+        setPane("education");
+        setLearningView(
+          view in learningViews ? (view as LearningView) : "home",
+        );
+      } else if (
+        [
+          "people",
+          "campuses",
+          "courses",
+          "enrollments",
+          "families",
+          "responsibilities",
+          "audit",
+          "deliveries",
+          "security",
+          "account",
+          "settings",
+          "intake",
+        ].includes(next)
+      ) {
+        setPane(next as Pane);
+      }
+      setMenuOpen(false);
+    };
+    restore();
+    window.addEventListener("hashchange", restore);
+    return () => window.removeEventListener("hashchange", restore);
+  }, []);
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pane, learningView]);
   const pendingLoad = useRef<AbortController | null>(null);
   const datasetKey = [org, campus, pane, query].join("|");
   const rows = dataset.key === datasetKey ? dataset.rows : [];
@@ -227,6 +276,10 @@ export function Workspace({
   const t = text[language];
   const context = contexts.find((x) => x.id === org);
   const owner = contexts.some((x) => x.id === org && x.role === "owner");
+  const teaching = contexts.some(
+    (x) =>
+      x.id === org && ["owner", "coordinator", "instructor"].includes(x.role),
+  );
   const manager =
     owner || contexts.some((x) => x.id === org && x.role === "coordinator");
   const api = useCallback(() => apiClient(me?.csrf), [me?.csrf]);
@@ -534,51 +587,133 @@ export function Workspace({
     <fieldset className="hydration-guard" disabled={!hydrated}>
       <legend className="sr-only">Workspace tools</legend>
       <div className="workspace">
-        <aside className="rail">
-          <Link href="/" className="wordmark">
+        <aside className={"rail" + (menuOpen ? " menu-open" : "")}>
+          <Link href="/workspace#education/home" className="wordmark">
             LW /<br />
             Learning Workspace
           </Link>
-          <p className="rail-caption">{t.workspace}</p>
-          <nav aria-label={t.workspace}>
-            {(
-              [
-                "education",
-                "people",
-                "intake",
-                "enrollments",
-                "families",
-                "responsibilities",
-                "courses",
-                "campuses",
-                "audit",
-                "deliveries",
-                "security",
-                "account",
-                "settings",
-              ] as Pane[]
-            )
-              .filter((p) =>
-                p === "settings"
-                  ? owner
-                  : manager ||
-                    p === "education" ||
-                    p === "security" ||
-                    p === "account",
-              )
-              .map((p) => (
+          <button
+            className="mobile-menu-toggle"
+            aria-expanded={menuOpen}
+            aria-controls="workspace-navigation"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? "Close menu" : "Menu"}
+          </button>
+          <nav id="workspace-navigation" aria-label={t.workspace}>
+            <p className="nav-group-title">
+              {teaching ? "Teaching" : "Learning"}
+            </p>
+            {(teaching
+              ? [
+                  "home",
+                  "generate",
+                  "curriculum",
+                  "papers",
+                  "scan",
+                  "results",
+                  "samples",
+                ]
+              : ["home"]
+            ).map((id) => (
+              <button
+                key={id}
+                aria-current={
+                  pane === "education" && learningView === id
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => navigate("education", id as LearningView)}
+              >
+                {teaching
+                  ? learningViews[id as LearningView].title
+                  : language === "hi"
+                    ? "मेरे आकलन"
+                    : "My assessments"}
+              </button>
+            ))}
+            {manager && (
+              <details
+                className="nav-group"
+                open={
+                  (pane !== "education" &&
+                    [
+                      "people",
+                      "intake",
+                      "enrollments",
+                      "families",
+                      "responsibilities",
+                      "courses",
+                      "campuses",
+                    ].includes(pane)) ||
+                  undefined
+                }
+              >
+                <summary>People & organization</summary>
+                {(
+                  [
+                    "people",
+                    "enrollments",
+                    "intake",
+                    "courses",
+                    "families",
+                    "responsibilities",
+                    "campuses",
+                  ] as Pane[]
+                ).map((p) => (
+                  <button
+                    key={p}
+                    aria-current={pane === p ? "page" : undefined}
+                    onClick={() => navigate(p)}
+                  >
+                    {t[p]}
+                  </button>
+                ))}
+              </details>
+            )}
+            {teaching && (
+              <button
+                aria-current={
+                  pane === "education" && learningView === "jobs"
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => navigate("education", "jobs")}
+              >
+                Background tasks
+              </button>
+            )}
+            {owner && (
+              <details
+                className="nav-group"
+                open={
+                  ["audit", "deliveries", "settings"].includes(pane) ||
+                  undefined
+                }
+              >
+                <summary>Administration</summary>
+                {(["audit", "deliveries", "settings"] as Pane[]).map((p) => (
+                  <button
+                    key={p}
+                    aria-current={pane === p ? "page" : undefined}
+                    onClick={() => navigate(p)}
+                  >
+                    {t[p]}
+                  </button>
+                ))}
+              </details>
+            )}
+            <div className="account-navigation">
+              {(["account", "security"] as Pane[]).map((p) => (
                 <button
                   key={p}
                   aria-current={pane === p ? "page" : undefined}
-                  onClick={() => {
-                    setPane(p);
-                    setNotice("");
-                    setQuery("");
-                  }}
+                  onClick={() => navigate(p)}
                 >
                   {t[p]}
                 </button>
               ))}
+            </div>
           </nav>
           <div className="rail-bottom">
             <p>
@@ -637,30 +772,39 @@ export function Workspace({
                 ))}
               </select>
             </Label>
-            <Label name={t.locale}>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
-              >
-                <option value="en">English</option>
-                <option value="hi">हिन्दी</option>
-              </select>
-            </Label>
-            <Label name="Appearance">
-              <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-                <option value="system">System</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
-            </Label>
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={large}
-                onChange={(e) => setLarge(e.target.checked)}
-              />
-              A+
-            </label>
+            <details className="display-preferences">
+              <summary>Display & language</summary>
+              <div className="display-preferences-panel">
+                {" "}
+                <Label name={t.locale}>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
+                  >
+                    <option value="en">English</option>
+                    <option value="hi">हिन्दी</option>
+                  </select>
+                </Label>
+                <Label name="Appearance">
+                  <select
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value)}
+                  >
+                    <option value="system">System</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                  </select>
+                </Label>
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={large}
+                    onChange={(e) => setLarge(e.target.checked)}
+                  />
+                  A+
+                </label>
+              </div>
+            </details>
           </header>
           <main id="main" className="workmain">
             <div className="page-heading">
@@ -668,10 +812,30 @@ export function Workspace({
                 <p className="eyebrow">
                   {context?.name} / {context?.timezone}
                 </p>
-                <h1>{t[pane]}</h1>
-                <p className="muted">{t.scope}</p>
+                <h1 ref={headingRef} tabIndex={-1}>
+                  {pane === "education"
+                    ? teaching
+                      ? learningViews[learningView].title
+                      : language === "hi"
+                        ? "मेरे आकलन"
+                        : "My assessments"
+                    : t[pane]}
+                </h1>
+                <p className="muted">
+                  {pane === "education"
+                    ? teaching
+                      ? learningViews[learningView].hint
+                      : "Open an assigned test, continue saved work or see a released result."
+                    : t.scope}
+                </p>
               </div>
-              <button onClick={() => void load()} disabled={loading}>
+              <button
+                onClick={() => {
+                  if (pane === "education") setRefreshKey((k) => k + 1);
+                  else void load();
+                }}
+                disabled={loading}
+              >
                 {t.refresh}
               </button>
             </div>
@@ -1242,6 +1406,9 @@ export function Workspace({
             {pane === "education" && (
               <AcademicStudio
                 key={org + campus}
+                refreshToken={refreshKey}
+                view={learningView}
+                onNavigate={(view) => navigate("education", view)}
                 org={org}
                 campus={campus}
                 csrf={me.csrf}

@@ -1,3 +1,4 @@
+import { navigate } from "./navigation";
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 const creds = readFileSync(
@@ -11,6 +12,7 @@ const fixture = JSON.parse(
 ) as {
   org: string;
   course_name: string;
+  learner: string;
   learner_email: string;
   learner_password: string;
 };
@@ -28,7 +30,7 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
   await page.getByLabel("Password", { exact: true }).fill(ownerPassword);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page
-    .getByRole("button", { name: "Learning & assessment", exact: true })
+    .getByRole("button", { name: "Question bank", exact: true })
     .click();
   await page.getByText("Add a topic", { exact: true }).click();
   const topicForm = page
@@ -50,6 +52,9 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
   await expect(
     page.getByRole("button", { name: "Author question", exact: true }),
   ).toBeEnabled();
+  await page
+    .getByRole("button", { name: "Upload questions", exact: true })
+    .click();
   await page.getByLabel("Question file", { exact: true }).setInputFiles({
     name: "original.csv",
     mimeType: "text/csv",
@@ -65,6 +70,12 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Commit clean rows", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Next: review imported questions",
+      exact: true,
+    })
     .click();
   await page.getByRole("button", { name: /^Approve Q-/ }).click();
   await page.getByLabel("Select for paper", { exact: true }).check();
@@ -104,15 +115,13 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
   }
   const scanTitle = "Scanned arithmetic " + Date.now();
   await compose(scanTitle);
-  await page
-    .getByRole("button", { name: "Paper evidence", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Scan & check", exact: true }).click();
   await page
     .getByRole("button", { name: "Create sheet layout", exact: true })
     .click();
-  await page
-    .getByLabel("Assigned learner", { exact: true })
-    .selectOption({ label: "Academic Browser Learner / not_started" });
+  await expect(
+    page.getByLabel("Assigned learner", { exact: true }),
+  ).not.toHaveValue("");
   const link = page.getByRole("link", {
     name: "Open printable answer sheet",
     exact: true,
@@ -146,19 +155,18 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
     { url: sheetURL!, center: layout.spec.rows[0].centers[0] },
   );
   await page
-    .getByRole("button", { name: "Create intake batch", exact: true })
-    .click();
-  await page
     .getByLabel("Scanned PDF or page image", { exact: true })
     .setInputFiles({
       name: "filled-sheet.png",
       mimeType: "image/png",
       buffer: Buffer.from(filled, "base64"),
     });
-  await page.getByRole("button", { name: "Upload scan", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Upload and read sheet", exact: true })
+    .click();
   await expect(async () => {
     await page
-      .getByRole("button", { name: "Refresh scan batch", exact: true })
+      .getByRole("button", { name: "Refresh scan review", exact: true })
       .click();
     await expect(
       page.getByRole("heading", { name: "Page 1 · review", exact: true }),
@@ -181,9 +189,7 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
     .click();
   await expect(page.getByText("2 / 2", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Back to work", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Prepare assessment", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Assessments", exact: true }).click();
   const onlineTitle = "Online arithmetic " + Date.now();
   await compose(onlineTitle);
   const learner = await browser.newContext({
@@ -198,9 +204,7 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
     .getByLabel("Password", { exact: true })
     .fill(fixture.learner_password);
   await lp.getByRole("button", { name: "Sign in", exact: true }).click();
-  await lp
-    .getByRole("button", { name: "Learning & assessment", exact: true })
-    .click();
+
   const row = lp
     .getByText(onlineTitle, { exact: true })
     .locator("..")

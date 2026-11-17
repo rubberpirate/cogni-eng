@@ -1,3 +1,4 @@
+import { navigate } from "./navigation";
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 const creds = readFileSync(
@@ -13,12 +14,13 @@ test("owner organizes campus, course, admission and family with persistent audit
   await page.getByLabel("Email address", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await navigate(page, "People");
   await expect(
     page.getByRole("heading", { name: "People", exact: true }),
   ).toBeVisible();
   const suffix = Date.now().toString().slice(-7);
   const campus = "Test Campus " + suffix;
-  await page.getByRole("button", { name: "Campuses", exact: true }).click();
+  await navigate(page, "Campuses");
   const campusForm = page
     .getByRole("heading", { name: "Create · Campuses" })
     .locator("..")
@@ -32,7 +34,7 @@ test("owner organizes campus, course, admission and family with persistent audit
   await expect(
     page.getByRole("cell", { name: campus, exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Courses", exact: true }).click();
+  await navigate(page, "Courses");
   const courseForm = page
     .getByRole("heading", { name: "Create · Courses" })
     .locator("..")
@@ -48,7 +50,7 @@ test("owner organizes campus, course, admission and family with persistent audit
   await expect(
     page.getByRole("cell", { name: "Science " + suffix, exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "People", exact: true }).click();
+  await navigate(page, "People");
   const form = page
     .getByRole("heading", { name: "Invite a person" })
     .locator("..")
@@ -64,7 +66,7 @@ test("owner organizes campus, course, admission and family with persistent audit
   await expect(
     page.getByRole("cell", { name: "Learner " + suffix, exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Admissions", exact: true }).click();
+  await navigate(page, "Admissions");
   const admission = page
     .getByRole("heading", { name: "Create · Admissions" })
     .locator("..")
@@ -84,7 +86,7 @@ test("owner organizes campus, course, admission and family with persistent audit
   await expect(
     page.getByRole("cell", { name: "Learner " + suffix, exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "People", exact: true }).click();
+  await navigate(page, "People");
   const guardianForm = page
     .getByRole("heading", { name: "Invite a person" })
     .locator("..")
@@ -105,7 +107,7 @@ test("owner organizes campus, course, admission and family with persistent audit
   await expect(
     page.getByRole("cell", { name: "Guardian " + suffix, exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Family links", exact: true }).click();
+  await navigate(page, "Family links");
   const familyForm = page
     .getByRole("heading", { name: "Create · Family links" })
     .locator("..")
@@ -139,10 +141,11 @@ test("owner organizes campus, course, admission and family with persistent audit
     familyRow.getByRole("cell", { name: "removed", exact: true }),
   ).toBeVisible();
   await page.reload();
+  await navigate(page, "People");
   await expect(
     page.getByRole("heading", { name: "People", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Audit ledger", exact: true }).click();
+  await navigate(page, "Audit ledger");
   await expect(
     page.getByRole("cell", { name: "learner.enrolled", exact: true }).first(),
   ).toBeVisible();
@@ -150,9 +153,7 @@ test("owner organizes campus, course, admission and family with persistent audit
     path: ".local/screenshots/audit-desktop.png",
     fullPage: true,
   });
-  await page
-    .getByRole("button", { name: "Access and security", exact: true })
-    .click();
+  await navigate(page, "Access and security");
   await expect(
     page.getByRole("heading", { name: "Your active sessions" }),
   ).toBeVisible();
@@ -169,6 +170,7 @@ test("narrow layout and keyboard sign-in retain meaningful states", async ({
   await page.getByLabel("Email address", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Password", { exact: true }).press("Enter");
+  await navigate(page, "People");
   await expect(
     page.getByRole("heading", { name: "People", exact: true }),
   ).toBeVisible();
@@ -177,6 +179,7 @@ test("narrow layout and keyboard sign-in retain meaningful states", async ({
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  await page.getByText("Display & language", { exact: true }).click();
   await page.getByLabel("Language", { exact: true }).selectOption("hi");
   await expect(
     page.getByRole("heading", { name: "लोग", exact: true }),
@@ -194,10 +197,11 @@ test("profile and institution edits persist; campus edit uses optimistic version
   await page.getByLabel("Email address", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await navigate(page, "People");
   await expect(
     page.getByRole("heading", { name: "People", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "My account", exact: true }).click();
+  await navigate(page, "My account");
   const profile = page
     .getByRole("heading", { name: "Your profile" })
     .locator("..")
@@ -212,13 +216,11 @@ test("profile and institution edits persist; campus edit uses optimistic version
     page.getByRole("status").filter({ hasText: "Profile saved." }),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: "My account", exact: true }).click();
+  await navigate(page, "My account");
   await expect(
     page.getByLabel("Emergency contact", { exact: true }),
   ).toHaveValue("Synthetic emergency contact");
-  await page
-    .getByRole("button", { name: "Institution settings", exact: true })
-    .click();
+  await navigate(page, "Institution settings");
   const settings = page
     .getByRole("heading", { name: "Institution configuration" })
     .locator("..")
@@ -232,7 +234,7 @@ test("profile and institution edits persist; campus edit uses optimistic version
   await expect(
     page.getByRole("status").filter({ hasText: "Configuration saved." }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Campuses", exact: true }).click();
+  await navigate(page, "Campuses");
   const row = page.getByRole("row").filter({
     has: page.getByRole("cell", { name: "River Campus", exact: true }),
   });
@@ -255,12 +257,11 @@ test("learner registers, verifies captured mail and receives approved placement 
   await page.getByLabel("Email address", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await navigate(page, "People");
   await expect(
     page.getByRole("heading", { name: "People", exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Enrollment intake", exact: true })
-    .click();
+  await navigate(page, "Enrollment intake");
   const codeForm = page
     .getByRole("heading", { name: "Enrollment codes", exact: true })
     .locator("..")
@@ -323,10 +324,8 @@ test("learner registers, verifies captured mail and receives approved placement 
       .click();
     await expect(learner.getByRole("status")).toContainText("Email verified");
     await page.getByRole("button", { name: "Refresh", exact: true }).click();
-    await page.getByRole("button", { name: "People", exact: true }).click();
-    await page
-      .getByRole("button", { name: "Enrollment intake", exact: true })
-      .click();
+    await navigate(page, "People");
+    await navigate(page, "Enrollment intake");
     const item = page
       .locator("article.queue-item")
       .filter({ hasText: address });
@@ -352,7 +351,7 @@ test("learner registers, verifies captured mail and receives approved placement 
       .fill("a browser registration phrase 3!");
     await learner.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(
-      learner.getByRole("heading", { name: "My account", exact: true }),
+      learner.getByRole("heading", { name: "My assessments", exact: true }),
     ).toBeVisible();
     await expect(
       learner
@@ -371,10 +370,11 @@ test("profile crop saves privately and removal ends reads", async ({
   await page.getByLabel("Email address", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await navigate(page, "People");
   await expect(
     page.getByRole("heading", { name: "People", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "My account", exact: true }).click();
+  await navigate(page, "My account");
   const pixels = await page.evaluate(() => {
     const c = document.createElement("canvas");
     c.width = 320;

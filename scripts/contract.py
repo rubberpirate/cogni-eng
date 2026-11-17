@@ -94,5 +94,6 @@ paths['/api/v1/profile/avatar']['put']['requestBody']={'required':True,'content'
 paths['/api/v1/profile/avatar']['get']['responses']['200']={'description':'Private normalized image for current person only','content':{'image/png':{'schema':{'type':'string','format':'binary'}}}}
 route('/profile/image-history','get','ImageHistory',listed=True)
 route('/profile/image-history/{id}/retry','post')
+exec(Path('scripts/academic-contract.py').read_text())
 doc={'openapi':'3.1.0','info':{'title':'Learning Workspace API','version':'1.0.0','description':'Go-owned business API. Mutations require exact configured Origin, opaque cookie and CSRF header. No private response may be publicly cached. Limits and incomplete functionality are tracked in IMPLEMENTATION-STATUS.md.'},'servers':[{'url':'http://localhost:3000'}],'paths':paths,'components':{'securitySchemes':{'session':{'type':'apiKey','in':'cookie','name':'workspace_session'}},'schemas':schemas}}
 Path('contracts/openapi.json').write_text(json.dumps(doc,indent=2)+'\n')

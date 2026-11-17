@@ -16,6 +16,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"learning.local/workspace/internal/access"
+	"learning.local/workspace/internal/scholar"
 )
 
 func main() {
@@ -30,6 +31,11 @@ func run() error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+	if os.Args[1] == "model-check" {
+		modelCtx, modelCancel := context.WithTimeout(context.Background(), 3*time.Minute)
+		defer modelCancel()
+		return modelCheck(modelCtx)
+	}
 	if os.Args[1] == "migrate" {
 		db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
 		if err != nil {
@@ -43,7 +49,18 @@ func run() error {
 		if err = goose.SetDialect("postgres"); err != nil {
 			return err
 		}
-		return goose.UpContext(ctx, db, "migrations")
+		if err = goose.UpContext(ctx, db, "migrations"); err != nil {
+			return err
+		}
+		pool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
+		if err != nil {
+			return err
+		}
+		defer pool.Close()
+		return scholar.Migrate(ctx, pool)
+	}
+	if os.Args[1] == "manual-demo" {
+		return manualDemo(ctx)
 	}
 	if os.Args[1] == "browser-fixture" {
 		return browserFixture(ctx)

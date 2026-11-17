@@ -18,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pquerna/otp/totp"
 	"learning.local/workspace/internal/access"
+	"learning.local/workspace/internal/scholar"
 )
 
 type harness struct {
@@ -71,9 +72,13 @@ func setup(t *testing.T) *harness {
 			t.Fatal(err)
 		}
 		up := strings.Split(strings.TrimPrefix(string(sql), "-- +goose Up"), "-- +goose Down")[0]
+		up = strings.ReplaceAll(strings.ReplaceAll(up, "-- +goose StatementBegin", ""), "-- +goose StatementEnd", "")
 		if _, err = db.Exec(ctx, up); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if err = scholar.Migrate(ctx, db); err != nil {
+		t.Fatal(err)
 	}
 	h := &harness{t: t, db: db, owner: access.Random(), org: access.Random(), campus: access.Random(), otherOrg: access.Random(), otherCampus: access.Random()}
 	h.handler = New(db, Config{Env: "test", Origin: "http://localhost:3000", MFAKey: make([]byte, 32)}).Handler()

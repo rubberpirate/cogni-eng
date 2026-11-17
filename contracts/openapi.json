@@ -5961,6 +5961,5769 @@
           }
         ]
       }
+    },
+    "/api/v1/institutions/{org}/education/courses": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_courses",
+        "summary": "GET /api/v1/institutions/{org}/education/courses",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicCourse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/topics": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_topics",
+        "summary": "GET /api/v1/institutions/{org}/education/topics",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicTopic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_topics",
+        "summary": "POST /api/v1/institutions/{org}/education/topics",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicTopic"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicTopic"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/questions": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_questions",
+        "summary": "GET /api/v1/institutions/{org}/education/questions",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicQuestion"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_questions",
+        "summary": "POST /api/v1/institutions/{org}/education/questions",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicQuestionCreated"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicQuestionWrite"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/imports": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_imports",
+        "summary": "GET /api/v1/institutions/{org}/education/imports",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicImport"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/papers": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_papers",
+        "summary": "GET /api/v1/institutions/{org}/education/papers",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicPaperRecord"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_papers",
+        "summary": "POST /api/v1/institutions/{org}/education/papers",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicPaperRecord"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicCompose"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/assignments": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_assignments",
+        "summary": "GET /api/v1/institutions/{org}/education/assignments",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicAssigned"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paper",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_assignments",
+        "summary": "POST /api/v1/institutions/{org}/education/assignments",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicStrings"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicAssign"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/layouts": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_layouts",
+        "summary": "GET /api/v1/institutions/{org}/education/layouts",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicSheetLayout"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paper",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_layouts",
+        "summary": "POST /api/v1/institutions/{org}/education/layouts",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSheetLayout"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicNewLayout"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/batches": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_batches",
+        "summary": "GET /api/v1/institutions/{org}/education/batches",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicBatch"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paper",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_batches",
+        "summary": "POST /api/v1/institutions/{org}/education/batches",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicBatch"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicNewBatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/scan-sheets": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_scan-sheets",
+        "summary": "GET /api/v1/institutions/{org}/education/scan-sheets",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicScanSheet"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "batch",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/jobs": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_jobs",
+        "summary": "GET /api/v1/institutions/{org}/education/jobs",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicJob"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/imports/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_imports_id",
+        "summary": "GET /api/v1/institutions/{org}/education/imports/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicImport"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/papers/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_papers_id",
+        "summary": "GET /api/v1/institutions/{org}/education/papers/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicPaperRecord"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/sittings/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_sittings_id",
+        "summary": "GET /api/v1/institutions/{org}/education/sittings/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSitting"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/jobs/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_jobs_id",
+        "summary": "GET /api/v1/institutions/{org}/education/jobs/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicJob"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/recipients/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_recipients_id",
+        "summary": "GET /api/v1/institutions/{org}/education/recipients/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicRecipient"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bounded results; 200 maximum. Empty campus requires institution-wide entitlement."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bounded results; 200 maximum. Empty campus requires institution-wide entitlement."
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/questions/{id}": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_questions_id",
+        "summary": "POST /api/v1/institutions/{org}/education/questions/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicQuestion"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicQuestionWrite"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/questions/{id}/review": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_questions_id_review",
+        "summary": "POST /api/v1/institutions/{org}/education/questions/{id}/review",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSaved"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicQuestionReview"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/imports/{id}/edit": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_imports_id_edit",
+        "summary": "POST /api/v1/institutions/{org}/education/imports/{id}/edit",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicImport"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicImportChange"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/imports/{id}/commit": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_imports_id_commit",
+        "summary": "POST /api/v1/institutions/{org}/education/imports/{id}/commit",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicImport"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicImportChange"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/papers/{id}/publish": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_papers_id_publish",
+        "summary": "POST /api/v1/institutions/{org}/education/papers/{id}/publish",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSaved"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicVersion"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/blueprint": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_blueprint",
+        "summary": "POST /api/v1/institutions/{org}/education/blueprint",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicStrings"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicGenerate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/assignments/{id}/start": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_assignments_id_start",
+        "summary": "POST /api/v1/institutions/{org}/education/assignments/{id}/start",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSitting"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicStart"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/sittings/{id}/save": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_sittings_id_save",
+        "summary": "POST /api/v1/institutions/{org}/education/sittings/{id}/save",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSitting"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicSave"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/sittings/{id}/submit": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_sittings_id_submit",
+        "summary": "POST /api/v1/institutions/{org}/education/sittings/{id}/submit",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSitting"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicEmpty"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/sittings/{id}/release": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_sittings_id_release",
+        "summary": "POST /api/v1/institutions/{org}/education/sittings/{id}/release",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSaved"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicEmpty"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/sittings/{id}/review": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_sittings_id_review",
+        "summary": "POST /api/v1/institutions/{org}/education/sittings/{id}/review",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSitting"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicReviewMarks"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/scan-sheets/{id}/review": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_scan-sheets_id_review",
+        "summary": "POST /api/v1/institutions/{org}/education/scan-sheets/{id}/review",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSaved"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicScanReview"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/generate": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_generate",
+        "summary": "POST /api/v1/institutions/{org}/education/generate",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicJob"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicGenerate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/jobs/{id}/retry": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_jobs_id_retry",
+        "summary": "POST /api/v1/institutions/{org}/education/jobs/{id}/retry",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSaved"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicEmpty"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/jobs/{id}/cancel": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_jobs_id_cancel",
+        "summary": "POST /api/v1/institutions/{org}/education/jobs/{id}/cancel",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicSaved"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicEmpty"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/imports/{id}/upload": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_imports_id_upload",
+        "summary": "POST /api/v1/institutions/{org}/education/imports/{id}/upload",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicImport"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "topic_id": {
+                    "type": "string"
+                  },
+                  "provenance": {
+                    "type": "string"
+                  },
+                  "license": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "topic_id",
+                  "provenance",
+                  "license"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/batches/{id}/upload": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_batches_id_upload",
+        "summary": "POST /api/v1/institutions/{org}/education/batches/{id}/upload",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicJob"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/assets": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_assets",
+        "summary": "POST /api/v1/institutions/{org}/education/assets",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicAsset"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "campus_id": {
+                    "type": "string"
+                  },
+                  "course_id": {
+                    "type": "string"
+                  },
+                  "purpose": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "campus_id",
+                  "course_id",
+                  "purpose"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/assets/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_assets_id",
+        "summary": "GET /api/v1/institutions/{org}/education/assets/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorized private binary",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/sheet-image/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_sheet-image_id",
+        "summary": "GET /api/v1/institutions/{org}/education/sheet-image/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorized private binary",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignment",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/imports/{id}/parse": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_imports_id_parse",
+        "summary": "POST /api/v1/institutions/{org}/education/imports/{id}/parse",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicImport"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicParseDocument"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/tutor": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_tutor",
+        "summary": "POST /api/v1/institutions/{org}/education/tutor",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicThread"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicTutorAsk"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_tutor",
+        "summary": "GET /api/v1/institutions/{org}/education/tutor",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicThread"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sitting",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "question",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/evidence/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_evidence_id",
+        "summary": "GET /api/v1/institutions/{org}/education/evidence/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicTopicEvidence"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bounded results; 200 maximum. Empty campus requires institution-wide entitlement."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bounded results; 200 maximum. Empty campus requires institution-wide entitlement."
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/result-history/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_result-history_id",
+        "summary": "GET /api/v1/institutions/{org}/education/result-history/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicResultHistory"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bounded results; 200 maximum. Empty campus requires institution-wide entitlement."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bounded results; 200 maximum. Empty campus requires institution-wide entitlement."
+          }
+        ]
+      }
+    },
+    "/api/v1/institutions/{org}/education/print-paper/{id}": {
+      "get": {
+        "operationId": "get__api_v1_institutions_org_education_print-paper_id",
+        "summary": "GET /api/v1/institutions/{org}/education/print-paper/{id}",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorized printable booklet or approved key",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "answers",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            }
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -7131,6 +12894,1708 @@
           "bytes",
           "created_at",
           "error"
+        ]
+      },
+      "AcademicOption": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "alt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ]
+      },
+      "AcademicNumericRule": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "min": {
+            "type": "string"
+          },
+          "max": {
+            "type": "string"
+          },
+          "absolute": {
+            "type": "string"
+          },
+          "relative": {
+            "type": "string"
+          },
+          "integer": {
+            "type": "boolean"
+          },
+          "unit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "values",
+          "integer"
+        ]
+      },
+      "AcademicCriterion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "marks": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "marks"
+        ]
+      },
+      "AcademicQuestion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "topic_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicOption"
+            }
+          },
+          "key": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "numeric": {
+            "$ref": "#/components/schemas/AcademicNumericRule"
+          },
+          "rubric": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicCriterion"
+            }
+          },
+          "solution": {
+            "type": "string"
+          },
+          "marks": {
+            "type": "string"
+          },
+          "penalty": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "provenance": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "alt": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "origin": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic_id",
+          "type",
+          "stem",
+          "options",
+          "key",
+          "rubric",
+          "solution",
+          "marks",
+          "penalty",
+          "difficulty",
+          "language",
+          "provenance",
+          "license"
+        ]
+      },
+      "AcademicSection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "cap": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicQuestion"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "policy",
+          "count",
+          "questions"
+        ]
+      },
+      "AcademicPaper": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "duration_minutes": {
+            "type": "integer"
+          },
+          "release_policy": {
+            "type": "string"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicSection"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "purpose",
+          "instructions",
+          "duration_minutes",
+          "release_policy",
+          "sections"
+        ]
+      },
+      "AcademicAnswer": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "selection": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "number": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "visited": {
+            "type": "boolean"
+          },
+          "review": {
+            "type": "boolean"
+          },
+          "order": {
+            "type": "integer"
+          },
+          "invalid": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "selection",
+          "number",
+          "text",
+          "visited",
+          "review",
+          "order",
+          "invalid"
+        ]
+      },
+      "AcademicManualMark": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "feedback": {
+            "type": "string"
+          },
+          "approved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "criteria",
+          "feedback",
+          "approved"
+        ]
+      },
+      "AcademicItemMark": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "topic_id": {
+            "type": "string"
+          },
+          "section_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "award": {
+            "type": "string"
+          },
+          "maximum": {
+            "type": "string"
+          },
+          "counted": {
+            "type": "boolean"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/AcademicAnswer"
+          }
+        },
+        "required": [
+          "question_id",
+          "topic_id",
+          "section_id",
+          "status",
+          "award",
+          "maximum",
+          "counted",
+          "required",
+          "explanation",
+          "answer"
+        ]
+      },
+      "AcademicResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "score": {
+            "type": "string"
+          },
+          "maximum": {
+            "type": "string"
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "answered": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicItemMark"
+            }
+          },
+          "policy": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "score",
+          "maximum",
+          "correct",
+          "wrong",
+          "answered",
+          "required",
+          "pending",
+          "items",
+          "policy"
+        ]
+      },
+      "AcademicImportRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "question": {
+            "$ref": "#/components/schemas/AcademicQuestion"
+          },
+          "error": {
+            "type": "string"
+          },
+          "existing_id": {
+            "type": "string"
+          },
+          "committed_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "question",
+          "error"
+        ]
+      },
+      "AcademicPoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ]
+      },
+      "AcademicBubbleRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "centers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicPoint"
+            }
+          }
+        },
+        "required": [
+          "question_id",
+          "type",
+          "labels",
+          "centers"
+        ]
+      },
+      "AcademicLayout": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "columns": {
+            "type": "integer"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicBubbleRow"
+            }
+          }
+        },
+        "required": [
+          "version",
+          "columns",
+          "rows"
+        ]
+      },
+      "AcademicReadRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "$ref": "#/components/schemas/AcademicAnswer"
+          },
+          "fill": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "uncertain": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "fill",
+          "uncertain",
+          "reason"
+        ]
+      },
+      "AcademicScanRead": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "assignment_id": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AcademicReadRow"
+            }
+          },
+          "corners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicPoint"
+            }
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "assignment_id",
+          "rows",
+          "corners",
+          "error"
+        ]
+      },
+      "AcademicError": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "AcademicService": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "AcademicTopic": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "campus_id": {
+            "type": "string"
+          },
+          "course_id": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campus_id",
+          "course_id",
+          "subject",
+          "name",
+          "outcome",
+          "language"
+        ]
+      },
+      "Academicstored": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "AcademicTaskArgs": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "AcademicExpiryArgs": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "institution_id": {
+            "type": "string"
+          },
+          "sitting_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "institution_id",
+          "sitting_id"
+        ]
+      },
+      "AcademicCourse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "campus_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "academic_year": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campus_id",
+          "name",
+          "academic_year"
+        ]
+      },
+      "AcademicImport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "topic_id": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicImportRow"
+            }
+          },
+          "raw_text": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "topic_id",
+          "asset_id",
+          "state",
+          "rows",
+          "raw_text",
+          "version",
+          "created_at"
+        ]
+      },
+      "AcademicComposeSection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "cap": {
+            "type": "string"
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "policy",
+          "count",
+          "cap",
+          "question_ids"
+        ]
+      },
+      "AcademicCompose": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "campus_id": {
+            "type": "string"
+          },
+          "course_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "duration_minutes": {
+            "type": "integer"
+          },
+          "release_policy": {
+            "type": "string"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicComposeSection"
+            }
+          }
+        },
+        "required": [
+          "campus_id",
+          "course_id",
+          "title",
+          "purpose",
+          "instructions",
+          "duration_minutes",
+          "release_policy",
+          "sections"
+        ]
+      },
+      "AcademicPaperRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "campus_id": {
+            "type": "string"
+          },
+          "course_id": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/AcademicPaper"
+          },
+          "maximum": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campus_id",
+          "course_id",
+          "reference",
+          "state",
+          "version",
+          "spec",
+          "maximum"
+        ]
+      },
+      "AcademicRecipient": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "reference"
+        ]
+      },
+      "AcademicAssigned": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "paper_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "learner_id": {
+            "type": "string"
+          },
+          "learner": {
+            "type": "string"
+          },
+          "opens_at": {
+            "type": "string"
+          },
+          "closes_at": {
+            "type": "string"
+          },
+          "extra_minutes": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "sitting_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "paper_id",
+          "title",
+          "reference",
+          "learner_id",
+          "learner",
+          "opens_at",
+          "closes_at",
+          "extra_minutes",
+          "state",
+          "sitting_id"
+        ]
+      },
+      "AcademicSitting": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "assignment_id": {
+            "type": "string"
+          },
+          "learner_id": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "started_at": {
+            "type": "string"
+          },
+          "deadline": {
+            "type": "string"
+          },
+          "answers": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AcademicAnswer"
+            }
+          },
+          "manual_marks": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AcademicManualMark"
+            }
+          },
+          "answer_version": {
+            "type": "integer"
+          },
+          "result": {
+            "$ref": "#/components/schemas/AcademicResult"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "paper": {
+            "$ref": "#/components/schemas/AcademicPaperRecord"
+          },
+          "server_time": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "assignment_id",
+          "learner_id",
+          "channel",
+          "state",
+          "started_at",
+          "deadline",
+          "answers",
+          "answer_version",
+          "revision",
+          "paper",
+          "server_time"
+        ]
+      },
+      "AcademicAsset": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "campus_id": {
+            "type": "string"
+          },
+          "course_id": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "media_type": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campus_id",
+          "course_id",
+          "purpose",
+          "filename",
+          "media_type",
+          "bytes",
+          "sha256",
+          "state"
+        ]
+      },
+      "AcademicSheetLayout": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/AcademicLayout"
+          },
+          "fingerprint": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "spec",
+          "fingerprint"
+        ]
+      },
+      "Academicrow": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "AcademicBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "paper_id": {
+            "type": "string"
+          },
+          "layout_id": {
+            "type": "string"
+          },
+          "sitting_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "paper_id",
+          "layout_id",
+          "sitting_at"
+        ]
+      },
+      "AcademicScanSheet": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "assignment_id": {
+            "type": "string"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "machine": {
+            "$ref": "#/components/schemas/AcademicScanRead"
+          },
+          "corrections": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AcademicAnswer"
+            }
+          },
+          "identity_confirmed": {
+            "type": "boolean"
+          },
+          "state": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "sitting_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "asset_id",
+          "assignment_id",
+          "page",
+          "machine",
+          "corrections",
+          "identity_confirmed",
+          "state",
+          "version",
+          "sitting_id"
+        ]
+      },
+      "AcademicJob": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "campus_id": {
+            "type": "string"
+          },
+          "course_id": {
+            "type": "string"
+          },
+          "actor_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "resource_id": {
+            "type": "string"
+          },
+          "input": {},
+          "state": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "output": {},
+          "provider": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campus_id",
+          "course_id",
+          "actor_id",
+          "kind",
+          "resource_id",
+          "input",
+          "state",
+          "progress",
+          "error",
+          "attempts",
+          "output",
+          "provider",
+          "model",
+          "created_at"
+        ]
+      },
+      "AcademictaskWorker": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "AcademicexpiryWorker": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "AcademicTutorMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "text",
+          "job_id"
+        ]
+      },
+      "AcademicThread": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sitting_id": {
+            "type": "string"
+          },
+          "question_id": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicTutorMessage"
+            }
+          },
+          "version": {
+            "type": "integer"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "job_state": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sitting_id",
+          "question_id",
+          "messages",
+          "version",
+          "job_id",
+          "job_state",
+          "error"
+        ]
+      },
+      "AcademicTutorOutput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "input_tokens": {
+            "type": "integer"
+          },
+          "output_tokens": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "text",
+          "provider",
+          "model"
+        ]
+      },
+      "AcademicTopicEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "topic_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "counted": {
+            "type": "integer"
+          },
+          "answered": {
+            "type": "integer"
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "required_blank": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic_id",
+          "name",
+          "counted",
+          "answered",
+          "correct",
+          "wrong",
+          "required_blank",
+          "pending",
+          "status",
+          "explanation"
+        ]
+      },
+      "AcademicResultHistory": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer"
+          },
+          "result": {
+            "$ref": "#/components/schemas/AcademicResult"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision",
+          "result",
+          "reason",
+          "created_at"
+        ]
+      },
+      "AcademicGeneration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "topic": {
+            "$ref": "#/components/schemas/AcademicTopic"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "difficulty": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic",
+          "count",
+          "difficulty"
+        ]
+      },
+      "AcademicVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "AcademicQuestionWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "$ref": "#/components/schemas/AcademicQuestion"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "question"
+        ]
+      },
+      "AcademicQuestionCreated": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "$ref": "#/components/schemas/AcademicQuestion"
+          },
+          "duplicate": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "question",
+          "duplicate"
+        ]
+      },
+      "AcademicQuestionReview": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "state",
+          "note",
+          "version"
+        ]
+      },
+      "AcademicImportChange": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "question": {
+            "$ref": "#/components/schemas/AcademicQuestion"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "selected": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "AcademicAssign": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "paper_id": {
+            "type": "string"
+          },
+          "learners": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opens_at": {
+            "type": "string"
+          },
+          "closes_at": {
+            "type": "string"
+          },
+          "extra_minutes": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "paper_id",
+          "learners",
+          "opens_at",
+          "closes_at",
+          "extra_minutes"
+        ]
+      },
+      "AcademicStart": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "takeover": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "takeover"
+        ]
+      },
+      "AcademicSave": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation_id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "answers": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AcademicAnswer"
+            }
+          }
+        },
+        "required": [
+          "operation_id",
+          "version",
+          "answers"
+        ]
+      },
+      "AcademicReviewMarks": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "manual_marks": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AcademicManualMark"
+            }
+          }
+        },
+        "required": [
+          "reason",
+          "revision",
+          "manual_marks"
+        ]
+      },
+      "AcademicNewLayout": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "paper_id": {
+            "type": "string"
+          },
+          "columns": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "paper_id",
+          "columns"
+        ]
+      },
+      "AcademicNewBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "paper_id": {
+            "type": "string"
+          },
+          "layout_id": {
+            "type": "string"
+          },
+          "sitting_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "paper_id",
+          "layout_id",
+          "sitting_at"
+        ]
+      },
+      "AcademicScanReview": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "assignment_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "identity_confirmed": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "corrections": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AcademicAnswer"
+            }
+          },
+          "commit": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "assignment_id",
+          "reason",
+          "identity_confirmed",
+          "version",
+          "corrections",
+          "commit"
+        ]
+      },
+      "AcademicGenerate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "topic_id": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "difficulty": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic_id",
+          "count",
+          "difficulty"
+        ]
+      },
+      "AcademicStrings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "AcademicEmpty": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "AcademicSaved": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "saved": {
+            "type": "boolean"
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "released": {
+            "type": "boolean"
+          },
+          "sitting_id": {
+            "type": "string"
+          }
+        },
+        "required": []
+      },
+      "AcademicParseDocument": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "provenance": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "text",
+          "provenance",
+          "license",
+          "version"
+        ]
+      },
+      "AcademicTutorAsk": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sitting_id": {
+            "type": "string"
+          },
+          "question_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sitting_id",
+          "question_id",
+          "text"
         ]
       }
     }

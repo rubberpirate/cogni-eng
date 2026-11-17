@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"learning.local/workspace/internal/access"
 	"learning.local/workspace/internal/blob"
+	"learning.local/workspace/internal/scholar"
 )
 
 type Config struct {
@@ -90,8 +91,11 @@ func (s *Server) wrap(f endpoint) http.HandlerFunc {
 func (s *Server) writeError(w http.ResponseWriter, id string, err error) {
 	p := &problem{500, "internal_error", "The operation could not finish. Retry with this request reference."}
 	var known *problem
+	var academicProblem *scholar.Error
 	if errors.As(err, &known) {
 		p = known
+	} else if errors.As(err, &academicProblem) {
+		p = &problem{academicProblem.Status, academicProblem.Code, academicProblem.Message}
 	} else {
 		slog.Error("request failed", "request_id", id, "error", err)
 	}
@@ -228,6 +232,9 @@ func (s *Server) Handler() http.Handler {
 		write(w, 200, map[string]string{"state": "ready"})
 		return nil
 	}))
+	for _, route := range []string{"GET /api/v1/institutions/{org}/education/{kind}", "GET /api/v1/institutions/{org}/education/{kind}/{id}", "POST /api/v1/institutions/{org}/education/{kind}", "POST /api/v1/institutions/{org}/education/{kind}/{id}", "POST /api/v1/institutions/{org}/education/{kind}/{id}/{action}"} {
+		m.HandleFunc(route, s.wrap(s.academicAPI))
+	}
 	for route, handler := range map[string]endpoint{
 		"GET /api/v1/profile/image-history":                             s.avatarHistory,
 		"POST /api/v1/profile/image-history/{id}/retry":                 s.retryAvatarCleanup,

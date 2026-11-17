@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image/png"
 	"learning.local/workspace/internal/academic"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -71,5 +73,60 @@ func TestActualTesseractTranscriptionProposal(t *testing.T) {
 	parsed, err := academic.ParseText(string(text), "topic", "Original synthetic PDF fixture", "CC0-1.0")
 	if err != nil || len(parsed) != 1 || !strings.Contains(strings.ToLower(parsed[0].Question.Stem), "seven") || len(parsed[0].Question.Key) != 1 || parsed[0].Question.Key[0] != "A" {
 		t.Fatalf("actual OCR proposal %+v %v", parsed, err)
+	}
+}
+
+func TestGeneratedSampleSheetPDFRoundTrip(t *testing.T) {
+	if _, err := exec.LookPath("pdftoppm"); err != nil {
+		t.Skip("Poppler unavailable; sample PDF raster path not qualified")
+	}
+	qs, err := academic.Samples("sample")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := range qs {
+		qs[i].ID = fmt.Sprint(i)
+	}
+	p := academic.Paper{Title: "Original sample", Purpose: "practice", DurationMinutes: 15, ReleasePolicy: "immediate", Sections: []academic.Section{{ID: "core", Title: "Samples", Policy: "all", Count: 6, Questions: qs}}}
+	l, err := academic.NewLayout(p, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assignment, fingerprint := strings.Repeat("a", 64), strings.Repeat("b", 64)
+	answers := map[string]academic.Answer{}
+	for _, q := range qs {
+		answers[q.ID] = academic.Answer{Selection: q.Key}
+	}
+	data, err := academic.SheetImage(l, assignment, fingerprint, "Sample", "Synthetic learner", answers)
+	if err != nil {
+		t.Fatal(err)
+	}
+	img, err := png.Decode(bytes.NewReader(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pdf, err := academic.ImagesPDF(img, img)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pages, err := rasterPages(context.Background(), "application/pdf", pdf)
+	if err != nil || len(pages) != 2 {
+		t.Fatalf("sample PDF raster %d %v", len(pages), err)
+	}
+	for _, data := range pages {
+		img, err := png.Decode(bytes.NewReader(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+		read := academic.Recognize(img, l, fingerprint)
+		if read.Error != "" || read.AssignmentID != assignment {
+			t.Fatalf("sample PDF identity %+v", read)
+		}
+		for _, q := range qs {
+			row := read.Rows[q.ID]
+			if row.Uncertain || !slices.Equal(row.Answer.Selection, q.Key) {
+				t.Fatalf("PDF pixels changed sample answer %+v", row)
+			}
+		}
 	}
 }

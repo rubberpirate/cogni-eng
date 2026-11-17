@@ -138,6 +138,9 @@ func (s *Service) Compose(ctx context.Context, tx pgx.Tx, actor, org string, in 
 				return PaperRecord{}, err
 			}
 			q.ID = id
+			if in.Purpose == "formal" && (q.Origin == "development_fixture" || academic.IsPublicSample(q)) {
+				return PaperRecord{}, Problem(400, "public_sample", "Public demonstration questions are practice-only. Author fresh items for formal examinations.")
+			}
 			sec.Questions = append(sec.Questions, q)
 		}
 		p.Sections = append(p.Sections, sec)

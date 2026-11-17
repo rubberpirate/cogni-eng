@@ -2,6 +2,7 @@ package academic
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"image"
 	"image/color"
@@ -176,5 +177,73 @@ func TestOMRPerspectiveAndExposure(t *testing.T) {
 	read := Recognize(warped, l, fp)
 	if read.Error != "" || read.AssignmentID != id || read.Rows[q.ID].Uncertain || len(read.Rows[q.ID].Answer.Selection) != 1 || read.Rows[q.ID].Answer.Selection[0] != "A" {
 		t.Fatalf("perspective/exposure fixture failed: %+v", read)
+	}
+}
+
+func TestOriginalSampleContract(t *testing.T) {
+	qs, err := Samples("practice-topic")
+	if err != nil || len(qs) != 6 {
+		t.Fatalf("sample bank %v", err)
+	}
+	correct, mixed := map[string]Answer{}, map[string]Answer{}
+	mix := [][]string{{"B"}, {"A"}, {"A", "C"}, {}, {"B"}, {"D"}}
+	for i := range qs {
+		qs[i].ID = fmt.Sprint(i)
+		correct[qs[i].ID] = Answer{Selection: qs[i].Key}
+		mixed[qs[i].ID] = Answer{Selection: mix[i]}
+		if !IsPublicSample(qs[i]) {
+			t.Fatal("public sample not recognized")
+		}
+	}
+	p := paper(qs...)
+	for _, tc := range []struct {
+		answers        map[string]Answer
+		score          string
+		correct, wrong int
+	}{{correct, "12", 6, 0}, {mixed, "5", 3, 2}} {
+		got, err := Mark(p, tc.answers, nil, "paper")
+		if err != nil || got.Score != tc.score || got.Maximum != "12" || got.Correct != tc.correct || got.Wrong != tc.wrong {
+			t.Fatalf("sample expectation %+v %v", got, err)
+		}
+	}
+}
+
+func TestRegistrationIgnoresDenseIdentityBits(t *testing.T) {
+	q := question("first")
+	l, err := NewLayout(paper(q), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := -1; i < 32; i++ {
+		assignment := fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("original-randomized-sheet-%d", i))))
+		fingerprint := fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("original-layout-%d", i))))
+		if i == -1 {
+			assignment = "59bb3d14e7e9067f2cc9d275c53433265fd8da2ac15fb84f04cdac5871a80000"
+			fingerprint = "543256ba676c5d04" + strings.Repeat("0", 48)
+		}
+		data, err := SheetImage(l, assignment, fingerprint, "Original randomized identity fixture", "Synthetic learner", map[string]Answer{q.ID: {Selection: []string{"A"}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		img, err := png.Decode(bytes.NewReader(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if i >= 0 {
+			for turn := 0; turn < i%4; turn++ {
+				b := img.Bounds()
+				rotated := image.NewRGBA(image.Rect(0, 0, b.Dy(), b.Dx()))
+				for y := 0; y < b.Dy(); y++ {
+					for x := 0; x < b.Dx(); x++ {
+						rotated.Set(b.Dy()-1-y, x, img.At(x, y))
+					}
+				}
+				img = rotated
+			}
+		}
+		read := Recognize(img, l, fingerprint)
+		if read.Error != "" || read.AssignmentID != assignment {
+			t.Fatalf("identity fixture %d confused registration with identity bits: %+v", i, read)
+		}
 	}
 }

@@ -1,7 +1,7 @@
 """Academic API schemas and operations, loaded by contract.py. Go tagged structs are the DTO source."""
 import re
 names={}
-for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go']:
+for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go']:
  for name,body in re.findall(r'type (\w+) struct \{\n(.*?)\n\}',Path(source).read_text(),re.S):
   names[name]=body
 
@@ -76,3 +76,10 @@ route(base+'result-history/{id}','get','AcademicResultHistory',listed=True)
 route(base+'print-paper/{id}','get')
 paths['/api/v1'+base+'print-paper/{id}']['get']['parameters'].append({'name':'answers','in':'query','schema':{'type':'string','enum':['0','1']}})
 paths['/api/v1'+base+'print-paper/{id}']['get']['responses']['200']={'description':'Authorized printable booklet or approved key','content':{'text/html':{'schema':S}}}
+
+schemas['AcademicSampleRequest']=obj({'course_id':S,'learner_id':S})
+route(base+'sample-kits','post','AcademicSampleKit','AcademicSampleRequest')
+route(base+'course-learners/{id}','get','AcademicRecipient',listed=True)
+route(base+'sample-files/{id}','get')
+paths['/api/v1'+base+'sample-files/{id}']['get']['parameters'].append({'name':'assignment','in':'query','required':True,'schema':S})
+paths['/api/v1'+base+'sample-files/{id}']['get']['responses']['200']={'description':'Private original practice test files with assigned registered sheets','content':{'application/zip':{'schema':{'type':'string','format':'binary'}}}}

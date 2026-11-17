@@ -1,0 +1,7 @@
+type,question,A,B,C,D,answer,marks,penalty,solution,provenance,license
+single,Seven seeds are joined by five more seeds. How many seeds are there?,10,12,14,15,B,2,0.5,Seven plus five is twelve: 7 + 5 = 12.,Original Learning Workspace practice sample,CC0-1.0
+single,What is half of 18?,6,7,9,12,C,2,0.5,"Two groups of nine make eighteen, so half of eighteen is nine.",Original Learning Workspace practice sample,CC0-1.0
+multiple,Select every number divisible by 3.,12,14,21,25,A|C,2,0.5,12 = 3 x 4 and 21 = 3 x 7. The other numbers leave a remainder.,Original Learning Workspace practice sample,CC0-1.0
+single,A cart travels 24 metres in 6 seconds at constant speed. What is its speed?,3 m/s,4 m/s,6 m/s,12 m/s,B,2,0.5,Speed = distance / time = 24 / 6 = 4 metres per second.,Original Learning Workspace practice sample,CC0-1.0
+single,How many oxygen atoms are represented by one CO2 molecule?,1,2,3,4,B,2,0.5,The subscript 2 applies to oxygen: a CO2 molecule has two oxygen atoms.,Original Learning Workspace practice sample,CC0-1.0
+single,Which structure controls substances entering and leaving an animal cell?,Cell wall,Cell membrane,Nucleus,Chloroplast,B,2,0.5,The selectively permeable cell membrane regulates exchange with the surroundings.,Original Learning Workspace practice sample,CC0-1.0

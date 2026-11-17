@@ -65,7 +65,7 @@ func (s *Service) Evidence(ctx context.Context, tx pgx.Tx, actor, org, sitting s
 		t := byTopic[id]
 		t.Status = "insufficient_evidence"
 		t.Explanation = "This is observed evidence from one sitting, not an estimate of mastery. Optional uncounted items are excluded; a required blank records missing work, not a diagnosis of ignorance. Timing was not measured."
-		if t.Counted >= 5 && t.Pending == 0 {
+		if t.Answered >= 5 && t.Pending == 0 {
 			t.Status = "observed_responses"
 		}
 		result = append(result, *t)

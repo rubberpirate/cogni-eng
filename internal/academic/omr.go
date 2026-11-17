@@ -150,6 +150,7 @@ func corners(img image.Image) ([]Point, error) {
 		ww, hh := w/4, h/4
 		seen := make([]bool, ww*hh)
 		best := 0
+		bestDistance := math.MaxFloat64
 		var center Point
 		for y := 0; y < hh; y++ {
 			for x := 0; x < ww; x++ {
@@ -183,9 +184,22 @@ func corners(img image.Image) ([]Point, error) {
 				}
 				bw, bh := maxx-minx+1, maxy-miny+1
 				area := bw * bh
-				if len(queue) > best && bw > 5 && bh > 5 && float64(bw)/float64(bh) > .55 && float64(bw)/float64(bh) < 1.8 && float64(len(queue))/float64(area) > .75 {
-					best = len(queue)
-					center = Point{float64(x0) + float64(sumx)/float64(best), float64(y0) + float64(sumy)/float64(best)}
+				if bw > 5 && bh > 5 && float64(bw)/float64(bh) > .55 && float64(bw)/float64(bh) < 1.8 && float64(len(queue))/float64(area) > .75 && float64(area) < float64(w*h)*.003 {
+					candidate := Point{float64(x0) + float64(sumx)/float64(len(queue)), float64(y0) + float64(sumy)/float64(len(queue))}
+					dx, dy := candidate.X/float64(w), candidate.Y/float64(h)
+					if quadrant[0] == 1 {
+						dx = 1 - dx
+					}
+					if quadrant[1] == 1 {
+						dy = 1 - dy
+					}
+					distance := dx*dx + dy*dy
+					// The identity grid can contain larger filled squares; registration is the eligible component nearest the page corner.
+					if distance < bestDistance {
+						bestDistance = distance
+						best = len(queue)
+						center = candidate
+					}
 				}
 			}
 		}

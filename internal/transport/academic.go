@@ -19,7 +19,7 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 	}
 	org, id, kind, action := r.PathValue("org"), r.PathValue("id"), r.PathValue("kind"), r.PathValue("action")
 	query := r.URL.Query()
-	if r.Method == "GET" && (kind == "assets" || kind == "sheet-image" || kind == "print-paper") {
+	if r.Method == "GET" && (kind == "assets" || kind == "sheet-image" || kind == "print-paper" || kind == "sample-files") {
 		var data []byte
 		content := "image/png"
 		filename := "answer-sheet.png"
@@ -29,6 +29,11 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 				return e
 			}
 			switch kind {
+			case "sample-files":
+				content = "application/zip"
+				filename = "practice-sample-kit.zip"
+				data, e = svc.SampleFiles(ctx, tx, a.ID, org, id, query.Get("assignment"))
+				return e
 			case "print-paper":
 				p, e := svc.Paper(ctx, tx, a.ID, org, id)
 				if e != nil {
@@ -120,6 +125,8 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 				return svc.History(ctx, tx, a.ID, org, id)
 			case "tutor":
 				return svc.Thread(ctx, tx, a.ID, org, query.Get("sitting"), query.Get("question"))
+			case "course-learners":
+				return svc.CourseLearners(ctx, tx, a.ID, org, id)
 			case "courses":
 				return svc.Courses(ctx, tx, a.ID, org, query.Get("campus"))
 			case "topics":
@@ -163,6 +170,17 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 	}
 	// Each operation uses a narrow request type and strict JSON decoding.
 	switch kind {
+	case "sample-kits":
+		var in struct {
+			Course  string `json:"course_id"`
+			Learner string `json:"learner_id"`
+		}
+		if err = decode(w, r, &in); err != nil {
+			return err
+		}
+		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
+			return svc.CreateSampleKit(ctx, tx, a.ID, org, in.Course, in.Learner)
+		})
 	case "tutor":
 		var in struct {
 			Sitting  string `json:"sitting_id"`

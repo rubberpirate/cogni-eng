@@ -3,11 +3,13 @@
 package transport
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/json"
 	"image"
 	"image/png"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -426,6 +428,159 @@ func TestAcademicAssetsRequireSubjectRelationship(t *testing.T) {
 	academicTx(t, h, func(tx pgx.Tx) error {
 		if _, err := svc.Asset(ctx, tx, staff[0], h.org, asset.ID); err == nil {
 			t.Fatal("ended teaching relationship retained asset access")
+		}
+		return nil
+	})
+}
+
+func TestOriginalSampleKitFilesAndPermissions(t *testing.T) {
+	h, svc, course, learner := academicFixture(t)
+	ctx := context.Background()
+	var kit scholar.SampleKit
+	var files []byte
+	academicTx(t, h, func(tx pgx.Tx) error {
+		var err error
+		kit, err = svc.CreateSampleKit(ctx, tx, h.owner, h.org, course, learner)
+		if err != nil {
+			return err
+		}
+		files, err = svc.SampleFiles(ctx, tx, h.owner, h.org, kit.PaperID, kit.AssignmentID)
+		return err
+	})
+	archive, err := zip.NewReader(bytes.NewReader(files), int64(len(files)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	contents := map[string][]byte{}
+	for _, file := range archive.File {
+		r, err := file.Open()
+		if err != nil {
+			t.Fatal(err)
+		}
+		contents[file.Name], err = io.ReadAll(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = r.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, name := range []string{"START-HERE.txt", "question-paper.pdf", "marking-guide.pdf", "omr-blank.pdf", "omr-correct.png", "omr-mixed.png", "omr-needs-review.png", "duplicate-pages.pdf", "questions.json", "expected-results.json"} {
+		if len(contents[name]) == 0 {
+			t.Errorf("missing original sample %s", name)
+		}
+	}
+	var p scholar.PaperRecord
+	var layout scholar.SheetLayout
+	academicTx(t, h, func(tx pgx.Tx) error {
+		var err error
+		p, err = svc.Paper(ctx, tx, h.owner, h.org, kit.PaperID)
+		if err != nil {
+			return err
+		}
+		layouts, err := svc.Layouts(ctx, tx, h.owner, h.org, p.ID)
+		if err != nil {
+			return err
+		}
+		layout = layouts[0]
+		return nil
+	})
+	for _, tc := range []struct{ Name, Score string }{{"correct", "12"}, {"mixed", "5"}} {
+		img, err := png.Decode(bytes.NewReader(contents["omr-"+tc.Name+".png"]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		read := academic.Recognize(img, layout.Spec, layout.Fingerprint)
+		if read.Error != "" || read.AssignmentID != kit.AssignmentID {
+			t.Fatalf("sample sheet identity %+v", read)
+		}
+		answers := map[string]academic.Answer{}
+		for id, row := range read.Rows {
+			if row.Uncertain {
+				t.Fatal("clean sample needs unexpected review")
+			}
+			answers[id] = row.Answer
+		}
+		marked, err := academic.Mark(p.Spec, answers, nil, "paper")
+		if err != nil || marked.Score != tc.Score {
+			t.Fatalf("sample %s expected %s got %+v %v", tc.Name, tc.Score, marked, err)
+		}
+	}
+	img, err := png.Decode(bytes.NewReader(contents["omr-needs-review.png"]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	read := academic.Recognize(img, layout.Spec, layout.Fingerprint)
+	if !read.Rows[p.Spec.Sections[0].Questions[0].ID].Uncertain {
+		t.Fatal("ambiguous sample silently accepted")
+	}
+	h.login("academic-learner@example.invalid", "unique learner academic phrase 91!", "")
+	h.request("GET", h.path("/education/sample-files/"+kit.PaperID+"?assignment="+kit.AssignmentID), nil, 403)
+	h.request("POST", h.path("/education/sample-kits"), map[string]string{"course_id": course, "learner_id": learner}, 403)
+	started := h.request("POST", h.path("/education/assignments/"+kit.AssignmentID+"/start"), map[string]bool{"takeover": false}, 200)
+	sittingID := started["id"].(string)
+	h.request("POST", h.path("/education/sittings/"+sittingID+"/submit"), map[string]any{}, 200)
+	academicTx(t, h, func(tx pgx.Tx) error {
+		evidence, err := svc.Evidence(ctx, tx, learner, h.org, sittingID)
+		if err != nil {
+			return err
+		}
+		if len(evidence) != 1 || evidence[0].RequiredBlank != 6 || evidence[0].Answered != 0 || evidence[0].Status != "insufficient_evidence" {
+			t.Fatalf("blank sample fabricated response evidence: %+v", evidence)
+		}
+		return nil
+	})
+
+}
+
+func TestSampleKitRetainsTeacherEditsAndRejectsChangedKeys(t *testing.T) {
+	h, svc, course, learner := academicFixture(t)
+	ctx := context.Background()
+	academicTx(t, h, func(tx pgx.Tx) error {
+		kit, err := svc.CreateSampleKit(ctx, tx, h.owner, h.org, course, learner)
+		if err != nil {
+			return err
+		}
+		original, err := svc.Paper(ctx, tx, h.owner, h.org, kit.PaperID)
+		if err != nil {
+			return err
+		}
+		q := original.Spec.Sections[0].Questions[3]
+		q.Key = []string{"A"}
+		revised, err := svc.ReviseQuestion(ctx, tx, h.owner, h.org, q.ID, q, 2)
+		if err != nil {
+			return err
+		}
+		if err = svc.ReviewQuestion(ctx, tx, h.owner, h.org, revised.ID, "approved", "Synthetic changed-key regression fixture", revised.Version); err != nil {
+			return err
+		}
+		_, err = svc.CreateSampleKit(ctx, tx, h.owner, h.org, course, learner)
+		known, ok := err.(*scholar.Error)
+		if !ok || known.Code != "sample_changed" {
+			t.Fatalf("modified key silently reused: %v", err)
+		}
+		bank, err := svc.Bank(ctx, tx, h.owner, h.org, q.TopicID)
+		if err != nil {
+			return err
+		}
+		found := false
+		for _, v := range bank {
+			if v.ID == revised.ID {
+				found = true
+				if len(v.Key) != 1 || v.Key[0] != "A" {
+					t.Fatal("teacher revision was silently reset")
+				}
+			}
+		}
+		if !found {
+			t.Fatal("teacher revision was removed")
+		}
+		pinned, err := svc.Paper(ctx, tx, h.owner, h.org, kit.PaperID)
+		if err != nil {
+			return err
+		}
+		if pinned.Spec.Sections[0].Questions[3].Key[0] != "B" {
+			t.Fatal("published original sample was rewritten")
 		}
 		return nil
 	})

@@ -54,6 +54,10 @@ export function educationClient(org: string, csrf: string) {
     ) => request<Lists[K][]>(kind + "?" + new URLSearchParams(query)),
     detail: <K extends keyof Details>(kind: K, id: string) =>
       request<Details[K]>(kind + "/" + id),
+    courseLearners: (id: string) =>
+      request<A<"AcademicRecipient">[]>("course-learners/" + id),
+    sampleKit: (body: A<"AcademicSampleRequest">) =>
+      request<A<"AcademicSampleKit">>("sample-kits", body),
     topics: (body: A<"AcademicTopic">) =>
       request<A<"AcademicTopic">>("topics", body),
     question: (body: A<"AcademicQuestionWrite">, id?: string) =>

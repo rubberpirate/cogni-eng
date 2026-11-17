@@ -157,7 +157,7 @@ test("generation failure remains understandable on the request screen and naviga
       json: {
         ...job,
         state: "failed",
-        error: "Gemini quota/rate limit exhausted. Your request is saved.",
+        error: "Gemini returned HTTP 503; saved work is retained",
       },
     }),
   );
@@ -167,15 +167,21 @@ test("generation failure remains understandable on the request screen and naviga
     .click();
   await expect(
     page.getByRole("heading", {
-      name: "The questions could not be generated",
+      name: "The AI service is temporarily unavailable",
       exact: true,
     }),
   ).toBeVisible({ timeout: 10000 });
   await expect(
     page.getByText(
-      "Gemini quota/rate limit exhausted. Your request is saved.",
+      "Gemini could not complete this request. Wait a little, then retry the saved request below.",
       { exact: true },
     ),
+  ).toBeVisible();
+  await page.getByText("Technical details", { exact: true }).click();
+  await expect(
+    page.getByText("Gemini returned HTTP 503; saved work is retained", {
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Retry this request", exact: true }),

@@ -75,3 +75,11 @@ Passed:
 Failed / external: a fresh explicit live Gemini model check again returned **HTTP 503**. Successful live generation/tutoring, model quality and resolved model version remain unverified. No successful provider response or delivery is fabricated.
 
 Unexecuted / remaining: real-photo/erasures/printer diversity evaluation, general calibration and replacement reconciliation, full WCAG/device/localization qualification, production model delivery/quality, native/offline scope and the remaining register. The current runtime image was not rebuilt/requalified for this increment. These changes complete neither the full academic milestones nor the full application.
+
+## Reference-guided interface refinement — 2026-11-18
+
+Passed: complete browser suite **10 passed (1.4m)** with the new light shell, task overview, assessment cards and sign-in design. The generation failure fixture now specifically exercises HTTP 503: plain-language guidance, technical-details disclosure and retry are visible; browser-back and mobile keyboard navigation still pass. Existing real OMR PDF/PNG correction/commit, online learner, numerical authoring and organization journeys passed. Strict TypeScript and the optimized production Next build passed. Final desktop (1600px), phone (390px) and dark-theme screenshots of Home, generation and sign-in were inspected; the final phone render has no document overflow. All overview counts derive from authorized API data.
+
+External failure: one explicit live Gemini generation check using the existing private configuration timed out awaiting response headers. No successful live generation/tutoring or provider quality is established. The 503 UI test is an HTTP fixture and does not prove provider delivery.
+
+No Go business rules, database schema or provider adapter changed in this visual increment; new Go/database qualification was not required or rerun. Full WCAG/screen-reader/device qualification and the remaining product register are still open. Screenshots are private local review artifacts under `.local/screenshots/reference-*`.

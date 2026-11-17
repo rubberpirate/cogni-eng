@@ -1,4 +1,5 @@
 "use client";
+import { WorkIcon } from "./workspace-art";
 import {
   cloneElement,
   useId,
@@ -589,8 +590,12 @@ export function Workspace({
       <div className="workspace">
         <aside className={"rail" + (menuOpen ? " menu-open" : "")}>
           <Link href="/workspace#education/home" className="wordmark">
-            LW /<br />
-            Learning Workspace
+            <span className="brand-symbol" aria-hidden="true">
+              <WorkIcon name="curriculum" />
+            </span>
+            <span>
+              Learning<span className="brand-subtitle">Workspace</span>
+            </span>
           </Link>
           <button
             className="mobile-menu-toggle"
@@ -625,6 +630,7 @@ export function Workspace({
                 }
                 onClick={() => navigate("education", id as LearningView)}
               >
+                <WorkIcon name={id} />
                 {teaching
                   ? learningViews[id as LearningView].title
                   : language === "hi"
@@ -680,6 +686,7 @@ export function Workspace({
                 }
                 onClick={() => navigate("education", "jobs")}
               >
+                <WorkIcon name="jobs" />
                 Background tasks
               </button>
             )}
@@ -710,6 +717,7 @@ export function Workspace({
                   aria-current={pane === p ? "page" : undefined}
                   onClick={() => navigate(p)}
                 >
+                  <WorkIcon name={p} />
                   {t[p]}
                 </button>
               ))}

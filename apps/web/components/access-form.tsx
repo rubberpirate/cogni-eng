@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { StudyArtwork, WorkIcon } from "./workspace-art";
 import { apiClient } from "../../../clients/http";
 export function AccessForm({ mode }: { mode: "sign-in" | "reset" | "join" }) {
   const [error, setError] = useState(""),
@@ -69,9 +70,30 @@ export function AccessForm({ mode }: { mode: "sign-in" | "reset" | "join" }) {
   }
   return (
     <main id="main" className="access">
-      <Link href="/" className="wordmark">
-        LW / Learning Workspace
-      </Link>
+      <aside className="access-introduction">
+        <Link href="/" className="wordmark">
+          <span className="brand-symbol">
+            <WorkIcon name="curriculum" />
+          </span>
+          Learning Workspace
+        </Link>
+        <div>
+          <p className="eyebrow">A place for progress</p>
+          <h2>
+            Good questions.
+            <br />
+            New possibilities.
+          </h2>
+          <p>
+            Prepare, practice and understand what comes next. Your learning
+            starts here.
+          </p>
+        </div>
+        <StudyArtwork />
+        <p className="access-caption">
+          Questions · Assessments · Useful feedback
+        </p>
+      </aside>
       <section className="access-panel">
         <p className="eyebrow">Your institution. Your responsibilities.</p>
         <h1>

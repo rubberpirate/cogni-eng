@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { type A, type EducationClient } from "../../../clients/academic";
 import { FormField as Field } from "./form-field";
+import { StudyArtwork, WorkIcon } from "./workspace-art";
 import { type LearningView } from "./learning-navigation";
 type Paper = A<"AcademicPaperRecord">;
 type Job = A<"AcademicJob">;
@@ -20,113 +21,182 @@ export function LearningHome({
   topics: Topic[];
   jobs: Job[];
 }) {
+  const active = jobs.filter((j) =>
+    ["queued", "running"].includes(j.state),
+  ).length;
+  const failed = jobs.filter((j) =>
+    ["failed", "configuration_required"].includes(j.state),
+  ).length;
+  const published = papers.filter((p) => p.state === "published").length;
   return (
     <>
-      <section className="learning-welcome">
-        <p className="eyebrow">Teaching workspace</p>
-        <h2>What would you like to do?</h2>
-        <p>
-          Start with questions, turn them into a test, then collect and review
-          answers.
-        </p>
-        <div className="actions">
-          <button className="primary" onClick={() => navigate("generate")}>
-            Create questions with AI
+      <div className="overview-grid">
+        <section className="learning-welcome">
+          <div>
+            <p className="eyebrow">A little preparation. A clearer picture.</p>
+            <h2>
+              Make room for
+              <br />
+              the next discovery.
+            </h2>
+            <p>
+              Create thoughtful questions, prepare an assessment and turn
+              answers into useful feedback.
+            </p>
+            <div className="actions">
+              <button className="primary" onClick={() => navigate("generate")}>
+                <WorkIcon name="generate" />
+                Create questions with AI
+              </button>
+              <button onClick={() => navigate("import")}>
+                Upload a question paper
+              </button>
+            </div>
+          </div>
+          <StudyArtwork />
+        </section>
+        <section className="overview-summary" aria-label="Workspace overview">
+          <div className="summary-heading">
+            <span className="icon-tile">
+              <WorkIcon name="papers" />
+            </span>
+            <h2>Your workspace</h2>
+          </div>
+          <div className="summary-counts">
+            <div>
+              <strong>{papers.length}</strong>
+              <span>Assessments</span>
+            </div>
+            <div>
+              <strong>{topics.length}</strong>
+              <span>Topics</span>
+            </div>
+          </div>
+          <p className="muted">
+            {published} published · {papers.length - published} drafts
+          </p>
+          <button className="text-action" onClick={() => navigate("jobs")}>
+            {active} processing · {failed} need attention{" "}
+            <WorkIcon name="arrow" />
           </button>
-          <button onClick={() => navigate("import")}>
-            Upload a question paper
-          </button>
+        </section>
+      </div>
+      <section aria-labelledby="quick-actions-title">
+        <div className="section-heading">
+          <h2 id="quick-actions-title">From questions to results</h2>
+          <span className="muted">Your everyday tools</span>
         </div>
-      </section>
-      <div className="learning-home-grid">
-        <section className="card">
-          <h2>A clear path from questions to results</h2>
-          <ol className="task-path">
-            {[
+        <div className="quick-action-grid">
+          {(
+            [
               [
                 "curriculum",
                 "Prepare questions",
-                "Write or import questions and check their answer keys.",
+                "Write, upload and check your answer keys.",
               ],
               [
                 "papers",
-                "Create an assessment",
-                "Select approved questions and assign the test to learners.",
+                "Build an assessment",
+                "Choose questions and invite your learners.",
               ],
               [
                 "scan",
-                "Collect paper answers",
-                "Print matching sheets, upload scans and check uncertain marks.",
+                "Check paper answers",
+                "Read OMR sheets and review uncertain marks.",
               ],
               [
                 "results",
                 "Review the results",
-                "Approve written marks and see exactly how scores were awarded.",
+                "See the evidence behind every awarded mark.",
               ],
-            ].map(([view, title, description], i) => (
-              <li key={view}>
-                <span className="step-number">{i + 1}</span>
-                <div>
-                  <button
-                    className="text-action"
-                    onClick={() => navigate(view as LearningView)}
-                  >
-                    {title}
-                  </button>
-                  <p>{description}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-        <section className="card sample-invitation">
-          <p className="eyebrow">First time here?</p>
-          <h2>Try it with a ready-made example.</h2>
-          <p>
-            Create a practice test for a test learner. Download the paper,
-            answer key and completed OMR sheets, then upload one to see a real
-            result.
-          </p>
-          <button onClick={() => navigate("samples")}>Try sample files</button>
-          <div className="workspace-facts">
-            <span>{topics.length} topics</span>
-            <span>{papers.length} assessments</span>
-            <button className="text-action" onClick={() => navigate("jobs")}>
-              {
-                jobs.filter((j) => ["queued", "running"].includes(j.state))
-                  .length
-              }{" "}
-              tasks processing
+            ] as const
+          ).map(([view, title, description], i) => (
+            <button
+              className="quick-action"
+              onClick={() => navigate(view)}
+              key={view}
+            >
+              <span className={"icon-tile tone-" + i}>
+                <WorkIcon name={view} />
+              </span>
+              <strong>{title}</strong>
+              <span>{description}</span>
+              <WorkIcon name="arrow" />
             </button>
-          </div>
-        </section>
-      </div>
-      {papers.length > 0 && (
-        <section className="card">
-          <div className="section-heading">
-            <h2>Recent assessments</h2>
-            <button onClick={() => navigate("papers")}>See assessments</button>
-          </div>
-          {papers.slice(0, 3).map((p) => (
-            <div className="academic-row" key={p.id}>
-              <div>
-                <strong>{p.spec.title}</strong>
-                <p className="muted">
-                  {p.reference} ·{" "}
-                  {p.state === "draft"
-                    ? "Draft — needs publishing"
-                    : "Published"}{" "}
-                  · {p.maximum} marks
-                </p>
-              </div>
-              <button onClick={() => openPaper(p)}>Open assessment</button>
-            </div>
           ))}
-        </section>
-      )}
+        </div>
+      </section>
+      <section aria-labelledby="recent-assessments-title">
+        <div className="section-heading assessment-heading">
+          <div>
+            <h2 id="recent-assessments-title">Your assessments</h2>
+            <p className="muted">Pick up where you left off.</p>
+          </div>
+          <button onClick={() => navigate("papers")}>
+            See assessments <WorkIcon name="arrow" />
+          </button>
+        </div>
+        {papers.length ? (
+          <div className="assessment-card-grid">
+            {papers.slice(0, 4).map((p, i) => (
+              <article className="assessment-tile" key={p.id}>
+                <div className={"assessment-cover tone-" + i}>
+                  <WorkIcon name="papers" />
+                  <span className="state-pill">
+                    {p.state === "draft" ? "Draft" : "Published"}
+                  </span>
+                  <span className="cover-lines" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                </div>
+                <div className="assessment-tile-body">
+                  <h3>{p.spec.title}</h3>
+                  <p className="muted">{p.reference}</p>
+                  <div className="assessment-meta">
+                    <span>
+                      {p.spec.sections.reduce(
+                        (n, section) => n + section.questions.length,
+                        0,
+                      )}{" "}
+                      questions
+                    </span>
+                    <span>{p.maximum} marks</span>
+                  </div>
+                  <button onClick={() => openPaper(p)}>
+                    Open assessment <WorkIcon name="arrow" />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="empty-message">
+            No assessments yet. Build your first test or try the sample kit
+            below.
+          </p>
+        )}
+      </section>
+      <section className="sample-invitation">
+        <span className="icon-tile">
+          <WorkIcon name="samples" />
+        </span>
+        <div>
+          <h2>A first run, without the preparation.</h2>
+          <p>
+            Try an original question paper, answer key and filled OMR sheets.
+            Follow the complete flow with a test learner.
+          </p>
+        </div>
+        <button onClick={() => navigate("samples")}>
+          Try sample files <WorkIcon name="arrow" />
+        </button>
+      </section>
     </>
   );
 }
+
 export function GenerationFlow({
   api,
   topics,
@@ -182,6 +252,8 @@ export function GenerationFlow({
       clearInterval(timer);
     };
   }, [api, job?.id, job?.state]);
+  const unavailable =
+    !!job && job.state === "failed" && /HTTP 50[234]/.test(job.error);
   const running = !!job && ["queued", "running"].includes(job.state);
   const labels: Record<string, string> = {
     queued: "Waiting to start",
@@ -330,7 +402,9 @@ export function GenerationFlow({
         <p className="eyebrow">Request status</p>
         <h2>
           {job
-            ? (labels[job.state] ?? job.state)
+            ? unavailable
+              ? "The AI service is temporarily unavailable"
+              : (labels[job.state] ?? job.state)
             : "Your questions will appear here"}
         </h2>
         {!job ? (
@@ -354,7 +428,25 @@ export function GenerationFlow({
                   ? "Review every answer key before approving questions for a test."
                   : "Your topic and request are saved. Existing questions and assessments are unaffected."}
             </p>
-            {job.error && <p className="error">{job.error}</p>}
+            {job.error &&
+              (unavailable ? (
+                <div className="provider-recovery">
+                  <p>
+                    Gemini could not complete this request. Wait a little, then
+                    retry the saved request below.
+                  </p>
+                  <p>
+                    You can keep working with your question bank or try the
+                    sample paper while the service recovers.
+                  </p>
+                  <details>
+                    <summary>Technical details</summary>
+                    <p className="muted">{job.error}</p>
+                  </details>
+                </div>
+              ) : (
+                <p className="error">{job.error}</p>
+              ))}
             <p>
               <a href="#education/samples">Try ready-made sample questions</a> ·{" "}
               <a href="#education/curriculum">Write questions yourself</a>

@@ -36,3 +36,8 @@ Core education priority (2026-11-17):
 - Keep generation and grading in Go. Python/ReportLab is an artifact-authoring tool only; no Python application service is introduced.
 - Select the eligible registration component nearest each page corner; dense identity bits must not impersonate the marker. Require explicit correction for multiple single-choice fills.
 - Count answered observations for the insufficient-evidence threshold; required blanks do not establish observed response evidence. Full learning-evidence policy remains open.
+
+2026-11-18 owner reference refinement:
+
+- Adopt a white labelled rail, light teal workspace and rounded task/assessment panels using the existing local IBM Plex font. Original SVG artwork and actual paper/topic/job values avoid external asset dependencies and unsupported analytics.
+- Treat 502/503/504 generation errors as provider unavailability in the UI; preserve exact safe technical context in a disclosure, saved inputs and the existing authorized retry. A fresh live check timed out awaiting headers; no provider delivery is claimed. Google troubleshooting guidance still recommends bounded backoff for transient errors (https://aistudio.google.com/docs/troubleshooting); durable worker retries remain unchanged.

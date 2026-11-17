@@ -1891,6 +1891,13 @@ function AnswerControl({
             />
             <span>
               {o.id}. {o.text}
+              {o.asset_id && (
+                <img
+                  className="question-image"
+                  src={api.url("assets/" + o.asset_id)}
+                  alt={o.alt ?? ""}
+                />
+              )}
             </span>
           </label>
         ))}

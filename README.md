@@ -47,3 +47,7 @@ Integration tests create and drop isolated schemas in the supplied PostgreSQL da
 `bun run generate` produces shared web/native TypeScript API types from [OpenAPI](contracts/openapi.json). After contract authoring changes run `python3 scripts/contract.py` first. No handwritten parallel API type copy is needed.
 
 See [architecture](docs/ARCHITECTURE.md), [decisions](docs/DECISIONS.md), [operations](docs/OPERATIONS.md), [test evidence](docs/TEST-REPORT.md), and [provenance](docs/PROVENANCE.md).
+
+The **Learning & assessment** workspace now connects question/key imports, reviewed authoring, immutable papers, online sittings and registered-sheet OMR review/grading. See [core education operations and limits](docs/CORE-EDUCATION.md) for the complete demonstration flow, provider configuration and qualification boundaries. The full requirement register remains authoritative; this increment does not complete the platform.
+
+For manual role testing, load the local environment and run `go run ./cmd/operator manual-demo`; credentials and walkthrough are written privately to `.local/manual-access.md`. The current development environment is configured for Gemini. Set `ACADEMIC_MODEL_PROVIDER=gemini`, `GEMINI_API_KEY` and `GEMINI_MODEL` privately when reproducing it. See the core guide for the distinction between configured code, HTTP contract checks and live provider success.

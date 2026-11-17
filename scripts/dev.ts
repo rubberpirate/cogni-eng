@@ -43,6 +43,7 @@ const children = [
   [".local/bin/worker"],
   [
     "bun",
+    "--no-env-file",
     "--bun",
     "apps/web/node_modules/next/dist/bin/next",
     "dev",
@@ -50,7 +51,18 @@ const children = [
     "--hostname",
     "127.0.0.1",
   ],
-].map((cmd) => Bun.spawn(cmd, { env, stdout: "inherit", stderr: "inherit" }));
+].map((cmd) => {
+  const childEnv = { ...env };
+  if (cmd[0] !== ".local/bin/worker") {
+    delete childEnv.GEMINI_API_KEY;
+    delete childEnv.ANTHROPIC_API_KEY;
+  }
+  return Bun.spawn(cmd, {
+    env: childEnv,
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+});
 console.log(
   "Workspace: http://localhost:3000 · Local mail catcher: http://localhost:58025",
 );

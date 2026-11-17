@@ -4,7 +4,35 @@
 
 Test environment: Ryoku Linux x86-64 host; Go 1.27.4; Bun 1.4.4; PostgreSQL 18.7 and SeaweedFS 4.54 in Docker; Mailpit 1.28.0; Next.js 16.4.6; Playwright Chromium. Data consists of small original synthetic fixtures and isolated database schemas. No real institutional data or live deliveries/charges were used.
 
-## Passed
+## Core education increment — 2026-11-18
+
+This is qualification of connected core workflows, **not completion of milestones 2–5 or a production release**.
+
+Passed:
+
+- Exact marking fixtures: selection sets, penalties, exact decimal boundary/tolerance acceptance, malformed numbers, first/best optional contribution, uncounted blank treatment, rubric proposals/overflow, and 18×3 + 8×2 = 70. Number parsing also has seed fuzz checks.
+- Actual image pixels across original one/two-column registered OMR layouts: filled/blank/partial circles, mismatched identity, rotation, projective distortion and changed exposure. These are synthetic fixtures; no field accuracy percentage is inferred.
+- Actual PostgreSQL/private S3: import errors and repeated-file deduplication, immutable published key after bank revision, answer secrecy, stale/replayed saves, duplicate submission, browser-closed worker expiry, pixels → durable scan job → reviewed commit → ordinary marks, and repeated commit safety. Added cross-subject private asset denial, ended-teaching denial and no leakage of a new bank diagram into an older pinned sitting.
+- Actual River worker recovery from missing model configuration into an explicit development fixture; generated output remains draft and cannot enter a scored paper without approval. This demonstrates recovery/approval behavior, **not live AI delivery**.
+- Anthropic/Gemini HTTP contract tests for headers, model/version handling, structured output, real usage fields, omitted internal thought parts, malformed/truncated/blocked output, signature-free API-key authentication failures, quota/HTTP errors, cancellation and timeouts. No provider response body or key is exposed in application errors.
+- Actual Poppler multi-page rasterization/cancellation/malformed-PDF handling. Actual host Tesseract transcription of one original printed PDF fixture, followed by application text mapping. This does not qualify handwriting, photographs, equation/figure reconstruction or the complete OCR import journey.
+- Latest full normal PostgreSQL/S3/SMTP suite passed (transport 35.3s). Full core/foundation race suite passed earlier in this increment (transport 192.0s); the newer targeted academic race suite passed (61.6s). The final subject-file entitlement check passed separately (1.8s); it was not included in that earlier full race run.
+- Latest complete browser suite: **6 passed (1.0m)**. The new teacher journey imports a key, approves a question, composes/publishes/assigns papers, uploads a real filled PNG, confirms review and obtains marks. A separate learner uses a 390px viewport and keyboard selection, saves/submits and sees the released result/solution and guarded tutor surface. The final focused academic rerun passed (16.5s), including topic evidence and the compact answer controls. Screenshots were inspected locally.
+- Seven manual synthetic accounts passed actual sign-in, identity and institution checks; staff saw the expected four subject banks. Credentials are protected ignored local files, not report content. Account creation retains passwords/work on rerun.
+- Contract generation, strict TypeScript, Go vet/tests, production Next build and focused lint (0 issues). `govulncheck` found **0 reachable vulnerabilities**, 0 affected imported packages and 1 module-only advisory in uncalled code.
+- Updated Go runtime image built successfully (`learning-core:local`); native executable checks inside it report Tesseract 5.3.0/Leptonica 1.82.0 and Poppler 22.12.0. Host native evaluation used Tesseract 5.5.4/Poppler 26.10.0. This is a build/executable check; the full new academic browser flow was tested on host processes with real local services, not rerun inside this image.
+
+Failed / external:
+
+- Live Gemini `gemini-flash-latest` structured generation using the owner-supplied local key returned HTTP 503 on the first attempt, then timed out waiting for response headers on a bounded retry. A minimal request matching the owner's example also timed out. Consequently the live generation → tutoring check did **not** pass. No live success, token total, charge, quality or resolved model version is asserted. Configuration is retained privately for a later retry. Contract tests do not replace this evidence.
+- Google Developer Knowledge MCP returned HTTP 403; current official Gemini API/reference pages were retrieved directly instead.
+
+Skipped / unexecuted:
+
+- Tagged integration tests skip when service variables are absent; reported runs provided PostgreSQL/private S3 and, in the complete run, SMTP values. Native tests explicitly skip if tools are absent; reported native runs found and executed them.
+- Live Anthropic checks, successful live Gemini generation/tutoring, full model/OCR educational evaluation datasets, worker-process crash injection, protected refresh/offline exam synchronization, generalized sheet calibration, full document import acceptance, complete subjective moderation/appeals/regrading and the remaining product register are unexecuted/incomplete. No reference workload/load, recovery SLO or full WCAG/device matrix has been qualified.
+
+## Earlier trust-foundation passed checks
 
 - Unit checks: password hashing/verification and weak-input rejection; AES-GCM tamper rejection; default-deny role capabilities; bounded image decoding and malformed/non-square/oversized image rejection.
 - PostgreSQL integration: institution/campus authorization; cross-tenant write rollback; learner escalation denial; CSRF rejection; permanent old-session revocation after membership suspension/reactivation; invitation/reset single use; reset revocation; TOTP and recovery-code replay; audit/business transaction consistency.
@@ -28,7 +56,7 @@ Go integration tests are excluded without the `integration` tag. Tagged tests ex
 
 ## Unexecuted / incomplete
 
-Hosted CI execution; complete milestone 1 acceptance; complete English/Hindi translations; full WCAG 2.2 AA, screen-reader and browser/device matrix; production SMTP/S3 provider qualification; generalized job crash/cancellation tests; backup/restore drill; reference load (12,000 learners/600 writers); availability/recovery targets; academic authoring and online/paper assessment tests; all AI/model/media educational evaluations; collaboration/finance/provider-webhook tests; native/offline tests.
+Hosted CI execution; complete milestone 1 acceptance; complete English/Hindi translations; full WCAG 2.2 AA, screen-reader and browser/device matrix; production SMTP/S3 provider qualification; generalized job crash/cancellation tests; backup/restore drill; reference load (12,000 learners/600 writers); availability/recovery targets; complete academic milestone acceptance beyond the core evidence above; full AI/model/media educational evaluations; collaboration/finance/provider-webhook tests; native/offline tests.
 
 No performance, availability, educational accuracy, production readiness or full-platform completion claim is established. All required scope remains in IMPLEMENTATION-STATUS.md.
 

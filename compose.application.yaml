@@ -4,6 +4,7 @@ services:
     build: .
     environment:
       APP_ENV: development
+      ACADEMIC_MODEL_PROVIDER: ${ACADEMIC_MODEL_PROVIDER:-anthropic}
       HTTP_ADDR: 0.0.0.0:8080
       PUBLIC_ORIGIN: http://localhost:3000
       DATABASE_URL: postgres://workspace:${DATABASE_PASSWORD:?required}@database:5432/workspace?sslmode=disable
@@ -22,6 +23,11 @@ services:
     entrypoint: [/app/worker]
     environment:
       APP_ENV: development
+      ACADEMIC_MODEL_PROVIDER: ${ACADEMIC_MODEL_PROVIDER:-anthropic}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
       DATABASE_URL: postgres://workspace:${DATABASE_PASSWORD:?required}@database:5432/workspace?sslmode=disable
       SMTP_ADDR: mail:1025
       SMTP_FROM: security@workspace.invalid

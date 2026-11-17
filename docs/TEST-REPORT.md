@@ -61,3 +61,17 @@ Hosted CI execution; complete milestone 1 acceptance; complete English/Hindi tra
 No performance, availability, educational accuracy, production readiness or full-platform completion claim is established. All required scope remains in IMPLEMENTATION-STATUS.md.
 
 Rendering: public pages use server rendering; authenticated workspace identity/context is fetched from Go per request with no shared cache. Controls are disabled until hydration. Private image tests also assert decoded image pixels, not just an image element.
+
+## Teaching usability and original practice kit — 2026-11-18
+
+Passed:
+
+- Latest complete browser suite: **10 passed (1.6m)**. Covers foundation journeys plus teacher import/publish/scan/online assessment; real private ZIP download and mixed PDF to 5/12; ambiguous sheet rejection then explicit correction to 12/12; numerical authoring through normal fields with backend persistence; generation error/retry surface, browser back and narrow-screen keyboard Menu. The generation-error response in that UI test is an explicit HTTP fixture, not live-provider evidence.
+- Complete actual PostgreSQL/S3/SMTP integration suite passed (transport 37.144s). Updated academic integration passed (11.446s); final sample-key-edit/preset guards passed (4.060s). Tests cover private kit authorization, actual image recognition, immutable published revisions, preserved teacher edits and insufficient evidence for required blanks.
+- Go race checks passed: academic 112.879s and scholar 10.359s. Registration fixtures include the known dense-header case and 32 randomized headers across four rotations, alongside perspective/exposure fixtures. These are synthetic rasters, not field-scan accuracy evidence or application throughput measurements.
+- Generated sample PDF round-trip through actual Poppler preserves sheet identity and answers. Original paper/key and OMR PDFs were rendered and visually inspected. Six original questions, correct/mixed/uncertain/blank and duplicate-page variants form a deliberately small functional dataset.
+- Strict TypeScript, Go vet/unit checks and focused lint (0 issues) passed. Latest production Next build passed after correcting the initial selected-results prop. UI screenshots were inspected at desktop and narrow widths.
+
+Failed / external: a fresh explicit live Gemini model check again returned **HTTP 503**. Successful live generation/tutoring, model quality and resolved model version remain unverified. No successful provider response or delivery is fabricated.
+
+Unexecuted / remaining: real-photo/erasures/printer diversity evaluation, general calibration and replacement reconciliation, full WCAG/device/localization qualification, production model delivery/quality, native/offline scope and the remaining register. The current runtime image was not rebuilt/requalified for this increment. These changes complete neither the full academic milestones nor the full application.

@@ -24,3 +24,9 @@ Body: locally bundled IBM Plex Sans; headings use the same family at 600. Base 1
 Semantic HTML, actual labels, visible focus, 44px interaction targets, text with states, inline errors and a status region. Tables use left-aligned labels and right-aligned tabular numbers; narrow screens stack work forms and scroll tables in labeled regions. Theme and text-size preferences affect all components. Motion limited to 120ms opacity; reduced motion disables it. No stock imagery needed for record workflows.
 
 Audit: source-level token and semantic review pending rendered verification. WCAG conformity is not yet established.
+
+## Teaching navigation refinement — 2026-11-18
+
+Staff enter Home and see the sequence from questions to assessment to evidence. Direct task links expose AI generation, bank, assessments, scanning, results and sample files; organization and administration use separate disclosures. Learners enter My assessments. Mobile Menu retains keyboard navigation and avoids horizontal overflow. Hash state supports browser back and selected-paper refresh.
+
+Keep each flow's next action close to its input. Show real loading, empty and provider-error states; poll active work without discarding editors. Numerical rules and rubric criteria use normal labelled fields. Uncertain single-choice readings select no radio until an explicit correction. Advanced scoring/layout options are disclosed on demand. Rendered desktop/mobile journeys were inspected and tested; full WCAG qualification remains open.

@@ -28,3 +28,11 @@ Core education priority (2026-11-17):
 - Implement the verified official `generateContent` JSON Schema contract with an explicit configured model alias and retain the actual resolved response model version. Reject incomplete/blocked output and require teacher approval. HTTP contract tests distinguish themselves from a live model check.
 - Create independent development-only manual actors with random unique passwords and a protected ignored manifest. Seed active relationships and original content without bypassing authorization in application routes. Preserve fixture changes on rerun. Family/reviewer workspaces are not misrepresented as complete.
 - Exact question duplicates are scoped to institution and topic, so a North subject cannot accidentally deduplicate into a South course or disclose another subject's record. Serialize concurrent duplicate creation inside the business transaction.
+
+2026-11-18 teaching usability and original test materials:
+
+- Use task navigation, an explanatory Home and progressive disclosure instead of one long academic form. Preserve hash/back/selected-assessment state and show provider progress/recovery beside the request.
+- Supply original public practice questions and private assignment-matched ZIPs; no AI or external documents are needed to exercise scanning. Public questions cannot enter formal exams. Preserve staff-edited sample keys and reject misleading kit regeneration.
+- Keep generation and grading in Go. Python/ReportLab is an artifact-authoring tool only; no Python application service is introduced.
+- Select the eligible registration component nearest each page corner; dense identity bits must not impersonate the marker. Require explicit correction for multiple single-choice fills.
+- Count answered observations for the insufficient-evidence threshold; required blanks do not establish observed response evidence. Full learning-evidence policy remains open.

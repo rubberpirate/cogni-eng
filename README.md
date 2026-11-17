@@ -1,6 +1,6 @@
 # Learning Workspace
 
-New institution-oriented learning platform, implemented incrementally against [PRODUCT-SPEC.md](PRODUCT-SPEC.md). **The complete platform is not implemented.** The current runnable increment covers part of milestone 1. The [233-requirement register](IMPLEMENTATION-STATUS.md) is the completion authority.
+New institution-oriented learning platform, implemented incrementally against [PRODUCT-SPEC.md](PRODUCT-SPEC.md). **The complete platform is not implemented.** The current runnable increment covers trust foundations and connected core education workflows across milestones 2–5. The [233-requirement register](IMPLEMENTATION-STATUS.md) is the completion authority.
 
 ## Run locally
 
@@ -26,7 +26,7 @@ Do not use real children or financial records in this development installation. 
 - Issue enrollment codes, verify self-registered learners and decide their admission placement. Configure institution settings and staff MFA policy; transfer ownership with reauthentication.
 - Read institution audit and invitation delivery status; retry failed invitation delivery.
 
-All institutional operations run in Go, with parameterized PostgreSQL transactions and server-side capability checks. There are no implemented academic, finance, AI or native workflows yet. Some English/Hindi interface labels are translated; translation completeness remains open.
+All institutional operations run in Go, with parameterized PostgreSQL transactions and server-side capability checks. Academic authoring, online assessment, registered-sheet OMR review and configured AI adapters are implemented to the limits described below. Finance and native workflows remain outstanding. Some English/Hindi interface labels are translated; translation completeness remains open.
 
 ## Check
 
@@ -48,6 +48,14 @@ Integration tests create and drop isolated schemas in the supplied PostgreSQL da
 
 See [architecture](docs/ARCHITECTURE.md), [decisions](docs/DECISIONS.md), [operations](docs/OPERATIONS.md), [test evidence](docs/TEST-REPORT.md), and [provenance](docs/PROVENANCE.md).
 
-The **Learning & assessment** workspace now connects question/key imports, reviewed authoring, immutable papers, online sittings and registered-sheet OMR review/grading. See [core education operations and limits](docs/CORE-EDUCATION.md) for the complete demonstration flow, provider configuration and qualification boundaries. The full requirement register remains authoritative; this increment does not complete the platform.
+The teaching workspace now connects question/key imports, reviewed authoring, immutable papers, online sittings and registered-sheet OMR review/grading. See [core education operations and limits](docs/CORE-EDUCATION.md) for the complete demonstration flow, provider configuration and qualification boundaries. The full requirement register remains authoritative; this increment does not complete the platform.
 
 For manual role testing, load the local environment and run `go run ./cmd/operator manual-demo`; credentials and walkthrough are written privately to `.local/manual-access.md`. The current development environment is configured for Gemini. Set `ACADEMIC_MODEL_PROVIDER=gemini`, `GEMINI_API_KEY` and `GEMINI_MODEL` privately when reproducing it. See the core guide for the distinction between configured code, HTTP contract checks and live provider success.
+
+## Try the educational workflows
+
+Sign in with a staff account from the private `.local/manual-access.md`, choose **Manual Learning Institute**, and open **Try sample files**. Select a course and enrolled learner, create a practice test, then download its matching ZIP. No model call is needed. The kit includes an original question paper, marking guide, importable CSV/JSON and registered blank/filled OMR sheets in PDF/PNG.
+
+Use **Go to Scan & check** and upload `omr-correct.pdf` for **12/12**, or `omr-mixed.pdf` for **5/12**. Create a fresh practice test for each committed variant. `omr-needs-review.pdf` deliberately has two fills on question 1: correct it to B and confirm identity before committing. The ZIP's START-HERE.txt records the matching assignment. Generic documents are also in `apps/web/public/samples`; registered sheets must match their own assignment.
+
+The sidebar separates **Create questions with AI**, **Question bank**, **Assessments**, **Scan & check** and **Results & review**. AI failures stay on the generation screen with retry and saved inputs. The latest live Gemini check returned HTTP 503; successful live generation is not verified. See [current test evidence](docs/TEST-REPORT.md).

@@ -8,6 +8,10 @@ services:
       PUBLIC_ORIGIN: http://localhost:3000
       DATABASE_URL: postgres://workspace:${DATABASE_PASSWORD:?required}@database:5432/workspace?sslmode=disable
       MFA_KEY: ${MFA_KEY:?required}
+      OBJECT_ENDPOINT: http://objects:8333
+      OBJECT_BUCKET: private-workspace
+      OBJECT_USER: ${OBJECT_USER:?required}
+      OBJECT_PASSWORD: ${OBJECT_PASSWORD:?required}
     depends_on:
       database:
         condition: service_healthy
@@ -21,6 +25,10 @@ services:
       DATABASE_URL: postgres://workspace:${DATABASE_PASSWORD:?required}@database:5432/workspace?sslmode=disable
       SMTP_ADDR: mail:1025
       SMTP_FROM: security@workspace.invalid
+      OBJECT_ENDPOINT: http://objects:8333
+      OBJECT_BUCKET: private-workspace
+      OBJECT_USER: ${OBJECT_USER:?required}
+      OBJECT_PASSWORD: ${OBJECT_PASSWORD:?required}
     depends_on:
       database:
         condition: service_healthy

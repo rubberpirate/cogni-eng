@@ -31,6 +31,10 @@ jobs:
           go mod tidy
           git diff --exit-code -- go.mod go.sum
           bun run check
+      - name: Go lint and vulnerability checks
+        run: |
+          go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0 run ./...
+          go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - run: bun run build
       - name: Start synthetic environment
         run: |

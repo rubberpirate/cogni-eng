@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"learning.local/workspace/internal/blob"
 	"learning.local/workspace/internal/transport"
 )
 
@@ -42,7 +43,12 @@ func run() error {
 	if err = pool.Ping(ctx); err != nil {
 		return err
 	}
-	srv := &http.Server{Addr: c.Address, Handler: transport.New(pool, c).Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 20 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16384}
+	api := transport.New(pool, c)
+	api.Objects, err = blob.FromEnv()
+	if err != nil {
+		return err
+	}
+	srv := &http.Server{Addr: c.Address, Handler: api.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 20 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16384}
 	done := make(chan error, 1)
 	go func() { done <- srv.ListenAndServe() }()
 	slog.Info("gateway ready", "address", c.Address)

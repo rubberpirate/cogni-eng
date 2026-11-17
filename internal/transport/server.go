@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"learning.local/workspace/internal/access"
+	"learning.local/workspace/internal/blob"
 )
 
 type Config struct {
@@ -39,21 +40,22 @@ func LoadConfig() (Config, error) {
 	if c.Env != "development" && c.Env != "production" && c.Env != "test" {
 		return c, errors.New("APP_ENV must be development, test or production")
 	}
-	if !strings.HasPrefix(c.Origin, "https://") && !(c.Env != "production" && strings.HasPrefix(c.Origin, "http://localhost:")) {
+	if !strings.HasPrefix(c.Origin, "https://") && (c.Env == "production" || !strings.HasPrefix(c.Origin, "http://localhost:")) {
 		return c, errors.New("PUBLIC_ORIGIN requires HTTPS in production and localhost HTTP in development")
 	}
 	return c, nil
 }
 
 type Server struct {
-	DB     *pgxpool.Pool
-	Config Config
-	dummy  string
+	Objects *blob.Store
+	DB      *pgxpool.Pool
+	Config  Config
+	dummy   string
 }
 
 func New(db *pgxpool.Pool, c Config) *Server {
 	dummy, _ := access.Password(access.Random())
-	return &Server{db, c, dummy}
+	return &Server{DB: db, Config: c, dummy: dummy}
 }
 
 type problem struct {
@@ -146,7 +148,12 @@ func (s *Server) transaction(r *http.Request, fn func(context.Context, pgx.Tx) e
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		// Successful commit closes the transaction; other rollback failures need visibility.
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			slog.Warn("transaction rollback failed", "error", rollbackErr)
+		}
+	}()
 	if err = fn(ctx, tx); err != nil {
 		return err
 	}
@@ -222,6 +229,11 @@ func (s *Server) Handler() http.Handler {
 		return nil
 	}))
 	for route, handler := range map[string]endpoint{
+		"GET /api/v1/profile/image-history":                             s.avatarHistory,
+		"POST /api/v1/profile/image-history/{id}/retry":                 s.retryAvatarCleanup,
+		"PUT /api/v1/profile/avatar":                                    s.putAvatar,
+		"GET /api/v1/profile/avatar":                                    s.getAvatar,
+		"DELETE /api/v1/profile/avatar":                                 s.deleteAvatar,
 		"POST /api/v1/verification/resend":                              s.resendVerification,
 		"POST /api/v1/register":                                         s.register,
 		"POST /api/v1/verify-email":                                     s.verifyEmail,

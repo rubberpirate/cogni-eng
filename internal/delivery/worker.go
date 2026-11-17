@@ -35,7 +35,10 @@ func (s SMTP) Send(ctx context.Context, id, to, subject, body string) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() {
+		// SMTP completion is checked by Quit; this also closes failed exchanges.
+		_ = conn.Close()
+	}()
 	if err = conn.SetDeadline(time.Now().Add(15 * time.Second)); err != nil {
 		return err
 	}
@@ -43,7 +46,10 @@ func (s SMTP) Send(ctx context.Context, id, to, subject, body string) error {
 	if err != nil {
 		return err
 	}
-	defer client.Close()
+	defer func() {
+		// Quit reports normal completion; cleanup must preserve an earlier SMTP failure.
+		_ = client.Close()
+	}()
 	if !s.Local {
 		if err = client.StartTLS(&tls.Config{ServerName: host, MinVersion: tls.VersionTLS12}); err != nil {
 			return err

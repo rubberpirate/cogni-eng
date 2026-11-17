@@ -8,7 +8,7 @@ This is development software, not release-qualified infrastructure. Required ope
 
 SMTP_ADDR, SMTP_FROM, SMTP_USERNAME and SMTP_PASSWORD configure the SMTP adapter. Production requires STARTTLS with certificate validation. Development uses Mailpit and explicitly labels captured mail. SMTP acceptance is the strongest observable state; it does not prove delivery. A crash after acceptance but before acknowledgment can repeat a message with the same Message-ID. Invitation/reset business tokens remain single-use. No exactly-once email-delivery claim is made.
 
-SeaweedFS 4.54 runs a private local S3 bucket with environment-provided access keys and host-loopback port exposure. No application file upload/read path is implemented yet; RUN-03 is incomplete. Do not add public bucket policies. Application-level file entitlement and lifecycle tests remain required.
+SeaweedFS 4.54 runs a private local S3 bucket with environment-provided access keys and host-loopback port exposure. A private profile-image path is implemented and tested; broader RUN-03 document/media intake remains incomplete. Do not add public bucket policies. OBJECT_ENDPOINT is an origin URL (no trailing slash), and OBJECT_BUCKET selects the private bucket. Production requires HTTPS and separately scoped service credentials.
 
 ## Bootstrap and recovery
 
@@ -38,7 +38,7 @@ After initializing `.env`/migrations/demo with `bun run dev`, stop the host app 
 docker compose -f compose.yaml -f compose.application.yaml up -d --build
 ```
 
-API/worker share one Go runtime image. Web uses a standalone Next.js build on Bun. All run without root. This configuration remains a local development deployment with local SMTP; it is not a production activation. The image builds passed locally. Container-to-container journeys still need qualification. `API_INTERNAL_URL` is compiled into Next rewrites; rebuild web when changing that destination.
+API/worker share one Go runtime image. Web uses a standalone Next.js build on Bun. All run without root. This configuration remains a local development deployment with local SMTP; it is not a production activation. The current image builds and a separate browser/API/database/S3 container-network smoke journey passed locally. Full production and release journeys remain unqualified. `API_INTERNAL_URL` is compiled into Next rewrites; rebuild web when changing that destination.
 
 ## Enrollment and account changes
 
@@ -47,3 +47,13 @@ Enrollment intake issues expiring bounded codes and queues learner registrations
 Password changes revoke other sessions and unused resets. Email changes retain the old verified email until confirmation, then revoke other sessions. Owners can enforce staff MFA only after enabling their own. Staff can always reach personal MFA enrollment to regain institutional capability. Owner transfer reauthenticates, checks a verified staff successor, serializes the institution change, grants the new owner before archiving the caller's owner membership, and records a reason.
 
 Browser suites create a new explicitly synthetic owner fixture per run. This preserves real shared sign-in rate limits across repeated local test runs. Test fixture creation is prohibited outside development.
+
+## Profile-image lifecycle
+
+The browser crops to a 256-pixel PNG. Go bounds request bytes/dimensions, decodes only PNG/JPEG and re-encodes without original metadata. A staged database record is created before upload. The old profile pointer changes only after successful storage and a second authorized transaction. Failed uploads retain the prior image and expose retryable status. Original selected images never leave the browser.
+
+Images are read only through the current person's authorized API route with `no-store`; no object URL is returned. Authenticated people cannot request another person's image by supplying an ID. History is self-only and contains safe storage state, not object keys. Removing an image immediately ends application reads and retires the object. The worker periodically deletes unused retired/abandoned objects; deletion and its database completion can be replayed safely. An active/in-progress image cannot be manually purged. Configuration/storage failure leaves recoverable state.
+
+Staged uploads expire after one hour; replaced/removed images are immediately eligible for cleanup. These are initial profile-image defaults, not a general academic-record retention policy. Production disk encryption, object backup, document quarantine, resumable uploads and all institutional file policies still require implementation/qualification.
+
+To repeat the bounded container check after building the two local images, run `bun run qualify:containers`. It creates an isolated temporary network and synthetic fixture, uses ports 13000/18080, and removes only its temporary containers/network. Existing backing-service volumes remain intact.

@@ -5,7 +5,7 @@ if (!existsSync(".env")) {
   const db = randomBytes(24).toString("hex");
   writeFileSync(
     ".env",
-    `APP_ENV=development\nHTTP_ADDR=127.0.0.1:8080\nPUBLIC_ORIGIN=http://localhost:3000\nDATABASE_PASSWORD=${db}\nDATABASE_URL=postgres://workspace:${db}@localhost:55432/workspace?sslmode=disable\nMFA_KEY=${randomBytes(32).toString("hex")}\nOBJECT_USER=workspace-local\nOBJECT_PASSWORD=${randomBytes(24).toString("hex")}\nSMTP_ADDR=localhost:51025\nSMTP_FROM=security@workspace.invalid\n`,
+    `APP_ENV=development\nHTTP_ADDR=127.0.0.1:8080\nPUBLIC_ORIGIN=http://localhost:3000\nDATABASE_PASSWORD=${db}\nDATABASE_URL=postgres://workspace:${db}@localhost:55432/workspace?sslmode=disable\nMFA_KEY=${randomBytes(32).toString("hex")}\nOBJECT_USER=workspace-local\nOBJECT_PASSWORD=${randomBytes(24).toString("hex")}\nSMTP_ADDR=localhost:51025\nSMTP_FROM=security@workspace.invalid\nOBJECT_ENDPOINT=http://localhost:59000\nOBJECT_BUCKET=private-workspace\n`,
     { mode: 0o600 },
   );
 }
@@ -19,7 +19,12 @@ const config = Object.fromEntries(
       return [x.slice(0, i), x.slice(i + 1)];
     }),
 );
-const env = { ...process.env, ...config };
+const env = {
+  ...process.env,
+  ...config,
+  OBJECT_ENDPOINT: config.OBJECT_ENDPOINT ?? "http://localhost:59000",
+  OBJECT_BUCKET: config.OBJECT_BUCKET ?? "private-workspace",
+};
 async function run(cmd: string[]) {
   const p = Bun.spawn(cmd, { env, stdout: "inherit", stderr: "inherit" });
   if ((await p.exited) !== 0) throw new Error(`${cmd[0]} failed`);

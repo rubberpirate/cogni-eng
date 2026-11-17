@@ -19,9 +19,11 @@ Do not use real children or financial records in this development installation. 
 
 ## Current operations
 
-- Sign in with an opaque server session, inspect/revoke sessions, enroll TOTP, save single-use recovery codes, reset passwords and accept invitations.
-- Choose institution/campus; create additional institutions, campuses and courses; invite learners, guardians and staff; admit learners with permanent references; approve/remove family links; assign teaching responsibilities.
+- Sign in with an opaque server session, inspect/revoke sessions, enroll TOTP, save single-use recovery codes, reset/change passwords, confirm email changes and accept invitations.
+- Save a cropped private profile image, inspect storage history and retry failed cleanup.
+- Choose institution/campus; create additional institutions, campuses and courses; invite learners, guardians and staff; admit learners with permanent references; approve/remove family links; assign teaching responsibilities; transfer/withdraw enrollments with retained history.
 - Suspend or restore memberships with a reason; suspension revokes existing sessions. Owner removal and self changes fail closed.
+- Issue enrollment codes, verify self-registered learners and decide their admission placement. Configure institution settings and staff MFA policy; transfer ownership with reauthentication.
 - Read institution audit and invitation delivery status; retry failed invitation delivery.
 
 All institutional operations run in Go, with parameterized PostgreSQL transactions and server-side capability checks. There are no implemented academic, finance, AI or native workflows yet. Some English/Hindi interface labels are translated; translation completeness remains open.
@@ -35,7 +37,7 @@ bun run build
 set -a
 source .env
 set +a
-TEST_DATABASE_URL="$DATABASE_URL" go test -tags=integration -race ./...
+TEST_DATABASE_URL="$DATABASE_URL" TEST_SMTP_ADDR="$SMTP_ADDR" go test -tags=integration -race ./...
 bunx playwright install chromium
 bun run test:e2e
 ```

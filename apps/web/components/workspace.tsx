@@ -177,15 +177,27 @@ function Label({
 function field(f: FormData, key: string) {
   return String(f.get(key) ?? "");
 }
-export function Workspace() {
-  const [me, setMe] = useState<Me | null>(null),
-    [contexts, setContexts] = useState<Context[]>([]),
-    [org, setOrg] = useState(""),
+export function Workspace({
+  initialMe,
+  initialContexts,
+}: {
+  initialMe: Me;
+  initialContexts: Context[];
+}) {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  const [me, setMe] = useState<Me | null>(initialMe),
+    [contexts, setContexts] = useState<Context[]>(initialContexts),
+    [org, setOrg] = useState(initialContexts[0]?.id ?? ""),
     [campus, setCampus] = useState(""),
     [campuses, setCampuses] = useState<Campus[]>([]),
     [people, setPeople] = useState<Person[]>([]),
     [courses, setCourses] = useState<Course[]>([]),
-    [pane, setPane] = useState<Pane>("people"),
+    [pane, setPane] = useState<Pane>(
+      initialContexts.some((x) => ["owner", "coordinator"].includes(x.role))
+        ? "people"
+        : "account",
+    ),
     [dataset, setDataset] = useState<{ key: string; rows: Row[] }>({
       key: "",
       rows: [],
@@ -223,6 +235,7 @@ export function Workspace() {
   useEffect(() => {
     const saved = localStorage.getItem("workspace-language");
     if (saved === "hi") setLanguage(saved);
+    setLarge(localStorage.getItem("workspace-large") === "true");
     const th = localStorage.getItem("workspace-theme") ?? "system";
     setTheme(th);
   }, []);
@@ -232,6 +245,7 @@ export function Workspace() {
     document.documentElement.dataset.large = String(large);
     localStorage.setItem("workspace-language", language);
     localStorage.setItem("workspace-theme", theme);
+    localStorage.setItem("workspace-large", String(large));
   }, [language, theme, large]);
   const loadContexts = useCallback(async () => {
     const result = await api().GET("/api/v1/workspaces");
@@ -240,36 +254,14 @@ export function Workspace() {
     return result.data;
   }, [api]);
   useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const result = await apiClient().GET("/api/v1/me");
-        if (result.error) {
-          location.assign("/sign-in");
-          return;
-        }
-        if (!active) return;
-        setMe(result.data);
-        const work = await apiClient().GET("/api/v1/workspaces");
-        if (work.error) throw new Error(work.error.message);
-        setContexts(work.data);
-        if (!work.data.some((x) => ["owner", "coordinator"].includes(x.role)))
-          setPane("account");
-        const last = localStorage.getItem("workspace-institution");
-        setOrg(
-          work.data.find((x) => x.id === last)?.id ?? work.data[0]?.id ?? "",
-        );
-      } catch (e) {
-        if (active)
-          setError(e instanceof Error ? e.message : "Connection unavailable.");
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
+    const last = localStorage.getItem("workspace-institution");
+    setOrg(
+      initialContexts.find((x) => x.id === last)?.id ??
+        initialContexts[0]?.id ??
+        "",
+    );
+    if (!initialContexts.length) setLoading(false);
+  }, [initialContexts]);
   useEffect(() => {
     if (!me || !org) return;
     let active = true;
@@ -534,303 +526,339 @@ export function Workspace() {
       </main>
     );
   return (
-    <div className="workspace">
-      <aside className="rail">
-        <Link href="/" className="wordmark">
-          LW /<br />
-          Learning Workspace
-        </Link>
-        <p className="rail-caption">{t.workspace}</p>
-        <nav aria-label={t.workspace}>
-          {(
-            [
-              "people",
-              "intake",
-              "enrollments",
-              "families",
-              "responsibilities",
-              "courses",
-              "campuses",
-              "audit",
-              "deliveries",
-              "security",
-              "account",
-              "settings",
-            ] as Pane[]
-          )
-            .filter((p) =>
-              p === "settings"
-                ? owner
-                : manager || p === "security" || p === "account",
+    <fieldset className="hydration-guard" disabled={!hydrated}>
+      <legend className="sr-only">Workspace tools</legend>
+      <div className="workspace">
+        <aside className="rail">
+          <Link href="/" className="wordmark">
+            LW /<br />
+            Learning Workspace
+          </Link>
+          <p className="rail-caption">{t.workspace}</p>
+          <nav aria-label={t.workspace}>
+            {(
+              [
+                "people",
+                "intake",
+                "enrollments",
+                "families",
+                "responsibilities",
+                "courses",
+                "campuses",
+                "audit",
+                "deliveries",
+                "security",
+                "account",
+                "settings",
+              ] as Pane[]
             )
-            .map((p) => (
-              <button
-                key={p}
-                aria-current={pane === p ? "page" : undefined}
-                onClick={() => {
-                  setPane(p);
-                  setNotice("");
-                  setQuery("");
+              .filter((p) =>
+                p === "settings"
+                  ? owner
+                  : manager || p === "security" || p === "account",
+              )
+              .map((p) => (
+                <button
+                  key={p}
+                  aria-current={pane === p ? "page" : undefined}
+                  onClick={() => {
+                    setPane(p);
+                    setNotice("");
+                    setQuery("");
+                  }}
+                >
+                  {t[p]}
+                </button>
+              ))}
+          </nav>
+          <div className="rail-bottom">
+            <p>
+              {me.name}
+              <br />
+              <span>{me.email}</span>
+            </p>
+            <button
+              onClick={() =>
+                void act(
+                  () =>
+                    api().POST("/api/v1/sign-out", {
+                      params: { header: { "X-CSRF-Token": me.csrf } },
+                    }),
+                  () => location.assign("/sign-in"),
+                )
+              }
+            >
+              {t.signout}
+            </button>
+          </div>
+        </aside>
+        <div className="workbody">
+          <header className="context-bar">
+            <Label name={t.institution}>
+              <select
+                value={org}
+                onChange={(e) => {
+                  setOrg(e.target.value);
+                  setError("");
                 }}
               >
-                {t[p]}
-              </button>
-            ))}
-        </nav>
-        <div className="rail-bottom">
-          <p>
-            {me.name}
-            <br />
-            <span>{me.email}</span>
-          </p>
-          <button
-            onClick={() =>
-              void act(
-                () =>
-                  api().POST("/api/v1/sign-out", {
-                    params: { header: { "X-CSRF-Token": me.csrf } },
-                  }),
-                () => location.assign("/sign-in"),
-              )
-            }
-          >
-            {t.signout}
-          </button>
-        </div>
-      </aside>
-      <div className="workbody">
-        <header className="context-bar">
-          <Label name={t.institution}>
-            <select
-              value={org}
-              onChange={(e) => {
-                setOrg(e.target.value);
-                setError("");
-              }}
-            >
-              {Array.from(new Map(contexts.map((c) => [c.id, c])).values()).map(
-                (c) => (
+                {Array.from(
+                  new Map(contexts.map((c) => [c.id, c])).values(),
+                ).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
-                ),
-              )}
-            </select>
-          </Label>
-          <Label name={t.campus}>
-            <select
-              value={campus}
-              onChange={(e) => {
-                setPeople([]);
-                setCourses([]);
-                setCampus(e.target.value);
-              }}
-            >
-              <option value="">{t.all}</option>
-              {campuses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Label>
-          <Label name={t.locale}>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
-            >
-              <option value="en">English</option>
-              <option value="hi">हिन्दी</option>
-            </select>
-          </Label>
-          <Label name="Appearance">
-            <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-              <option value="system">System</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </Label>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={large}
-              onChange={(e) => setLarge(e.target.checked)}
-            />
-            A+
-          </label>
-        </header>
-        <main id="main" className="workmain">
-          <div className="page-heading">
-            <div>
-              <p className="eyebrow">
-                {context?.name} / {context?.timezone}
+                ))}
+              </select>
+            </Label>
+            <Label name={t.campus}>
+              <select
+                value={campus}
+                onChange={(e) => {
+                  setPeople([]);
+                  setCourses([]);
+                  setCampus(e.target.value);
+                }}
+              >
+                <option value="">{t.all}</option>
+                {campuses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </Label>
+            <Label name={t.locale}>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
+              >
+                <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+              </select>
+            </Label>
+            <Label name="Appearance">
+              <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </Label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={large}
+                onChange={(e) => setLarge(e.target.checked)}
+              />
+              A+
+            </label>
+          </header>
+          <main id="main" className="workmain">
+            <div className="page-heading">
+              <div>
+                <p className="eyebrow">
+                  {context?.name} / {context?.timezone}
+                </p>
+                <h1>{t[pane]}</h1>
+                <p className="muted">{t.scope}</p>
+              </div>
+              <button onClick={() => void load()} disabled={loading}>
+                {t.refresh}
+              </button>
+            </div>
+            {me.environment !== "production" && (
+              <p className="environment">{t.local}</p>
+            )}
+            {error && (
+              <div className="error" role="alert">
+                {error} <button onClick={() => void load()}>{t.retry}</button>
+              </div>
+            )}
+            {notice && (
+              <p role="status" className="notice">
+                {notice}
               </p>
-              <h1>{t[pane]}</h1>
-              <p className="muted">{t.scope}</p>
-            </div>
-            <button onClick={() => void load()} disabled={loading}>
-              {t.refresh}
-            </button>
-          </div>
-          {me.environment !== "production" && (
-            <p className="environment">{t.local}</p>
-          )}
-          {error && (
-            <div className="error" role="alert">
-              {error} <button onClick={() => void load()}>{t.retry}</button>
-            </div>
-          )}
-          {notice && (
-            <p role="status" className="notice">
-              {notice}
-            </p>
-          )}
-          {pane === "people" && (
-            <form
-              className="search"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void load();
-              }}
-            >
-              <label>
-                {t.search}
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  maxLength={100}
-                />
-              </label>
-            </form>
-          )}
-          {pane !== "security" &&
-            pane !== "account" &&
-            pane !== "settings" &&
-            pane !== "intake" && (
-              <>
-                <section
-                  className="ledger"
-                  aria-label={t[pane]}
-                  aria-busy={loading}
-                >
-                  {loading ? (
-                    <p role="status">{t.loading}</p>
-                  ) : rows.length === 0 ? (
-                    <p className="empty">{t.empty}</p>
-                  ) : (
-                    <div
-                      className="table-scroll"
-                      tabIndex={0}
-                      role="region"
-                      aria-label={`${t[pane]} · scroll to see all columns`}
-                    >
-                      <table>
-                        <caption>
-                          {t[pane]} · {rows.length} records (bounded view)
-                        </caption>
-                        <thead>
-                          <tr>
-                            {columns[pane].map((c) => (
-                              <th key={c}>{c.replaceAll("_", " ")}</th>
-                            ))}
-                            {((pane === "people" && owner) ||
-                              (pane === "families" && owner) ||
-                              (pane === "deliveries" && owner) ||
-                              (pane === "campuses" && manager) ||
-                              (pane === "enrollments" && manager)) && (
-                              <th>{t.access}</th>
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rows.map((row, i) => (
-                            <tr key={String(row.id ?? i)}>
+            )}
+            {pane === "people" && (
+              <form
+                className="search"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void load();
+                }}
+              >
+                <label>
+                  {t.search}
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    maxLength={100}
+                  />
+                </label>
+              </form>
+            )}
+            {pane !== "security" &&
+              pane !== "account" &&
+              pane !== "settings" &&
+              pane !== "intake" && (
+                <>
+                  <section
+                    className="ledger"
+                    aria-label={t[pane]}
+                    aria-busy={loading}
+                  >
+                    {loading ? (
+                      <p role="status">{t.loading}</p>
+                    ) : rows.length === 0 ? (
+                      <p className="empty">{t.empty}</p>
+                    ) : (
+                      <div
+                        className="table-scroll"
+                        tabIndex={0}
+                        role="region"
+                        aria-label={`${t[pane]} · scroll to see all columns`}
+                      >
+                        <table>
+                          <caption>
+                            {t[pane]} · {rows.length} records (bounded view)
+                          </caption>
+                          <thead>
+                            <tr>
                               {columns[pane].map((c) => (
-                                <td key={c}>
-                                  {c === "time"
-                                    ? formatTime(String(row[c]))
-                                    : String(row[c] ?? "—")}
-                                </td>
+                                <th key={c}>{c.replaceAll("_", " ")}</th>
                               ))}
-                              {pane === "campuses" && manager && (
-                                <td>
-                                  <CampusAction
-                                    org={org}
-                                    csrf={me.csrf}
-                                    row={row as Campus}
-                                    onSaved={() => void load()}
-                                  />
-                                </td>
+                              {((pane === "people" && owner) ||
+                                (pane === "families" && owner) ||
+                                (pane === "deliveries" && owner) ||
+                                (pane === "campuses" && manager) ||
+                                (pane === "enrollments" && manager)) && (
+                                <th>{t.access}</th>
                               )}
-                              {pane === "enrollments" && manager && (
-                                <td>
-                                  <PlacementAction
-                                    org={org}
-                                    csrf={me.csrf}
-                                    row={
-                                      row as components["schemas"]["Enrollment"]
-                                    }
-                                    campuses={campuses}
-                                    onSaved={() => void load()}
-                                  />
-                                </td>
-                              )}
-                              {pane === "people" && owner && (
-                                <td>
-                                  {row.role !== "owner" && row.id !== me.id && (
-                                    <MembershipAction
-                                      person={row}
-                                      label={
-                                        row.state === "active"
-                                          ? t.suspend
-                                          : t.restore
-                                      }
-                                      reasonLabel={t.reason}
-                                      disabled={busy}
-                                      onSubmit={(reason) =>
-                                        act(() =>
-                                          api().PATCH(
-                                            "/api/v1/institutions/{org}/memberships/{id}",
-                                            {
-                                              params: {
-                                                path: {
-                                                  org,
-                                                  id: String(row.membership_id),
-                                                },
-                                                header: {
-                                                  "X-CSRF-Token": me.csrf,
-                                                },
-                                              },
-                                              body: {
-                                                state:
-                                                  row.state === "active"
-                                                    ? "suspended"
-                                                    : "active",
-                                                version: Number(row.version),
-                                                reason,
-                                              },
-                                            },
-                                          ),
-                                        )
-                                      }
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map((row, i) => (
+                              <tr key={String(row.id ?? i)}>
+                                {columns[pane].map((c) => (
+                                  <td key={c}>
+                                    {c === "time"
+                                      ? formatTime(String(row[c]))
+                                      : String(row[c] ?? "—")}
+                                  </td>
+                                ))}
+                                {pane === "campuses" && manager && (
+                                  <td>
+                                    <CampusAction
+                                      org={org}
+                                      csrf={me.csrf}
+                                      row={row as Campus}
+                                      onSaved={() => void load()}
                                     />
-                                  )}
-                                </td>
-                              )}
-                              {pane === "families" && owner && (
-                                <td>
-                                  {row.state === "approved" && (
-                                    <button
-                                      disabled={busy}
-                                      onClick={() => {
-                                        if (
-                                          confirm(
-                                            "Remove this family link and end its access?",
+                                  </td>
+                                )}
+                                {pane === "enrollments" && manager && (
+                                  <td>
+                                    <PlacementAction
+                                      org={org}
+                                      csrf={me.csrf}
+                                      row={
+                                        row as components["schemas"]["Enrollment"]
+                                      }
+                                      campuses={campuses}
+                                      onSaved={() => void load()}
+                                    />
+                                  </td>
+                                )}
+                                {pane === "people" && owner && (
+                                  <td>
+                                    {row.role !== "owner" &&
+                                      row.id !== me.id && (
+                                        <MembershipAction
+                                          person={row}
+                                          label={
+                                            row.state === "active"
+                                              ? t.suspend
+                                              : t.restore
+                                          }
+                                          reasonLabel={t.reason}
+                                          disabled={busy}
+                                          onSubmit={(reason) =>
+                                            act(() =>
+                                              api().PATCH(
+                                                "/api/v1/institutions/{org}/memberships/{id}",
+                                                {
+                                                  params: {
+                                                    path: {
+                                                      org,
+                                                      id: String(
+                                                        row.membership_id,
+                                                      ),
+                                                    },
+                                                    header: {
+                                                      "X-CSRF-Token": me.csrf,
+                                                    },
+                                                  },
+                                                  body: {
+                                                    state:
+                                                      row.state === "active"
+                                                        ? "suspended"
+                                                        : "active",
+                                                    version: Number(
+                                                      row.version,
+                                                    ),
+                                                    reason,
+                                                  },
+                                                },
+                                              ),
+                                            )
+                                          }
+                                        />
+                                      )}
+                                  </td>
+                                )}
+                                {pane === "families" && owner && (
+                                  <td>
+                                    {row.state === "approved" && (
+                                      <button
+                                        disabled={busy}
+                                        onClick={() => {
+                                          if (
+                                            confirm(
+                                              "Remove this family link and end its access?",
+                                            )
                                           )
-                                        )
+                                            void act(() =>
+                                              api().DELETE(
+                                                "/api/v1/institutions/{org}/families/{id}",
+                                                {
+                                                  params: {
+                                                    path: {
+                                                      org,
+                                                      id: String(row.id),
+                                                    },
+                                                    header: {
+                                                      "X-CSRF-Token": me.csrf,
+                                                    },
+                                                  },
+                                                },
+                                              ),
+                                            );
+                                        }}
+                                      >
+                                        Remove link
+                                      </button>
+                                    )}
+                                  </td>
+                                )}
+                                {pane === "deliveries" && owner && (
+                                  <td>
+                                    {row.state === "failed" && (
+                                      <button
+                                        disabled={busy}
+                                        onClick={() =>
                                           void act(() =>
-                                            api().DELETE(
-                                              "/api/v1/institutions/{org}/families/{id}",
+                                            api().POST(
+                                              "/api/v1/institutions/{org}/deliveries/{id}/retry",
                                               {
                                                 params: {
                                                   path: {
@@ -843,396 +871,378 @@ export function Workspace() {
                                                 },
                                               },
                                             ),
-                                          );
-                                      }}
-                                    >
-                                      Remove link
-                                    </button>
-                                  )}
-                                </td>
-                              )}
-                              {pane === "deliveries" && owner && (
-                                <td>
-                                  {row.state === "failed" && (
-                                    <button
-                                      disabled={busy}
-                                      onClick={() =>
-                                        void act(() =>
-                                          api().POST(
-                                            "/api/v1/institutions/{org}/deliveries/{id}/retry",
-                                            {
-                                              params: {
-                                                path: {
-                                                  org,
-                                                  id: String(row.id),
-                                                },
-                                                header: {
-                                                  "X-CSRF-Token": me.csrf,
-                                                },
-                                              },
-                                            },
-                                          ),
-                                        )
-                                      }
-                                    >
-                                      {t.retry}
-                                    </button>
-                                  )}
-                                </td>
-                              )}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
-                {manager &&
-                  [
-                    "people",
-                    "campuses",
-                    "courses",
-                    "enrollments",
-                    "families",
-                    "responsibilities",
-                  ].includes(pane) && (
-                    <section className="editor">
-                      <h2>
-                        {pane === "people"
-                          ? t.invite
-                          : t.create + " · " + t[pane]}
-                      </h2>
-                      <form
-                        onSubmit={submit}
-                        className="field-grid"
-                        aria-busy={busy}
-                      >
-                        {["people", "campuses", "courses"].includes(pane) && (
-                          <Label name={t.name}>
-                            <input
-                              name="name"
-                              required
-                              minLength={2}
-                              maxLength={120}
-                            />
-                          </Label>
-                        )}
-                        {pane === "people" && (
-                          <>
-                            <Label name={t.email}>
-                              <input
-                                type="email"
-                                name="email"
-                                required
-                                maxLength={254}
-                              />
-                            </Label>
-                            <Label name={t.role}>
-                              <select name="role">
-                                <option value="learner">Learner</option>
-                                <option value="guardian">Guardian</option>
-                                <option value="instructor">Instructor</option>
-                                <option value="reviewer">Reviewer</option>
-                                {owner && (
-                                  <option value="coordinator">
-                                    Coordinator
-                                  </option>
+                                          )
+                                        }
+                                      >
+                                        {t.retry}
+                                      </button>
+                                    )}
+                                  </td>
                                 )}
-                              </select>
-                            </Label>
-                          </>
-                        )}
-                        {pane !== "campuses" && (
-                          <CampusSelect
-                            campuses={campuses}
-                            value={campus}
-                            label={t.campus}
-                          />
-                        )}
-                        {pane === "campuses" && (
-                          <>
-                            <Label name={t.code}>
-                              <input name="code" required maxLength={20} />
-                            </Label>
-                            <Label name={t.address}>
-                              <input name="address" maxLength={500} />
-                            </Label>
-                          </>
-                        )}
-                        {pane === "courses" && (
-                          <Label name={t.year}>
-                            <input
-                              name="academic_year"
-                              required
-                              minLength={4}
-                              maxLength={20}
-                            />
-                          </Label>
-                        )}
-                        {pane === "enrollments" && (
-                          <>
-                            <PersonSelect
-                              people={people}
-                              role="learner"
-                              name="person_id"
-                              label={t.learner}
-                            />
-                            <CourseSelect courses={courses} label={t.course} />
-                            <Label name={t.start}>
-                              <input type="date" name="start_date" required />
-                            </Label>
-                          </>
-                        )}
-                        {pane === "families" && (
-                          <>
-                            <PersonSelect
-                              people={people}
-                              role="guardian"
-                              name="guardian_id"
-                              label={t.guardian}
-                            />
-                            <PersonSelect
-                              people={people}
-                              role="learner"
-                              name="learner_id"
-                              label={t.learner}
-                            />
-                            <Label name={t.relationship}>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </section>
+                  {manager &&
+                    [
+                      "people",
+                      "campuses",
+                      "courses",
+                      "enrollments",
+                      "families",
+                      "responsibilities",
+                    ].includes(pane) && (
+                      <section className="editor">
+                        <h2>
+                          {pane === "people"
+                            ? t.invite
+                            : t.create + " · " + t[pane]}
+                        </h2>
+                        <form
+                          onSubmit={submit}
+                          className="field-grid"
+                          aria-busy={busy}
+                        >
+                          {["people", "campuses", "courses"].includes(pane) && (
+                            <Label name={t.name}>
                               <input
-                                name="relationship"
+                                name="name"
                                 required
                                 minLength={2}
-                                maxLength={80}
+                                maxLength={120}
                               />
                             </Label>
-                          </>
-                        )}
-                        {pane === "responsibilities" && (
-                          <>
-                            <PersonSelect
-                              people={people}
-                              role="instructor"
-                              name="staff_id"
-                              label={t.role}
+                          )}
+                          {pane === "people" && (
+                            <>
+                              <Label name={t.email}>
+                                <input
+                                  type="email"
+                                  name="email"
+                                  required
+                                  maxLength={254}
+                                />
+                              </Label>
+                              <Label name={t.role}>
+                                <select name="role">
+                                  <option value="learner">Learner</option>
+                                  <option value="guardian">Guardian</option>
+                                  <option value="instructor">Instructor</option>
+                                  <option value="reviewer">Reviewer</option>
+                                  {owner && (
+                                    <option value="coordinator">
+                                      Coordinator
+                                    </option>
+                                  )}
+                                </select>
+                              </Label>
+                            </>
+                          )}
+                          {pane !== "campuses" && (
+                            <CampusSelect
+                              campuses={campuses}
+                              value={campus}
+                              label={t.campus}
                             />
-                            <CourseSelect courses={courses} label={t.course} />
-                            <Label name={t.subject}>
-                              <input name="subject" required maxLength={100} />
+                          )}
+                          {pane === "campuses" && (
+                            <>
+                              <Label name={t.code}>
+                                <input name="code" required maxLength={20} />
+                              </Label>
+                              <Label name={t.address}>
+                                <input name="address" maxLength={500} />
+                              </Label>
+                            </>
+                          )}
+                          {pane === "courses" && (
+                            <Label name={t.year}>
+                              <input
+                                name="academic_year"
+                                required
+                                minLength={4}
+                                maxLength={20}
+                              />
                             </Label>
-                            <Label name={t.start}>
-                              <input name="starts_on" type="date" required />
-                            </Label>
-                            <Label name={t.end}>
-                              <input name="ends_on" type="date" />
-                            </Label>
-                          </>
-                        )}
-                        <div className="form-actions">
-                          <button className="primary" disabled={busy}>
-                            {busy ? "…" : t.save}
-                          </button>
-                        </div>
-                      </form>
-                    </section>
-                  )}
-                {pane === "campuses" && owner && (
-                  <section className="editor">
-                    <h2>{t.neworg}</h2>
-                    <form
-                      className="field-grid"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        const form = e.currentTarget,
-                          f = new FormData(form);
-                        void act(
-                          () =>
-                            api().POST("/api/v1/institutions", {
-                              params: { header: { "X-CSRF-Token": me.csrf } },
-                              body: {
-                                name: field(f, "name"),
-                                timezone: field(f, "timezone"),
-                                locale: field(f, "locale") as "en" | "hi",
-                              },
-                            }),
-                          () => {
-                            form.reset();
-                            void loadContexts();
-                          },
-                        );
-                      }}
-                    >
-                      <Label name={t.name}>
-                        <input
-                          name="name"
-                          required
-                          minLength={2}
-                          maxLength={120}
-                        />
-                      </Label>
-                      <Label name={t.timezone}>
-                        <input
-                          name="timezone"
-                          defaultValue="Asia/Kolkata"
-                          required
-                        />
-                      </Label>
-                      <Label name={t.locale}>
-                        <select name="locale">
-                          <option value="en">English</option>
-                          <option value="hi">हिन्दी</option>
-                        </select>
-                      </Label>
-                      <button className="primary" disabled={busy}>
-                        {t.create}
-                      </button>
-                    </form>
-                  </section>
-                )}
-              </>
-            )}
-          {pane === "security" && (
-            <>
-              <section className="editor">
-                <h2>{t.mfa}</h2>
-                {me.mfa_enabled ? (
-                  <p>Enabled. Keep your recovery codes in a safe place.</p>
-                ) : (
-                  <>
-                    <p>
-                      Use an authenticator app. Confirm a code before protection
-                      is enabled.
-                    </p>
-                    <button
-                      disabled={busy}
-                      onClick={() =>
-                        void act(() =>
-                          api().POST("/api/v1/mfa/enroll", {
-                            params: { header: { "X-CSRF-Token": me.csrf } },
-                          }),
-                        ).then((data) => {
-                          if (data)
-                            setMfa(data as { secret: string; url: string });
-                        })
-                      }
-                    >
-                      {t.begin}
-                    </button>
-                  </>
-                )}
-                {mfa && !me.mfa_enabled && (
-                  <>
-                    <p>Enter this secret in your authenticator:</p>
-                    <code className="secret">{mfa.secret}</code>
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        const f = new FormData(e.currentTarget);
-                        void act(() =>
-                          api().POST("/api/v1/mfa/confirm", {
-                            params: { header: { "X-CSRF-Token": me.csrf } },
-                            body: { code: field(f, "code") },
-                          }),
-                        ).then((data) => {
-                          if (data) {
-                            setCodes(
-                              (data as { recovery_codes: string[] })
-                                .recovery_codes,
-                            );
-                            setMe({ ...me, mfa_enabled: true });
-                            setMfa(null);
-                          }
-                        });
-                      }}
-                    >
-                      <Label name={t.code}>
-                        <input
-                          name="code"
-                          autoComplete="one-time-code"
-                          inputMode="numeric"
-                          required
-                          pattern="[0-9]{6}"
-                        />
-                      </Label>
-                      <button disabled={busy}>{t.confirm}</button>
-                    </form>
-                  </>
-                )}
-                {codes.length > 0 && (
-                  <div className="notice">
-                    <h3>Save your single-use recovery codes</h3>
-                    <pre>{codes.join("\n")}</pre>
-                    <button onClick={() => setCodes([])}>
-                      I saved these codes
-                    </button>
-                  </div>
-                )}
-              </section>
-              <section className="ledger">
-                <h2>{t.active}</h2>
-                {sessions.map((x) => (
-                  <article className="session" key={x.id}>
-                    <div>
-                      <strong>
-                        {x.current ? "Current session" : x.device}
-                      </strong>
-                      <p>
-                        {formatTime(x.last_seen)} · {x.device}
-                      </p>
-                    </div>
-                    <button
-                      disabled={busy}
-                      onClick={() => {
-                        if (confirm("Revoke this session?"))
+                          )}
+                          {pane === "enrollments" && (
+                            <>
+                              <PersonSelect
+                                people={people}
+                                role="learner"
+                                name="person_id"
+                                label={t.learner}
+                              />
+                              <CourseSelect
+                                courses={courses}
+                                label={t.course}
+                              />
+                              <Label name={t.start}>
+                                <input type="date" name="start_date" required />
+                              </Label>
+                            </>
+                          )}
+                          {pane === "families" && (
+                            <>
+                              <PersonSelect
+                                people={people}
+                                role="guardian"
+                                name="guardian_id"
+                                label={t.guardian}
+                              />
+                              <PersonSelect
+                                people={people}
+                                role="learner"
+                                name="learner_id"
+                                label={t.learner}
+                              />
+                              <Label name={t.relationship}>
+                                <input
+                                  name="relationship"
+                                  required
+                                  minLength={2}
+                                  maxLength={80}
+                                />
+                              </Label>
+                            </>
+                          )}
+                          {pane === "responsibilities" && (
+                            <>
+                              <PersonSelect
+                                people={people}
+                                role="instructor"
+                                name="staff_id"
+                                label={t.role}
+                              />
+                              <CourseSelect
+                                courses={courses}
+                                label={t.course}
+                              />
+                              <Label name={t.subject}>
+                                <input
+                                  name="subject"
+                                  required
+                                  maxLength={100}
+                                />
+                              </Label>
+                              <Label name={t.start}>
+                                <input name="starts_on" type="date" required />
+                              </Label>
+                              <Label name={t.end}>
+                                <input name="ends_on" type="date" />
+                              </Label>
+                            </>
+                          )}
+                          <div className="form-actions">
+                            <button className="primary" disabled={busy}>
+                              {busy ? "…" : t.save}
+                            </button>
+                          </div>
+                        </form>
+                      </section>
+                    )}
+                  {pane === "campuses" && owner && (
+                    <section className="editor">
+                      <h2>{t.neworg}</h2>
+                      <form
+                        className="field-grid"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const form = e.currentTarget,
+                            f = new FormData(form);
                           void act(
                             () =>
-                              api().DELETE("/api/v1/sessions/{id}", {
-                                params: {
-                                  path: { id: x.id },
-                                  header: { "X-CSRF-Token": me.csrf },
+                              api().POST("/api/v1/institutions", {
+                                params: { header: { "X-CSRF-Token": me.csrf } },
+                                body: {
+                                  name: field(f, "name"),
+                                  timezone: field(f, "timezone"),
+                                  locale: field(f, "locale") as "en" | "hi",
                                 },
                               }),
                             () => {
-                              if (x.current) location.assign("/sign-in");
+                              form.reset();
+                              void loadContexts();
                             },
                           );
-                      }}
-                    >
-                      {t.revoke}
-                    </button>
-                  </article>
-                ))}
-              </section>
-            </>
-          )}
-          {pane === "account" && (
-            <AccountPanel
-              csrf={me.csrf}
-              onChanged={(profile) =>
-                setMe({ ...me, name: profile.name, email: profile.email })
-              }
-            />
-          )}
-          {pane === "settings" && (
-            <SettingsPanel
-              key={org}
-              org={org}
-              csrf={me.csrf}
-              onSaved={() => void loadContexts()}
-            />
-          )}
-          {pane === "intake" && (
-            <AdmissionPanel
-              key={org + campus}
-              org={org}
-              campus={campus}
-              csrf={me.csrf}
-              campuses={campuses}
-              timezone={context?.timezone ?? "UTC"}
-            />
-          )}
-        </main>
+                        }}
+                      >
+                        <Label name={t.name}>
+                          <input
+                            name="name"
+                            required
+                            minLength={2}
+                            maxLength={120}
+                          />
+                        </Label>
+                        <Label name={t.timezone}>
+                          <input
+                            name="timezone"
+                            defaultValue="Asia/Kolkata"
+                            required
+                          />
+                        </Label>
+                        <Label name={t.locale}>
+                          <select name="locale">
+                            <option value="en">English</option>
+                            <option value="hi">हिन्दी</option>
+                          </select>
+                        </Label>
+                        <button className="primary" disabled={busy}>
+                          {t.create}
+                        </button>
+                      </form>
+                    </section>
+                  )}
+                </>
+              )}
+            {pane === "security" && (
+              <>
+                <section className="editor">
+                  <h2>{t.mfa}</h2>
+                  {me.mfa_enabled ? (
+                    <p>Enabled. Keep your recovery codes in a safe place.</p>
+                  ) : (
+                    <>
+                      <p>
+                        Use an authenticator app. Confirm a code before
+                        protection is enabled.
+                      </p>
+                      <button
+                        disabled={busy}
+                        onClick={() =>
+                          void act(() =>
+                            api().POST("/api/v1/mfa/enroll", {
+                              params: { header: { "X-CSRF-Token": me.csrf } },
+                            }),
+                          ).then((data) => {
+                            if (data)
+                              setMfa(data as { secret: string; url: string });
+                          })
+                        }
+                      >
+                        {t.begin}
+                      </button>
+                    </>
+                  )}
+                  {mfa && !me.mfa_enabled && (
+                    <>
+                      <p>Enter this secret in your authenticator:</p>
+                      <code className="secret">{mfa.secret}</code>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const f = new FormData(e.currentTarget);
+                          void act(() =>
+                            api().POST("/api/v1/mfa/confirm", {
+                              params: { header: { "X-CSRF-Token": me.csrf } },
+                              body: { code: field(f, "code") },
+                            }),
+                          ).then((data) => {
+                            if (data) {
+                              setCodes(
+                                (data as { recovery_codes: string[] })
+                                  .recovery_codes,
+                              );
+                              setMe({ ...me, mfa_enabled: true });
+                              setMfa(null);
+                            }
+                          });
+                        }}
+                      >
+                        <Label name={t.code}>
+                          <input
+                            name="code"
+                            autoComplete="one-time-code"
+                            inputMode="numeric"
+                            required
+                            pattern="[0-9]{6}"
+                          />
+                        </Label>
+                        <button disabled={busy}>{t.confirm}</button>
+                      </form>
+                    </>
+                  )}
+                  {codes.length > 0 && (
+                    <div className="notice">
+                      <h3>Save your single-use recovery codes</h3>
+                      <pre>{codes.join("\n")}</pre>
+                      <button onClick={() => setCodes([])}>
+                        I saved these codes
+                      </button>
+                    </div>
+                  )}
+                </section>
+                <section className="ledger">
+                  <h2>{t.active}</h2>
+                  {sessions.map((x) => (
+                    <article className="session" key={x.id}>
+                      <div>
+                        <strong>
+                          {x.current ? "Current session" : x.device}
+                        </strong>
+                        <p>
+                          {formatTime(x.last_seen)} · {x.device}
+                        </p>
+                      </div>
+                      <button
+                        disabled={busy}
+                        onClick={() => {
+                          if (confirm("Revoke this session?"))
+                            void act(
+                              () =>
+                                api().DELETE("/api/v1/sessions/{id}", {
+                                  params: {
+                                    path: { id: x.id },
+                                    header: { "X-CSRF-Token": me.csrf },
+                                  },
+                                }),
+                              () => {
+                                if (x.current) location.assign("/sign-in");
+                              },
+                            );
+                        }}
+                      >
+                        {t.revoke}
+                      </button>
+                    </article>
+                  ))}
+                </section>
+              </>
+            )}
+            {pane === "account" && (
+              <AccountPanel
+                csrf={me.csrf}
+                onChanged={(profile) =>
+                  setMe({ ...me, name: profile.name, email: profile.email })
+                }
+              />
+            )}
+            {pane === "settings" && (
+              <SettingsPanel
+                key={org}
+                org={org}
+                csrf={me.csrf}
+                onSaved={() => void loadContexts()}
+              />
+            )}
+            {pane === "intake" && (
+              <AdmissionPanel
+                key={org + campus}
+                org={org}
+                campus={campus}
+                csrf={me.csrf}
+                campuses={campuses}
+                timezone={context?.timezone ?? "UTC"}
+              />
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </fieldset>
   );
 }
 function MembershipAction({

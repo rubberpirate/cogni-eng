@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"learning.local/workspace/internal/access"
 )
@@ -23,7 +25,12 @@ func browserFixture(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		// Successful commit closes the transaction; other rollback failures need visibility.
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			slog.Warn("transaction rollback failed", "error", rollbackErr)
+		}
+	}()
 	var org string
 	if err = tx.QueryRow(ctx, `SELECT m.institution_id FROM membership m JOIN person p ON p.id=m.person_id WHERE p.email='owner@demonstration.invalid' AND m.role='owner' AND m.state='active' ORDER BY m.created_at LIMIT 1`).Scan(&org); err != nil {
 		return errors.New("initialize the synthetic demo before browser tests")

@@ -1,3 +1,13 @@
+try {
+  const ready = await fetch("http://localhost:3000/sign-in", {
+    signal: AbortSignal.timeout(3000),
+  });
+  if (!ready.ok) throw new Error();
+} catch {
+  throw new Error(
+    "Start the local application with bun run dev before browser tests.",
+  );
+}
 const fixture = Bun.spawn(["go", "run", "./cmd/operator", "browser-fixture"], {
   stdout: "inherit",
   stderr: "inherit",

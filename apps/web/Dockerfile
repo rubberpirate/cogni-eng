@@ -12,7 +12,7 @@ RUN bun run build
 
 FROM oven/bun:1.4.4-slim AS runtime
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000 API_INTERNAL_URL=http://gateway:8080
 COPY --from=compile --chown=bun:bun /source/apps/web/.next/standalone ./
 COPY --from=compile --chown=bun:bun /source/apps/web/.next/static ./apps/web/.next/static
 USER bun

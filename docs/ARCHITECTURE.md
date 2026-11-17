@@ -2,7 +2,7 @@
 
 Working identity: Learning Workspace. This is a neutral descriptive identity.
 
-One Go application owns access, organization, academic evidence, learning, communication, commerce and operations. `cmd/gateway` serves HTTP; `cmd/worker` executes durable work; `cmd/operator` performs explicit offline administration. Dependencies are passed by constructors. PostgreSQL stores authoritative state. Next.js renders public pages and authenticated tools and proxies `/api/v1` to Go. Expo will consume the same generated contracts; it is required and remains planned until implemented.
+One Go application owns access, organization, academic evidence, learning, communication, commerce and operations. `cmd/gateway` serves HTTP; `cmd/worker` executes durable work; `cmd/operator` performs explicit offline administration. Dependencies are passed by constructors. PostgreSQL stores authoritative state. Next.js server-renders public pages and initial authorized workspace identity/context through the Go contract, then renders interactive tools and proxies `/api/v1` to Go. Expo will consume the same generated contracts; it is required and remains planned until implemented.
 
 ## Vocabulary
 

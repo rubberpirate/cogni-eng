@@ -5,7 +5,7 @@
     "dev": "bun --bun next dev --hostname 0.0.0.0",
     "build": "bun --bun next build",
     "start": "bun --bun next start --hostname 0.0.0.0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun --bun next typegen && tsc --noEmit"
   },
   "dependencies": {
     "next": "16.4.6",

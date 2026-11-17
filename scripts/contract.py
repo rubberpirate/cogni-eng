@@ -51,6 +51,7 @@ schemas.update({
  'Admission':obj({'id':S,'person_id':S,'name':S,'email':S,'campus_id':S,'state':S,'reason':S,'version':I}),
  'AdmissionDecision':obj({'course_id':S,'start_date':S,'decision':{'type':'string','enum':['placed','rejected']},'reason':S,'version':I}),
 })
+schemas['ImageHistory']=obj({'id':S,'state':S,'bytes':I,'created_at':S,'error':S})
 paths={}
 def route(path,method,response='Outcome',body=None,public=False,listed=False):
  path='/api/v1'+path
@@ -88,5 +89,10 @@ route('/register','post',body='Registration',public=True);route('/verify-email',
 route('/institutions/{org}/admission-codes','get','AdmissionCode',listed=True);route('/institutions/{org}/admission-codes','post','CreatedCode','NewAdmissionCode')
 route('/institutions/{org}/admission-codes/{id}','delete')
 route('/institutions/{org}/admission-queue','get','Admission',listed=True);route('/institutions/{org}/admission-queue/{id}/decision','post',body='AdmissionDecision')
+route('/profile/avatar','put');route('/profile/avatar','get');route('/profile/avatar','delete')
+paths['/api/v1/profile/avatar']['put']['requestBody']={'required':True,'content':{'image/png':{'schema':{'type':'string','format':'binary'}},'image/jpeg':{'schema':{'type':'string','format':'binary'}}}}
+paths['/api/v1/profile/avatar']['get']['responses']['200']={'description':'Private normalized image for current person only','content':{'image/png':{'schema':{'type':'string','format':'binary'}}}}
+route('/profile/image-history','get','ImageHistory',listed=True)
+route('/profile/image-history/{id}/retry','post')
 doc={'openapi':'3.1.0','info':{'title':'Learning Workspace API','version':'1.0.0','description':'Go-owned business API. Mutations require exact configured Origin, opaque cookie and CSRF header. No private response may be publicly cached. Limits and incomplete functionality are tracked in IMPLEMENTATION-STATUS.md.'},'servers':[{'url':'http://localhost:3000'}],'paths':paths,'components':{'securitySchemes':{'session':{'type':'apiKey','in':'cookie','name':'workspace_session'}},'schemas':schemas}}
 Path('contracts/openapi.json').write_text(json.dumps(doc,indent=2)+'\n')

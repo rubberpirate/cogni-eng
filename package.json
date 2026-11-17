@@ -11,7 +11,8 @@
     "generate": "bunx openapi-typescript contracts/openapi.json -o clients/schema.d.ts",
     "check": "bun run --cwd apps/web typecheck && go vet ./... && go test ./...",
     "build": "bun run --cwd apps/web build",
-    "test:e2e": "bun run scripts/browser.ts"
+    "test:e2e": "bun run scripts/browser.ts",
+    "qualify:containers": "bun run scripts/qualify-containers.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",

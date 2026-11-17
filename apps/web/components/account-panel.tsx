@@ -1,4 +1,5 @@
 "use client";
+import { AvatarEditor } from "./avatar-editor";
 import { useCallback, useEffect, useState } from "react";
 import { apiClient, type components } from "../../../clients/http";
 type Profile = components["schemas"]["Profile"];
@@ -78,6 +79,7 @@ export function AccountPanel({
           {notice}
         </p>
       )}
+      <AvatarEditor csrf={csrf} />
       <section className="editor">
         <h2>Your profile</h2>
         <p>Verified email: {profile.email}</p>

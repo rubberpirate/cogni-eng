@@ -363,3 +363,69 @@ test("learner registers, verifies captured mail and receives approved placement 
     await context.close();
   }
 });
+
+test("profile crop saves privately and removal ends reads", async ({
+  page,
+}) => {
+  await page.goto("/sign-in");
+  await page.getByLabel("Email address", { exact: true }).fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "People", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "My account", exact: true }).click();
+  const pixels = await page.evaluate(() => {
+    const c = document.createElement("canvas");
+    c.width = 320;
+    c.height = 180;
+    const x = c.getContext("2d")!;
+    x.fillStyle = "#276249";
+    x.fillRect(0, 0, 320, 180);
+    x.fillStyle = "#f0d599";
+    x.fillRect(60, 30, 90, 90);
+    return c.toDataURL("image/png").split(",")[1];
+  });
+  await page.getByLabel("Choose profile image", { exact: true }).setInputFiles({
+    name: "original-synthetic-crop.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(pixels, "base64"),
+  });
+  await expect(
+    page.getByRole("img", {
+      name: "Preview of the square profile crop",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.getByLabel("Crop zoom", { exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
+  await page
+    .getByRole("button", { name: "Save cropped image", exact: true })
+    .click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Profile image saved." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "Your saved profile image", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .getByRole("img", { name: "Your saved profile image", exact: true })
+        .evaluate((img) => (img as HTMLImageElement).naturalWidth),
+    )
+    .toBe(256);
+  const response = await page.request.get("/api/v1/profile/avatar");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toBe("no-store");
+  page.once("dialog", (d) => d.accept());
+  await page
+    .getByRole("button", { name: "Remove saved image", exact: true })
+    .click();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Image removed from your profile" }),
+  ).toBeVisible();
+  expect((await page.request.get("/api/v1/profile/avatar")).status()).toBe(404);
+});

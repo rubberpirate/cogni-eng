@@ -35,7 +35,11 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer func() {
+			if closeErr := db.Close(); closeErr != nil {
+				slog.Warn("migration database close failed", "error", closeErr)
+			}
+		}()
 		if err = goose.SetDialect("postgres"); err != nil {
 			return err
 		}
@@ -90,7 +94,12 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		// Successful commit closes the transaction; other rollback failures need visibility.
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			slog.Warn("transaction rollback failed", "error", rollbackErr)
+		}
+	}()
 	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(837201)"); err != nil {
 		return err
 	}

@@ -1558,7 +1558,7 @@
     "title": "File lifecycle",
     "detail": "Store originals and derivatives privately, validate file signatures and limits, quarantine unsafe/unscannable uploads, use bounded document/media processing, preserve provenance, handle resumable uploads and remove abandoned artifacts safely.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "RUN-04",

@@ -1,32 +1,35 @@
 # Verification report
 
-Date: 2026-11-17. This report is for the current increment, not release qualification.
+2026-11-17 · partial milestone 1 · **not release qualification**.
+
+Test environment: Ryoku Linux x86-64 host; Go 1.27.4; Bun 1.4.4; PostgreSQL 18.7 and SeaweedFS 4.54 in Docker; Mailpit 1.28.0; Next.js 16.4.6; Playwright Chromium. Data consists of small original synthetic fixtures and isolated database schemas. No real institutional data or live deliveries/charges were used.
 
 ## Passed
 
-- Go unit tests: password verification and weak-input rejection, authenticated encryption/tamper rejection, role-template default denial.
-- PostgreSQL 18.7 integration: cross-institution denial, cross-tenant campus write rollback, learner escalation denial, membership suspension/reactivation with permanent old-session revocation, forged CSRF rejection, invitation single use, reset-session revocation, TOTP enrollment, recovery-code replay rejection, scoped coordinator denial, and transactional audit creation.
-- Next.js 16.4.6 production compilation and strict TypeScript.
-- Go vet and ordinary Go test suite. Integration tests are skipped unless TEST_DATABASE_URL is supplied; the integration run above explicitly supplied it.
-- Local PostgreSQL and mail service startup, Goose migration, one-time synthetic demo initialization; SeaweedFS S3 service startup.
+- Unit checks: password hashing/verification and weak-input rejection; AES-GCM tamper rejection; default-deny role capabilities; bounded image decoding and malformed/non-square/oversized image rejection.
+- PostgreSQL integration: institution/campus authorization; cross-tenant write rollback; learner escalation denial; CSRF rejection; permanent old-session revocation after membership suspension/reactivation; invitation/reset single use; reset revocation; TOTP and recovery-code replay; audit/business transaction consistency.
+- Account/organization integration: password change and other-session revocation; pending/confirmed email changes; ownership succession with verified staff; MFA enforcement with an available enrollment path; retained learner reference and one historical placement event under stale writes.
+- Registration integration: explicit policy acknowledgments; no role injection; email verification before placement; code exhaustion; duplicate placement denial; one learner membership and enrollment.
+- Local SMTP: actual Mailpit acceptance, expired-lease recovery, one durable security token and sensitive payload removal after acceptance. This proves local SMTP acceptance, **not live inbox delivery**.
+- Private storage: actual S3 put/read/remove; anonymous object access denied; unauthenticated and other-person application access denied; no-store responses; malformed/failed upload preserves prior image; safe deletion/retry and fresh-staged cleanup rejection. Storage outage uses an unreachable endpoint, not a fabricated successful response.
+- Latest complete browser suite: **5 passed (28.5s)**. Campus/course setup, invitation/admission, family approval/removal, persistence/audit/logout; keyboard sign-in/Hindi navigation at 390px width; profile/settings/campus edits; registration → captured verification mail → staff placement → learner sign-in; private crop save/read/remove.
+- Strict TypeScript (with Next route type generation), Go vet, ordinary Go tests, Next.js production build and eight focused linters (0 issues).
+- Full PostgreSQL/S3/SMTP integration suite passed with race detection and shuffled test order (transport package 122.3s). Targeted image authorization/lifecycle checks passed after final cleanup guards.
+- Updated API/worker and standalone web container builds passed. An isolated container-network browser journey passed through web → Go → PostgreSQL/private S3, including authenticated image put/read/remove.
+- govulncheck v1.9.0: **no vulnerabilities found** after pinning golang.org/x/crypto v0.59.0. The prior module-only OpenPGP advisory was not reachable and was removed by this update.
 
-## In progress / failures corrected
+## Failed checks corrected
 
-- Initial storage image could not be fetched. Replaced with documented pinned SeaweedFS 4.54; startup succeeds.
-- Browser test exposed a password label including the visibility-button text. Corrected label association. Both Chromium journeys passed after fixing explicit labels and hoisting form selectors to preserve selections. A service restart was needed after an interrupted session; the complete startup command was then exercised successfully.
+The initial storage image was unavailable and was replaced by pinned SeaweedFS. Browser tests caught ambiguous control labels, remounted form selections, stale work-area rows, development-effect replay clearing email tokens and controls accepting clicks before hydration. A stale `go run` worker consumed a new message kind incorrectly; startup now manages compiled binaries directly. Subsequent tests above passed. No corrected historical failure is represented as an unexecuted passing gate.
+
+## Skipped checks
+
+Go integration tests are excluded without the `integration` tag. Tagged tests explicitly skip when required TEST_DATABASE_URL, TEST_SMTP_ADDR or OBJECT_ENDPOINT settings are absent. The reported service runs supplied those settings. A default unit-only `go test` result is not integration evidence.
 
 ## Unexecuted / incomplete
 
-Object storage entitlement/transaction tests, live SMTP verification, complete milestone 1 acceptance, all academic/paper/learning/AI/finance flows, native tests, provider contract/webhook tests, security audit, full WCAG/browser matrix, required reference load, educational/model evaluations and backup/restore drill. No performance, accuracy, availability or production-readiness claim is established.
+Hosted CI execution; complete milestone 1 acceptance; complete English/Hindi translations; full WCAG 2.2 AA, screen-reader and browser/device matrix; production SMTP/S3 provider qualification; generalized job crash/cancellation tests; backup/restore drill; reference load (12,000 learners/600 writers); availability/recovery targets; academic authoring and online/paper assessment tests; all AI/model/media educational evaluations; collaboration/finance/provider-webhook tests; native/offline tests.
 
-Observed dataset: small original synthetic local fixtures and isolated test schemas. No 12,000-learner/600-writer workload was run. Local operation logs are not capacity evidence.
+No performance, availability, educational accuracy, production readiness or full-platform completion claim is established. All required scope remains in IMPLEMENTATION-STATUS.md.
 
-Browser run: 2 passed (11.0s). Owner workflow creates campus/course, invites/admit learner, reloads persistence, inspects audit and verifies logout; phone workflow uses keyboard submission and Hindi navigation without page overflow. Family actions need a dedicated journey and are not covered by that test despite the initial broad test title. Screenshots are local `.local/screenshots/` artifacts.
-
-## Expanded trust increment
-
-Passed: PostgreSQL integration/race checks covering password changes and other-session revocation; pending versus confirmed email changes and token replay; preserved learner references and single placement-event history under stale writes; verified successor ownership transfer; staff MFA enforcement with enrollment recovery; registration verification/placement gates, code exhaustion, role-field rejection and policy acknowledgments. Local SMTP acceptance and recovery of an expired delivery lease passed against Mailpit. These establish local behavior, not live inbox delivery.
-
-Latest complete browser run: **4 passed (29.8s)**, including family approval/removal and the actual register → local captured email → verification → staff placement → learner sign-in journey. The profile/settings/campus journey also passed. The email-token effect replay bug and stale work-area table rendering were found by these tests and fixed.
-
-API/worker image and standalone web image builds passed. Hosted CI and full container-network journeys are unexecuted. Earlier test runs exposed and corrected label association, stale worker lifetime and strict-effect token handling; those failures are not counted as passed release gates. All remaining academic, native, provider, load and recovery checks remain unexecuted.
+Rendering: public pages use server rendering; authenticated workspace identity/context is fetched from Go per request with no shared cache. Controls are disabled until hydration. Private image tests also assert decoded image pixels, not just an image element.

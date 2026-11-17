@@ -12,3 +12,9 @@ generate:
 build:
 	go build ./cmd/...
 	bun run build
+
+lint:
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0 run ./...
+
+vuln:
+	go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...

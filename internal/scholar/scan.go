@@ -88,11 +88,53 @@ func (s *Service) Asset(ctx context.Context, tx pgx.Tx, actor, org, id string) (
 		return a, err
 	}
 	if err = Scope(ctx, tx, actor, org, a.CampusID, a.CourseID, ""); err == nil {
-		return a, nil
+		var broad, owned bool
+		if e := tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM membership WHERE institution_id=$1 AND person_id=$2 AND state='active' AND role IN ('owner','coordinator') AND (campus_id IS NULL OR campus_id=$3)),EXISTS(SELECT 1 FROM academic_asset WHERE institution_id=$1 AND id=$4 AND owner_id=$2)", org, actor, a.CampusID, id).Scan(&broad, &owned); e != nil {
+			return Asset{}, e
+		}
+		if broad || owned {
+			return a, nil
+		}
+		type subject struct{ ID string }
+		if a.Purpose == "question_image" || a.Purpose == "document" {
+			query := "SELECT DISTINCT q.topic_id FROM question_record q JOIN question_revision v ON v.record_id=q.id AND v.institution_id=q.institution_id WHERE q.institution_id=$1 AND (v.content->>'asset_id'=$2 OR EXISTS(SELECT 1 FROM jsonb_array_elements(coalesce(v.content->'options','[]'::jsonb)) o WHERE o->>'asset_id'=$2))"
+			if a.Purpose == "document" {
+				query = "SELECT topic_id FROM question_import WHERE institution_id=$1 AND asset_id=$2"
+			}
+			topics, e := rows[subject](ctx, tx, query, org, id)
+			if e != nil {
+				return Asset{}, e
+			}
+			for _, v := range topics {
+				t, e := GetTopic(ctx, tx, org, v.ID)
+				if e != nil {
+					return Asset{}, e
+				}
+				if e = Scope(ctx, tx, actor, org, t.CampusID, t.CourseID, t.Subject); e == nil {
+					return a, nil
+				}
+			}
+		} else {
+			papers, e := rows[subject](ctx, tx, `SELECT b.paper_id FROM scan_batch b JOIN scan_source src ON src.batch_id=b.id AND src.institution_id=b.institution_id WHERE b.institution_id=$1 AND src.asset_id=$2 UNION SELECT b.paper_id FROM scan_batch b JOIN scan_sheet sh ON sh.batch_id=b.id AND sh.institution_id=b.institution_id WHERE b.institution_id=$1 AND sh.asset_id=$2`, org, id)
+			if e != nil {
+				return Asset{}, e
+			}
+			for _, v := range papers {
+				if _, e = s.Paper(ctx, tx, actor, org, v.ID); e == nil {
+					return a, nil
+				}
+			}
+		}
+	} else {
+		var known *Error
+		if !errors.As(err, &known) {
+			return Asset{}, err
+		}
 	}
 	if a.Purpose != "question_image" {
-		return Asset{}, err
+		return Asset{}, Problem(403, "asset_forbidden", "This private file is outside your subject or paper responsibilities.")
 	}
+
 	type candidate struct{ ID string }
 	list, e := rows[candidate](ctx, tx, "SELECT id FROM sitting WHERE institution_id=$1 AND learner_id=$2", org, actor)
 	if e != nil {

@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"learning.local/workspace/internal/academic"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -44,5 +47,29 @@ func TestActualPDFRasterizationAndBounds(t *testing.T) {
 	cancel()
 	if _, err = rasterPages(ctx, "application/pdf", originalPDF()); err == nil || !strings.Contains(err.Error(), "PDF") {
 		t.Fatalf("cancellation %v", err)
+	}
+}
+
+func TestActualTesseractTranscriptionProposal(t *testing.T) {
+	for _, binary := range []string{"pdftoppm", "tesseract"} {
+		if _, err := exec.LookPath(binary); err != nil {
+			t.Skip("native OCR tools unavailable; transcription not qualified")
+		}
+	}
+	pages, err := rasterPages(context.Background(), "application/pdf", originalPDF())
+	if err != nil {
+		t.Fatal(err)
+	}
+	input := filepath.Join(t.TempDir(), "original-page.png")
+	if err = os.WriteFile(input, pages[0], 0600); err != nil {
+		t.Fatal(err)
+	}
+	text, err := exec.Command("tesseract", input, "stdout", "-l", "eng", "--psm", "3").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := academic.ParseText(string(text), "topic", "Original synthetic PDF fixture", "CC0-1.0")
+	if err != nil || len(parsed) != 1 || !strings.Contains(strings.ToLower(parsed[0].Question.Stem), "seven") || len(parsed[0].Question.Key) != 1 || parsed[0].Question.Key[0] != "A" {
+		t.Fatalf("actual OCR proposal %+v %v", parsed, err)
 	}
 }

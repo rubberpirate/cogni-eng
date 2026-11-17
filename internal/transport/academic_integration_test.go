@@ -380,3 +380,53 @@ func TestAcademicGenerationRequiresConfigurationAndReviewBeforeScoring(t *testin
 		t.Fatal("published content changed")
 	}
 }
+
+func TestAcademicAssetsRequireSubjectRelationship(t *testing.T) {
+	h, svc, course, learner := academicFixture(t)
+	_, _, q := academicPaper(t, h, svc, course, learner)
+	if svc.Objects == nil {
+		t.Skip("OBJECT_* required: private academic asset entitlement not executed")
+	}
+	ctx := context.Background()
+	staff := []string{access.Random(), access.Random()}
+	for i, subject := range []string{"Mathematics", "Physics"} {
+		h.exec("INSERT INTO person(id,email,name,password_hash,state) VALUES($1,$2,'Synthetic Instructor','not-a-login','active')", staff[i], staff[i]+"@example.invalid")
+		h.exec("INSERT INTO membership(id,institution_id,person_id,campus_id,role) VALUES($1,$2,$3,$4,'instructor')", access.Random(), h.org, staff[i], h.campus)
+		h.exec("INSERT INTO responsibility(id,institution_id,staff_id,course_id,subject,starts_on) VALUES($1,$2,$3,$4,$5,current_date)", access.Random(), h.org, staff[i], course, subject)
+	}
+	var asset scholar.Asset
+	academicTx(t, h, func(tx pgx.Tx) error {
+		var pixels bytes.Buffer
+		if err := png.Encode(&pixels, image.NewRGBA(image.Rect(0, 0, 64, 64))); err != nil {
+			return err
+		}
+		var err error
+		asset, err = svc.StoreAsset(ctx, tx, h.owner, h.org, h.campus, course, "question_image", "original-diagram.png", pixels.Bytes())
+		if err != nil {
+			return err
+		}
+		q.AssetID = asset.ID
+		q.Alt = "Original synthetic diagram"
+		_, err = svc.ReviseQuestion(ctx, tx, h.owner, h.org, q.ID, q, 2)
+		return err
+	})
+	academicTx(t, h, func(tx pgx.Tx) error {
+		if _, err := svc.Asset(ctx, tx, staff[0], h.org, asset.ID); err != nil {
+			return err
+		}
+		if _, err := svc.Asset(ctx, tx, staff[1], h.org, asset.ID); err == nil {
+			t.Fatal("unrelated subject instructor read private asset")
+		}
+		if _, err := svc.Asset(ctx, tx, learner, h.org, asset.ID); err == nil {
+			t.Fatal("new bank image leaked through an older published sitting")
+		}
+		return nil
+	})
+	h.exec("UPDATE responsibility SET starts_on=current_date-2,ends_on=current_date-1 WHERE institution_id=$1 AND staff_id=$2", h.org, staff[0])
+	academicTx(t, h, func(tx pgx.Tx) error {
+		if _, err := svc.Asset(ctx, tx, staff[0], h.org, asset.ID); err == nil {
+			t.Fatal("ended teaching relationship retained asset access")
+		}
+		return nil
+	})
+}

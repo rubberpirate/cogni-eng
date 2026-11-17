@@ -4,24 +4,24 @@ All scope is required. `planned` means unimplemented; `building` means partial s
 
 | Requirement | Milestone | State | Evidence | Relevant test | Blocker |
 |---|---|---|---|---|---|
-| [ID-01](#id-01) — Registration and invitations | 1 | planned | None | Not executed | Implementation outstanding |
-| [ID-02](#id-02) — Credential sign-in | 1 | planned | None | Not executed | Implementation outstanding |
-| [ID-03](#id-03) — Password recovery/change | 1 | planned | None | Not executed | Implementation outstanding |
-| [ID-04](#id-04) — MFA | 1 | planned | None | Not executed | Implementation outstanding |
-| [ID-05](#id-05) — Session management | 1 | planned | None | Not executed | Implementation outstanding |
-| [ID-06](#id-06) — Account state | 1 | planned | None | Not executed | Implementation outstanding |
-| [ID-07](#id-07) — Abuse controls | 1 | planned | None | Not executed | Implementation outstanding |
+| [ID-01](#id-01) — Registration and invitations | 1 | building | internal/transport/identity.go; organization.go; web access and people forms | TestInvitationResetSingleUseAndMFA | Registration codes, approvals and phone verification outstanding; SMTP production unverified |
+| [ID-02](#id-02) — Credential sign-in | 1 | building | internal/access; web access form | TestPasswordAndSecretBoundaries; browser sign-in | Full accessible validation/localization and credential remediation pending |
+| [ID-03](#id-03) — Password recovery/change | 1 | building | identity.go recovery/reset; delivery worker; reset UI | TestInvitationResetSingleUseAndMFA | Password change, verified email change and security notifications outstanding |
+| [ID-04](#id-04) — MFA | 1 | building | TOTP enrollment/confirmation, encryption, single-use codes; security UI | TestInvitationResetSingleUseAndMFA | Lost-device support and organization enforcement outstanding |
+| [ID-05](#id-05) — Session management | 1 | building | Server sessions; session list/revoke/logout UI | TestInstitutionIsolationAndRevocation | Rotation, approximate context and complete browser recovery checks outstanding |
+| [ID-06](#id-06) — Account state | 1 | building | Membership suspension/restoration with audit and session revocation | TestInstitutionIsolationAndRevocation | Global account-state administration and complete recovery workflow outstanding |
+| [ID-07](#id-07) — Abuse controls | 1 | building | PostgreSQL sign-in/recovery/token throttles | Integration suite exercises requests | Remaining request categories and concurrent abuse tests outstanding |
 | [ID-08](#id-08) — Profile | 1 | planned | None | Not executed | Implementation outstanding |
-| [ID-09](#id-09) — Safe bootstrap | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-01](#org-01) — Institution lifecycle | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-02](#org-02) — Campus management | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-03](#org-03) — Courses and groups | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-04](#org-04) — Learner admission | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-05](#org-05) — Human references | 1 | planned | None | Not executed | Implementation outstanding |
+| [ID-09](#id-09) — Safe bootstrap | 1 | building | cmd/operator one-time bootstrap and development guard | Local startup exercised | Compromised-credential remediation and bootstrap acceptance test outstanding |
+| [ORG-01](#org-01) — Institution lifecycle | 1 | building | Institution creation and context switching | Local/browser workflow | Configuration, branding, lifecycle and entitlements incomplete |
+| [ORG-02](#org-02) — Campus management | 1 | building | Scoped campus list/create UI and composite foreign keys | TestScopedCoordinatorAndAuditAtomicity | Campus edit, dates, contacts and reassignment incomplete |
+| [ORG-03](#org-03) — Courses and groups | 1 | building | Campus-bound course creation/list UI | Browser course workflow | Groups, cohorts, sections and timetable management outstanding |
+| [ORG-04](#org-04) — Learner admission | 1 | building | Single enrollment with learner/course/campus validation and reference | Browser admission journey | CSV/XLSX, intake queue, eligibility and full metadata outstanding |
+| [ORG-05](#org-05) — Human references | 1 | building | Nonrecycled sequence-backed learner references | Browser admission journey | Paper references, aliases, external IDs and correction workflow outstanding |
 | [ORG-06](#org-06) — Transfers and withdrawal | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-07](#org-07) — Guardian relationships | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-08](#org-08) — Staff and teaching assignments | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-09](#org-09) — Permission administration | 1 | planned | None | Not executed | Implementation outstanding |
+| [ORG-07](#org-07) — Guardian relationships | 1 | building | Institution-approved multiple family links and removal UI | Pending complete family browser journey | Verification, child workspace and custody controls outstanding |
+| [ORG-08](#org-08) — Staff and teaching assignments | 1 | building | Course/subject/effective-period staff responsibilities UI | Integration permission boundaries | Professional profile, roster editing and pagination outstanding |
+| [ORG-09](#org-09) — Permission administration | 1 | building | Role templates, campus checks, membership suspend/restore UI | TestScopedCoordinatorAndAuditAtomicity | Custom grants, bulk preview and protected owner transfer outstanding |
 | [ORG-10](#org-10) — Import/reconciliation tools | 1 | planned | None | Not executed | Implementation outstanding |
 | [CAT-01](#cat-01) — Curriculum models | 2 | planned | None | Not executed | Implementation outstanding |
 | [CAT-02](#cat-02) — Question types | 2 | planned | None | Not executed | Implementation outstanding |
@@ -162,12 +162,12 @@ All scope is required. `planned` means unimplemented; `building` means partial s
 | [ATT-04](#att-04) — Analysis | 7 | planned | None | Not executed | Implementation outstanding |
 | [ATT-05](#att-05) — Activity definitions | 7 | planned | None | Not executed | Implementation outstanding |
 | [COM-01](#com-01) — Notification inbox | 7 | planned | None | Not executed | Implementation outstanding |
-| [COM-02](#com-02) — Delivery channels | 7 | planned | None | Not executed | Implementation outstanding |
+| [COM-02](#com-02) — Delivery channels | 7 | building | SMTP adapter, Mailpit local capture, delivery state | Worker starts locally | Local SMTP acceptance test, push/SMS and production integration outstanding |
 | [COM-03](#com-03) — Preferences | 7 | planned | None | Not executed | Implementation outstanding |
 | [COM-04](#com-04) — Messaging | 7 | planned | None | Not executed | Implementation outstanding |
 | [COM-05](#com-05) — Class discussions | 7 | planned | None | Not executed | Implementation outstanding |
 | [COM-06](#com-06) — Announcements | 7 | planned | None | Not executed | Implementation outstanding |
-| [COM-07](#com-07) — Templates and retries | 7 | planned | None | Not executed | Implementation outstanding |
+| [COM-07](#com-07) — Templates and retries | 7 | building | Transactional invitation/reset queue and owner retry UI | Invitation transaction test | Templates, localization, complete deduplication/recovery outstanding |
 | [COM-08](#com-08) — Meetings | 7 | planned | None | Not executed | Implementation outstanding |
 | [COM-09](#com-09) — Support desk | 7 | planned | None | Not executed | Implementation outstanding |
 | [RPT-01](#rpt-01) — Personal insight | 7 | planned | None | Not executed | Implementation outstanding |
@@ -197,14 +197,14 @@ All scope is required. `planned` means unimplemented; `building` means partial s
 | [FIN-07](#fin-07) — Budgets and usage | 8 | planned | None | Not executed | Implementation outstanding |
 | [FIN-08](#fin-08) — Financial insight | 8 | planned | None | Not executed | Implementation outstanding |
 | [FIN-09](#fin-09) — Provider setup and access | 8 | planned | None | Not executed | Implementation outstanding |
-| [UX-01](#ux-01) — Public site | 1 | planned | None | Not executed | Implementation outstanding |
+| [UX-01](#ux-01) — Public site | 1 | building | Original public introduction, sign-in, help and development policies | Next production build | Public feature/about/contact/pricing workflows outstanding |
 | [UX-02](#ux-02) — Honest content | 1 | planned | None | Not executed | Implementation outstanding |
-| [UX-03](#ux-03) — Original visual system | 1 | planned | None | Not executed | Implementation outstanding |
-| [UX-04](#ux-04) — Responsive behavior | 1 | planned | None | Not executed | Implementation outstanding |
-| [UX-05](#ux-05) — Accessibility | 1 | planned | None | Not executed | Implementation outstanding |
-| [UX-06](#ux-06) — Localization | 1 | planned | None | Not executed | Implementation outstanding |
-| [UX-07](#ux-07) — State quality | 1 | planned | None | Not executed | Implementation outstanding |
-| [UX-08](#ux-08) — Discoverability | 1 | planned | None | Not executed | Implementation outstanding |
+| [UX-03](#ux-03) — Original visual system | 1 | building | DESIGN.md; shared tokens; theme and text size controls | Build; narrow-screen browser test | Full visual state audit outstanding |
+| [UX-04](#ux-04) — Responsive behavior | 1 | building | Responsive work forms, scrollable tables and print rules | Narrow-screen browser test | All required device/workflow qualification outstanding |
+| [UX-05](#ux-05) — Accessibility | 1 | building | Semantic labels, focus and keyboard forms | Browser label defects corrected | WCAG 2.2 AA audit and complete journeys outstanding |
+| [UX-06](#ux-06) — Localization | 1 | building | English/Hindi workspace dictionary and timezone dates | Hindi narrow-screen browser test | Complete translations outstanding |
+| [UX-07](#ux-07) — State quality | 1 | building | Loading/empty/error/saved states; request cancellation | Browser workflow | Offline persistence and all feature states outstanding |
+| [UX-08](#ux-08) — Discoverability | 1 | building | Institution/campus selector, people search, access help | Browser workflow | Global search, child switcher and deep links outstanding |
 | [UX-09](#ux-09) — Public performance/metadata | 1 | planned | None | Not executed | Implementation outstanding |
 | [MOB-01](#mob-01) — Native applications | 9 | planned | None | Not executed | Implementation outstanding |
 | [MOB-02](#mob-02) — Secure local state | 9 | planned | None | Not executed | Implementation outstanding |
@@ -224,19 +224,19 @@ All scope is required. `planned` means unimplemented; `building` means partial s
 | [AIO-08](#aio-08) — Quality and feedback | 5 | planned | None | Not executed | Implementation outstanding |
 | [AIO-09](#aio-09) — Data boundaries | 5 | planned | None | Not executed | Implementation outstanding |
 | [AIO-10](#aio-10) — Operator console | 5 | planned | None | Not executed | Implementation outstanding |
-| [RUN-01](#run-01) — Durable execution | 1 | planned | None | Not executed | Implementation outstanding |
-| [RUN-02](#run-02) — Operational console | 1 | planned | None | Not executed | Implementation outstanding |
+| [RUN-01](#run-01) — Durable execution | 1 | building | Transactional narrow delivery queue with leases/retries | Invitation handoff test | General maintained job mechanism, heartbeat, cancellation, crash tests outstanding |
+| [RUN-02](#run-02) — Operational console | 1 | building | Invitation delivery list and authorized retry UI | Permission tests; browser pending | Complete operational console outstanding |
 | [RUN-03](#run-03) — File lifecycle | 1 | planned | None | Not executed | Implementation outstanding |
-| [RUN-04](#run-04) — Audit | 1 | planned | None | Not executed | Implementation outstanding |
-| [RUN-05](#run-05) — Application security | 1 | planned | None | Not executed | Implementation outstanding |
+| [RUN-04](#run-04) — Audit | 1 | building | Transactionally inserted audit, bounded institution audit UI | TestScopedCoordinatorAndAuditAtomicity | Filters, export, full audit coverage and database role protection outstanding |
+| [RUN-05](#run-05) — Application security | 1 | building | Origin/CSRF checks, hashed sessions, typed input, tenant constraints | Isolation/revocation integration tests | Complete adversarial/security audit and file/webhook controls outstanding |
 | [RUN-06](#run-06) — Privacy/consent | 1 | planned | None | Not executed | Implementation outstanding |
-| [RUN-07](#run-07) — Resilience/health | 1 | planned | None | Not executed | Implementation outstanding |
+| [RUN-07](#run-07) — Resilience/health | 1 | building | Liveness/readiness and structured request logging | Local startup | Metrics, traces, alerting and operator dashboard outstanding |
 | [RUN-08](#run-08) — Backup and recovery | 1 | planned | None | Not executed | Implementation outstanding |
-| [RUN-09](#run-09) — Environment/deployment | 1 | planned | None | Not executed | Implementation outstanding |
+| [RUN-09](#run-09) — Environment/deployment | 1 | building | Local Compose, migration/bootstrap, exact dependencies, environment validation | Local full startup; build | Application containers, CI, maintenance/rollback qualification outstanding |
 | [RUN-10](#run-10) — Performance/concurrency | 1 | planned | None | Not executed | Implementation outstanding |
 | [RUN-11](#run-11) — Support recovery | 1 | planned | None | Not executed | Implementation outstanding |
 | [RUN-12](#run-12) — Data portability | 1 | planned | None | Not executed | Implementation outstanding |
-| [RUN-13](#run-13) — Delivery evidence | 1 | planned | None | Not executed | Implementation outstanding |
+| [RUN-13](#run-13) — Delivery evidence | 1 | building | Complete register, test report, operations/provenance documentation | Register count 233 | Release evidence incomplete |
 
 ## Expanded acceptance checklists
 

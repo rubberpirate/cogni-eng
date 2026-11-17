@@ -1,0 +1,25 @@
+{
+  "name": "learning-workspace",
+  "private": true,
+  "packageManager": "bun@1.4.4",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "bun run scripts/dev.ts",
+    "web": "bun run --cwd apps/web dev",
+    "generate": "bunx openapi-typescript contracts/openapi.json -o clients/schema.d.ts",
+    "check": "bun run --cwd apps/web typecheck && go vet ./... && go test ./...",
+    "build": "bun run --cwd apps/web build",
+    "test:e2e": "bunx playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/bun": "1.4.4",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.10.1"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  }
+}

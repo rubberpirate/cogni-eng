@@ -4,49 +4,49 @@
     "title": "Registration and invitations",
     "detail": "Support learner registration and staff/guardian invitations, institution enrollment codes, verified email, optional phone verification, and explicit approval where the institution requires it. Collect only needed personal/academic information; record terms/privacy acknowledgments with policy version and time.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ID-02",
     "title": "Credential sign-in",
     "detail": "Normalize email, validate inputs, offer password visibility and clear accessible validation, support persistent versus short sessions, and route the user to the correct permitted workspace. Do not reveal account existence through recovery responses.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ID-03",
     "title": "Password recovery/change",
     "detail": "Provide expiring single-use reset links/codes, authenticated password change, verified email-change confirmation, and relevant security notifications. Revoke sessions according to the recovery policy.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ID-04",
     "title": "MFA",
     "detail": "Implement authenticator-based MFA, recovery codes, enrollment confirmation, lost-device recovery, and organization-level enforcement for privileged staff. Offer email/SMS factors only when their provider and policy are configured.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ID-05",
     "title": "Session management",
     "detail": "Show current and other signed-in devices/sessions, last activity and approximate session context; revoke one or all. Rotate/reissue safely and expire idle/absolute sessions. Logout invalidates the applicable server session.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ID-06",
     "title": "Account state",
     "detail": "Support invited, active, suspended, and archived access states, with reason, actor, time, and recovery workflow. Suspension immediately invalidates access while preserving lawful academic/financial history.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ID-07",
     "title": "Abuse controls",
     "detail": "Rate-limit sign-in, recovery, registration, verification, invitations, uploads, and paid interactions across all application instances. Avoid locking an entire institution behind a shared network address because one person makes mistakes.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ID-08",
@@ -60,42 +60,42 @@
     "title": "Safe bootstrap",
     "detail": "Create the first organization owner through a secure one-time operator process. Development fixtures must be synthetic and unusable as production credentials. Provide weak/compromised credential remediation.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-01",
     "title": "Institution lifecycle",
     "detail": "Create, configure, activate, suspend, and close organizations with branding, timezone, locale, support contacts, academic-year settings, and subscription entitlements. Separate organization closure from deletion of retained records.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-02",
     "title": "Campus management",
     "detail": "Maintain named campuses with address, codes, contacts, responsible staff and active dates. Support staff responsible for more than one campus, institution-wide oversight, and scoped reassignment with audit.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-03",
     "title": "Courses and groups",
     "detail": "Manage programs, academic years, grades, courses, cohorts, class groups, sections, and teaching timetables. A batch date is not a replacement for managed class membership.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-04",
     "title": "Learner admission",
     "detail": "Enroll singly or through validated CSV/XLSX import, with preview, duplicates, row errors, eligibility/grade, target exams, campus, cohort, start/end dates, and admission state. Support an intake queue awaiting placement.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-05",
     "title": "Human references",
     "detail": "Allocate unique readable learner and paper reference codes, allow appropriate externally issued identifiers, preserve aliases after deliberate corrections, prevent reuse/races, and support manual lookup. Do not encode mutable campus or role state into permanent identity.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-06",
@@ -109,21 +109,21 @@
     "title": "Guardian relationships",
     "detail": "Invite and verify guardians, link multiple children and multiple guardians, distinguish relationship/permission level, approve/remove links, and show an unambiguous child switcher. Handle custody/contact restrictions through explicit institutional controls.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-08",
     "title": "Staff and teaching assignments",
     "detail": "Create/edit staff professional profiles, subjects, qualifications/experience, campus/class responsibilities and effective periods. Replace/add/remove teaching rosters through searchable selectors without losing selections across pagination.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-09",
     "title": "Permission administration",
     "detail": "Provide role templates, a capability matrix, custom scoped roles, grant/revoke workflows, protected owner transfer, and bulk changes with preview. Prevent self-escalation and orphaned ownership.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-10",
@@ -1110,7 +1110,7 @@
     "title": "Delivery channels",
     "detail": "Implement in-app, email and mobile/web push, plus configured SMS for selected events. Track queued/sent/provider-accepted/delivered/failed where actually observable; keep security messages reliable.",
     "milestone": 7,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "COM-03",
@@ -1145,7 +1145,7 @@
     "title": "Templates and retries",
     "detail": "Version message templates, localize, preview sample data, enforce deduplication, retry transient delivery failures and provide dead-letter recovery. Do not leak answer keys through previews or notification snippets.",
     "milestone": 7,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "COM-08",
@@ -1355,7 +1355,7 @@
     "title": "Public site",
     "detail": "Provide original home, feature/audience explanations, company/about, pricing where configured, contact/demo request, help, terms/privacy and sign-in/enrollment entries. A demo booking/contact form must actually persist and route requests.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "UX-02",
@@ -1369,42 +1369,42 @@
     "title": "Original visual system",
     "detail": "Define coherent typography, spacing, color, density, components and motion; support light/dark/system preference and text-size settings. Keep complex staff tools legible and learner work calm and focused.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "UX-04",
     "title": "Responsive behavior",
     "detail": "Support phones, tablets, desktop and print; dense tables need usable filtering/column choices or alternate views. Maintain accessible touch targets and avoid horizontal overflow for core workflows.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "UX-05",
     "title": "Accessibility",
     "detail": "Target WCAG 2.2 AA through keyboard navigation, visible focus, semantic labels, error summaries, screen-reader context, contrast, reduced motion, captions/transcripts and accessible mathematical content. Test complete workflows, not only component snapshots.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "UX-06",
     "title": "Localization",
     "detail": "Provide an internationalization foundation and complete English/Hindi UI translations for delivered workflows, locale-aware dates/numbers and content-language selection. Keep technical identifiers stable and permit additional languages without rewriting business logic.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "UX-07",
     "title": "State quality",
     "detail": "Every important view needs truthful loading, empty, partial, offline, permission-denied, recoverable error and success states, including saved feedback and destructive-action confirmation. Preserve user input across retryable failures.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "UX-08",
     "title": "Discoverability",
     "detail": "Implement entitled global search, navigation breadcrumbs, remembered workspace context, accessible dialogs, contextual help and clear account/child switches. Do not expose records through search snippets beyond the user's scope.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "UX-09",
@@ -1544,14 +1544,14 @@
     "title": "Durable execution",
     "detail": "Persist job intent with the triggering business transaction; support leases/heartbeat, retry attempts, exponential backoff where appropriate, cancellation, dead-letter inspection and crash recovery. Exactly-once business outcomes must survive at-least-once delivery.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "RUN-02",
     "title": "Operational console",
     "detail": "Search/filter jobs, inspect safe error context, replay failed work with authorization, cancel or reschedule, see backlog/progress, and identify orphaned records/assets. Every administrative recovery action is audited.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "RUN-03",
@@ -1565,14 +1565,14 @@
     "title": "Audit",
     "detail": "Provide append-only security/business audit records with actor, tenant, scope, operation, reason, object/revision, correlation ID and time. Search/export through appropriate permissions; logs must not contain passwords, session tokens, raw card data or unrestricted tutor transcripts.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "RUN-05",
     "title": "Application security",
     "detail": "Protect CSRF/session cookies, request boundaries, injection/SSRF, upload execution, object access, cross-tenant reads/writes, export abuse, output rendering and webhook integrity. Encrypt transport and restrict service credentials; use centralized secret management appropriate to deployment.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "RUN-06",
@@ -1586,7 +1586,7 @@
     "title": "Resilience/health",
     "detail": "Offer liveness/readiness, structured logs, request/job traces and metrics for API latency/errors, database saturation, job age, marking delay, file processing, provider quota and financial reconciliation. Expose safe operator dashboards and actionable alerts.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "RUN-08",
@@ -1600,7 +1600,7 @@
     "title": "Environment/deployment",
     "detail": "Provide local containers, migrations, validated secrets/provider settings, CI checks, staged releases, rollback procedures, maintenance mode and safe schema evolution. Reboots and deployments must not lose private files or acknowledged responses.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "RUN-10",
@@ -1628,6 +1628,6 @@
     "title": "Delivery evidence",
     "detail": "Maintain requirement status, test results, screen/state coverage, accessibility observations, provider setup and known limitations. Distinguish source completion, local/sandbox verification and production verification.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   }
 ]

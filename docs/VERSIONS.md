@@ -13,3 +13,7 @@ Checked 2026-11-17 against official documentation and package registries:
 - sqlc: https://docs.sqlc.dev/en/stable/tutorials/getting-started-postgresql.html
 
 Exact installed Go dependency versions live in go.mod/go.sum; JS in package manifests/bun.lock. Public documentation determines supported APIs; installed source is authoritative for exact dependency signatures. Provider integrations must add their official sources here when implemented. No integration is live-verified by this document.
+
+- Private local S3: SeaweedFS 4.54, official release https://github.com/seaweedfs/seaweedfs/releases/tag/4.54 and authenticated mini setup https://github.com/seaweedfs/seaweedfs#quick-start
+- SMTP adapter APIs: https://pkg.go.dev/net/smtp ; local Mailpit container setup: https://mailpit.axllent.org/docs/install/docker/
+- GitHub Actions: checkout 7.0.1, setup-go 7.1.0, upload-artifact 7.0.2, verified official release pages. CI source is not proof of a hosted CI run.

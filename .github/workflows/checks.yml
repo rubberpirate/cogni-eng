@@ -1,0 +1,63 @@
+name: Application checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.1.0
+        with:
+          go-version-file: go.mod
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - name: Contract and source checks
+        run: |
+          python3 scripts/contract.py
+          bun run generate
+          git diff --exit-code -- contracts/openapi.json clients/schema.d.ts
+          test -z "$(gofmt -l cmd internal)"
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+          bun run check
+      - run: bun run build
+      - name: Start synthetic environment
+        run: |
+          mkdir -p .local
+          bun run dev > .local/runtime.log 2>&1 &
+          for attempt in $(seq 1 90); do
+            if curl --fail --silent http://localhost:8080/health/ready && curl --fail --silent http://localhost:3000/sign-in > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat .local/runtime.log
+          exit 1
+      - name: PostgreSQL and race checks
+        shell: bash
+        run: |
+          set -a
+          source .env
+          set +a
+          TEST_DATABASE_URL="$DATABASE_URL" go test -tags=integration -race -shuffle=on -count=1 ./...
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run test:e2e
+      - name: Evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: browser-evidence
+          path: |
+            playwright-report/
+            test-results/
+            .local/screenshots/
+          retention-days: 7

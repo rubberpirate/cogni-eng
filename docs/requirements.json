@@ -1,0 +1,1633 @@
+[
+  {
+    "id": "ID-01",
+    "title": "Registration and invitations",
+    "detail": "Support learner registration and staff/guardian invitations, institution enrollment codes, verified email, optional phone verification, and explicit approval where the institution requires it. Collect only needed personal/academic information; record terms/privacy acknowledgments with policy version and time.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ID-02",
+    "title": "Credential sign-in",
+    "detail": "Normalize email, validate inputs, offer password visibility and clear accessible validation, support persistent versus short sessions, and route the user to the correct permitted workspace. Do not reveal account existence through recovery responses.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ID-03",
+    "title": "Password recovery/change",
+    "detail": "Provide expiring single-use reset links/codes, authenticated password change, verified email-change confirmation, and relevant security notifications. Revoke sessions according to the recovery policy.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ID-04",
+    "title": "MFA",
+    "detail": "Implement authenticator-based MFA, recovery codes, enrollment confirmation, lost-device recovery, and organization-level enforcement for privileged staff. Offer email/SMS factors only when their provider and policy are configured.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ID-05",
+    "title": "Session management",
+    "detail": "Show current and other signed-in devices/sessions, last activity and approximate session context; revoke one or all. Rotate/reissue safely and expire idle/absolute sessions. Logout invalidates the applicable server session.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ID-06",
+    "title": "Account state",
+    "detail": "Support invited, active, suspended, and archived access states, with reason, actor, time, and recovery workflow. Suspension immediately invalidates access while preserving lawful academic/financial history.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ID-07",
+    "title": "Abuse controls",
+    "detail": "Rate-limit sign-in, recovery, registration, verification, invitations, uploads, and paid interactions across all application instances. Avoid locking an entire institution behind a shared network address because one person makes mistakes.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ID-08",
+    "title": "Profile",
+    "detail": "Edit permitted name/contact/academic fields and a cropped profile image; retain verified identifiers and staff-controlled fields. Support emergency contacts and user-facing account activity history.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ID-09",
+    "title": "Safe bootstrap",
+    "detail": "Create the first organization owner through a secure one-time operator process. Development fixtures must be synthetic and unusable as production credentials. Provide weak/compromised credential remediation.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-01",
+    "title": "Institution lifecycle",
+    "detail": "Create, configure, activate, suspend, and close organizations with branding, timezone, locale, support contacts, academic-year settings, and subscription entitlements. Separate organization closure from deletion of retained records.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-02",
+    "title": "Campus management",
+    "detail": "Maintain named campuses with address, codes, contacts, responsible staff and active dates. Support staff responsible for more than one campus, institution-wide oversight, and scoped reassignment with audit.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-03",
+    "title": "Courses and groups",
+    "detail": "Manage programs, academic years, grades, courses, cohorts, class groups, sections, and teaching timetables. A batch date is not a replacement for managed class membership.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-04",
+    "title": "Learner admission",
+    "detail": "Enroll singly or through validated CSV/XLSX import, with preview, duplicates, row errors, eligibility/grade, target exams, campus, cohort, start/end dates, and admission state. Support an intake queue awaiting placement.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-05",
+    "title": "Human references",
+    "detail": "Allocate unique readable learner and paper reference codes, allow appropriate externally issued identifiers, preserve aliases after deliberate corrections, prevent reuse/races, and support manual lookup. Do not encode mutable campus or role state into permanent identity.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-06",
+    "title": "Transfers and withdrawal",
+    "detail": "Transfer campus/class/course, preserve academic history and identifier continuity, update affected staff scope, and record effective dates. Withdrawal ends access/assignments according to policy without destroying evidence.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-07",
+    "title": "Guardian relationships",
+    "detail": "Invite and verify guardians, link multiple children and multiple guardians, distinguish relationship/permission level, approve/remove links, and show an unambiguous child switcher. Handle custody/contact restrictions through explicit institutional controls.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-08",
+    "title": "Staff and teaching assignments",
+    "detail": "Create/edit staff professional profiles, subjects, qualifications/experience, campus/class responsibilities and effective periods. Replace/add/remove teaching rosters through searchable selectors without losing selections across pagination.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-09",
+    "title": "Permission administration",
+    "detail": "Provide role templates, a capability matrix, custom scoped roles, grant/revoke workflows, protected owner transfer, and bulk changes with preview. Prevent self-escalation and orphaned ownership.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "ORG-10",
+    "title": "Import/reconciliation tools",
+    "detail": "Reconcile duplicate people and conflicting external IDs without silently merging unrelated records. Offer dry-run reports, explicit resolution, reversible administrative corrections, and an audit trail.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-01",
+    "title": "Curriculum models",
+    "detail": "Maintain versioned curricula, exams, subjects, chapters, topics/subtopics, outcomes, prerequisite relationships, language and academic level. Seed original representative mathematics, physics, chemistry, and biology content; allow institution-defined subjects.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-02",
+    "title": "Question types",
+    "detail": "Support single selection, multiple selection, integer/decimal numerical, short written response, and extended written response. Provide rubric-based manual marking for written types and extensible type contracts without inventing a general plugin system.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-03",
+    "title": "Rich question content",
+    "detail": "Author readable text, mathematical/chemical notation, diagrams, tables, attachments, image-only stems, option images, alt text, and worked solutions. Rendering must agree in authoring preview, online/native player, paper export, review, and tutor context.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-04",
+    "title": "Academic metadata",
+    "detail": "Track intended outcome/topic, difficulty, source/license/provenance, language, estimated time, tags, default marks, penalties, numeric acceptance and accessibility alternatives. Permit weighted multi-topic attribution when explicitly authored.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-05",
+    "title": "Lifecycle and revision",
+    "detail": "Support draft, review, approved, retired and archived content with history, reviewer comments, comparison and restoration as a new revision. A correction cannot rewrite an already delivered question snapshot.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-06",
+    "title": "Bank management",
+    "detail": "Search/filter/preview, bulk tag/move/archive, edit, import/export selected records, inspect use history, and report deficient topic/difficulty coverage. Protect questions referenced by live or past assessments from destructive deletion.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-07",
+    "title": "Duplicate management",
+    "detail": "Detect exact and likely duplicate text/images with explainable matches; provide human merge/keep decisions that preserve references and original authorship. Do not silently replace similar scientific questions.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-08",
+    "title": "Bulk authoring/import",
+    "detail": "Support structured JSON, CSV, and XLSX import with type/answer alias normalization, image bundles, validation preview, row errors, repeat-import safety, and explicit handling of unknown answers. Incomplete questions cannot be published into scored work.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-09",
+    "title": "Review and provenance",
+    "detail": "Distinguish generated, imported, authored, and externally licensed content. Require staff approval before AI-generated questions/solutions become scored material. Record source attribution and permitted reuse.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "CAT-10",
+    "title": "Quality and item analysis",
+    "detail": "Show total/draft/approved/retired counts, topic/difficulty/type distribution, bank depth, freshness, exposure, observed facility/difficulty, distractor selection, discrimination where statistically supported, and flagged quality concerns. Provide evidence counts and avoid treating sparse statistics as authoritative.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "DOC-01",
+    "title": "Source intake",
+    "detail": "Accept image photographs, scanned/text PDFs, and DOCX papers, plus separate answer-key files and worked-solution documents. Validate content type, size, page limits, encryption, supported languages and readability.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "DOC-02",
+    "title": "Durable extraction workspace",
+    "detail": "Create a persistent import job with source previews, page-level progress, recoverable drafts, cancellation and resume. Closing the browser must not lose the import or its reviewed edits.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "DOC-03",
+    "title": "Faithful extraction",
+    "detail": "Recover complete stems, options, figures, option images, tables, equations, printed question numbers, section instructions, and supplied solutions. Preserve provenance/crop/page coordinates; flag missing or uncertain content instead of inventing it.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "DOC-04",
+    "title": "Key matching",
+    "detail": "Extract separate or embedded keys and match by paper revision, section and printed number. Report unmatched, duplicated, conflicting, multi-answer, numerical and withdrawn-question entries for review.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "DOC-05",
+    "title": "Reviewer tools",
+    "detail": "Edit wording/figures/options, keys and rubric, assign topic/difficulty, apply tags/rules to ranges, compare original and draft, and approve pages/questions. Support keyboard navigation and autosaved reviewer changes.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "DOC-06",
+    "title": "Completeness checks",
+    "detail": "Reconcile declared versus extracted question counts, section boundaries, numbering gaps, cross-page continuations, repeated pages and option completeness. Partial success remains usable but cannot be silently advertised as complete.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "DOC-07",
+    "title": "Publication",
+    "detail": "Validate every mandatory topic, key/rubric and scoring instruction before publishing a versioned assessment or selected bank entries. Preserve the exact intended order and retain the reviewed source record.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "DOC-08",
+    "title": "Retry and cost",
+    "detail": "Retry only failed extraction work without discarding reviewed corrections or paying again for completed work unnecessarily. Show consumption and useful quota/configuration failures to authorized operators.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-01",
+    "title": "Assessment purposes",
+    "detail": "Support baseline diagnostics, subject quizzes, practice, mock exams, formal exams, homework and adaptive practice. Keep purpose separate from delivery channel and grading/release policy.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-02",
+    "title": "Composition",
+    "detail": "Select explicit questions in order or generate from an approved blueprint using subjects/topics, count, difficulty, coverage, expected duration and exposure constraints. Preview the actual paper, not just a claimed count.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-03",
+    "title": "Sections and scoring",
+    "detail": "Configure sections, marks/penalties, maximum contribution, optional groups, numerical rules, partial-credit policies and rubrics. Derive total maximum marks from the selected rules and validate impossible configurations.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-04",
+    "title": "Lifecycle",
+    "detail": "Draft, review, publish, schedule, open, close and archive; duplicate a paper as a new revision; distinguish corrections from new papers. Pin a published revision for each assigned sitting.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-05",
+    "title": "Eligibility/recipients",
+    "detail": "Assign individually or by course/class/cohort, with searchable bulk selection, exclusions, due dates, windows, timezones, attempt counts and prerequisites. Freeze or explicitly manage later group-membership changes.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-06",
+    "title": "Accommodations",
+    "detail": "Set extra time, approved breaks, accessible presentation, alternative delivery, conduct exemptions, and individual scheduling. Approved accommodations affect the actual authoritative policy and are not misconduct.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-07",
+    "title": "Delivery configuration",
+    "detail": "Choose online, paper, or mixed delivery, fixed order versus seeded randomization, section timing, permitted calculator/reference material, and conduct policy. Prevent inconsistent settings between instructions and player behavior.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-08",
+    "title": "Reuse and extra assignment",
+    "detail": "Add eligible recipients to a published paper without duplicates; support reassignment/retakes under explicit version and result-selection policy. Preserve who assigned what and when.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-09",
+    "title": "Staff monitoring",
+    "detail": "List/search papers and show assigned/not started/live/submitted/awaiting review/released counts, deadlines, aggregate results, per-recipient state and actionable exceptions. Respect live-answer visibility policy.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-10",
+    "title": "Paper output",
+    "detail": "Export printable question booklets, marking instructions, approved answer keys and compatible response sheets, with clear version/reference identity and accessible alternatives.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "ASM-11",
+    "title": "Publishing checks",
+    "detail": "Detect missing keys, insufficient pool, duplicate questions, missing figure assets, invalid optional counts, unreconciled section totals, and broken schedules before delivery.",
+    "milestone": 2,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-01",
+    "title": "Eligible start",
+    "detail": "Show instructions, applicable accessibility/conduct requirements, technical readiness and release policy. Start only an eligible assigned/allowed paper within its window; resume the authorized sitting rather than creating accidental duplicates.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-02",
+    "title": "Player",
+    "detail": "Provide readable rich questions, figures/options, numerical/written answer inputs, section context, marks/penalties, approved tools, zoom, and accessible navigation. Save answer, clear, move back/forward, jump, bookmark/mark for review and filter the palette.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-03",
+    "title": "Palette and progress",
+    "detail": "Distinguish unseen, visited blank, answered, marked for review, and answered-and-marked states. Show section/optional-group completion, time remaining and meaningful approaching-deadline warnings.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-04",
+    "title": "Authoritative time",
+    "detail": "Establish deadlines from server time and approved allowances, independent of client clock and browser presence. Recover countdown after refresh; expire abandoned sittings through durable scheduled work. Define authorized pause/break and window-close behavior.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-05",
+    "title": "Durable saving",
+    "detail": "Autosave versioned responses, display saved/saving/offline/failed status, retry safely, and reconcile acknowledgments. Keep pending changes through refresh where permitted; never label a lost update saved.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-06",
+    "title": "Reconnection and concurrent clients",
+    "detail": "Resume after connection loss, reconcile local/server edits, reject stale writes, and detect a second active device/session. Adopt one active exam writer by default with an explicit supervised takeover flow.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-07",
+    "title": "Timing evidence",
+    "detail": "Accumulate per-item active viewing/answer interaction with return visits and evidence quality. Exclude background/inactive time appropriately, retain uncertainty after outages, and treat client timing as an observation rather than trusted proof of ability or misconduct.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-08",
+    "title": "Submission",
+    "detail": "Confirm voluntary submission with unanswered/optional-section summary; safely finalize the latest acknowledged responses and explicitly handle pending unsent work. Submission, deadline expiry and conduct submission converge on one idempotent finalization outcome.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-09",
+    "title": "Final state",
+    "detail": "Submitted content cannot change through answer-save routes. Offer a receipt, effective finish time, recorded reason, score/review status and reconnectable status lookup when the submit response is lost.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "SIT-10",
+    "title": "Accessibility and continuity",
+    "detail": "Support keyboard/screen-reader operation, large text, narrow/landscape layouts and approved accommodations without trapping the learner in fullscreen or inaccessible controls.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "INT-01",
+    "title": "Configurable conduct modes",
+    "detail": "Provide open practice, monitored browser, and institution-approved supervised delivery policies. Explain exactly what is observed and what consequence follows; obtain required acknowledgments.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "INT-02",
+    "title": "Browser observations",
+    "detail": "Observe fullscreen exit, focus/visibility changes, supported display information, copy/paste/context-menu restrictions and observable screenshot shortcuts when the selected policy enables them. Detect capabilities and document unsupported cases.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "INT-03",
+    "title": "Events and deduplication",
+    "detail": "Retain event category, observed/server times, device context, actor and policy version; deduplicate related browser events and network replays. Provide an accessible warning and remaining allowance.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "INT-04",
+    "title": "Escalation",
+    "detail": "Apply configured warning, instructor review, temporary hold or finalization consequences on the server. Support staff adjudication, justified overrides and appeals, with retained evidence.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "INT-05",
+    "title": "Answer secrecy",
+    "detail": "Prevent unreleased answers/solutions from appearing in assessment payloads, search, tutor history, content suggestions, attachments, notifications, caches and exports. Exposure history must affect future formal-paper selection or access policy.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "INT-06",
+    "title": "Security versus monitoring",
+    "detail": "Never claim the browser can prevent OS recording, external devices or collaboration. Webcam/biometric collection is not required by default. Any later collection needs a separately approved policy and implementation.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-01",
+    "title": "Objective correctness",
+    "detail": "Determine single selection, exact-set multiple selection and numerical correctness from the approved immutable key/rule version. Support defined all-or-nothing and explicitly authored partial-credit policies; distinguish blank, invalid and answered wrong.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-02",
+    "title": "Numerical acceptance",
+    "detail": "Support integer/decimal input, signs, bounds, accepted values/ranges, absolute/relative tolerances, units where authored, and explicit rounding/tie policy. Reject NaN/infinity, malformed input, and ambiguous locale formats with useful messages.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-03",
+    "title": "Optional groups",
+    "detail": "Support count-all, first-N-attempted and best-N selection. Record exactly which answers contribute, why, and the resulting maximum. For offline first-N, use published printed-order selection because chronological answer order is unobservable; do not claim to reconstruct it.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-04",
+    "title": "Special cases",
+    "detail": "Support cancelled/withdrawn questions, corrected keys, bonus/full-credit policies, absent/excused sittings and section caps. Show the applied policy and its effect rather than silently altering totals.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-05",
+    "title": "Subjective marking",
+    "detail": "Provide versioned rubrics, criterion/step marks, annotated script review, marker assignment, moderation, adjudication, double marking when required and reviewer workload. AI suggestions must preserve the script evidence and distinguish proposal from approved marks.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-06",
+    "title": "Immediate outcomes",
+    "detail": "Return objective score/counts promptly after finalization even if commentary/media is unavailable. Separately expose pending subjective review and provisional/released results; do not imply a provisional score is final.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-07",
+    "title": "Release policy",
+    "detail": "Configure when scores, rank, item correctness, answer keys, full solutions and tutor access become available. Default formal exams to cohort closure; practice can release immediately. Guardians receive only released child information.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-08",
+    "title": "Learner review",
+    "detail": "Once released, show every permitted question, answer, correctness, marks, worked solution, reason/uncertainty and observed time quality; distinguish optional blank, mandatory blank and invalid mark. Include subject/section breakdowns and offline/online provenance.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-09",
+    "title": "Appeals",
+    "detail": "Allow a learner/instructor to flag a problem and submit evidence, route it to an authorized reviewer, track acknowledgment/resolution and notify affected people. Preserve the original submitted answer.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-10",
+    "title": "Regrading",
+    "detail": "Preview affected sittings and score changes, require an authorized correction reason, publish a new marking revision, and recompute results, aggregates, learning indicators, rankings and applicable practice plans consistently. Keep old/new results and notifications auditable.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "GRD-11",
+    "title": "Rankings",
+    "detail": "Calculate cohort ranks/percentiles only for comparable released papers/sitting policies. Define ties, eligible population and retake selection; do not compare raw scores from different maximums or different personalized papers as if equivalent.",
+    "milestone": 3,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-01",
+    "title": "Layout studio",
+    "detail": "Create/version response-sheet layouts with learner/paper identity areas, response kinds, section/question mapping, registration/orientation marks and machine-readable template identity. Preview printable output and validate calibration against the generated blank sheet.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-02",
+    "title": "Format flexibility",
+    "detail": "Support different counts, sections, option labels, multi-select groups and numeric write-ins, including signed/decimal or four-plus-digit values when the selected format permits. Never apply one template's assumptions to another sheet silently.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-03",
+    "title": "Intake session",
+    "detail": "Create a campus/paper-bound batch with the actual exam date/time, template version, upload permissions and reviewers. Accept images and multi-page PDFs through resumable asynchronous intake.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-04",
+    "title": "Recognition and validation",
+    "detail": "Normalize perspective/orientation/exposure where supported, match layout identity, read references and responses, and validate learner eligibility/paper association. Uncertain identity or mismatched paper must block commitment.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-05",
+    "title": "Confidence and uncertainty",
+    "detail": "Identify blanks, multiple marks, ambiguous fills and uncertain handwriting. Keep transcription independent of the answer key; retain confidence/evidence and disagreements rather than replacing them with guessed certainty.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-06",
+    "title": "Review console",
+    "detail": "Prioritize uncertain sheets/items, filter by status/subject/reviewer, display original/aligned/cropped evidence and overlays, and support keyboard-first correction. Allow explicit blank, invalid/wrong, corrected value, identity correction, flag acknowledgment with reason, and reject/quarantine.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-07",
+    "title": "Reviewer scope",
+    "detail": "Assign subject-limited reviews without exposing unrelated private material unnecessarily. A designated coordinator approves whole-sheet identity and final commit. Detect conflicting simultaneous reviewer edits.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-08",
+    "title": "Evidence audit",
+    "detail": "Preserve machine readings, original scans, confidence/geometry, reviewer changes, reasons, actor/time and template revision. A re-decode can propose updated reads but cannot erase approved corrections; compare/reconcile conflicts visibly.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-09",
+    "title": "Duplicate safety",
+    "detail": "Deduplicate repeated files/pages, repeated uploads across requests, and repeated learner/paper commit races. Offer an explicit corrected/replacement scan workflow rather than generating a second academic result.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-10",
+    "title": "Commit",
+    "detail": "Commit eligible reviewed sheets once; allow selected clean sheets while other sheets remain in review, making remaining work explicit. Each committed sheet creates the ordinary marking/learning/reporting flow, with actual sitting time and no invented pace.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-11",
+    "title": "Failure recovery",
+    "detail": "Isolate bad pages, restart failed recognition, handle quota/provider failure as manual-review work, retain partial progress, and report rejected/failed/committed counts. Batch completion must not mean every sheet succeeded.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "PPR-12",
+    "title": "Private access and retention",
+    "detail": "Protect source scans/signatures and derived crops through entitlement checks, expiring access and audit. Apply configured retention/hold rules while retaining required marking evidence.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "WRT-01",
+    "title": "Script intake",
+    "detail": "Upload scanned written scripts or digital response attachments, associate them with the right sitting, map pages to questions and detect missing/duplicate pages and unreadable material.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "WRT-02",
+    "title": "Transcription review",
+    "detail": "Extract handwriting/text/diagrams where supported, retain page coordinates and uncertainty, and allow corrections without overwriting the original evidence.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "WRT-03",
+    "title": "Rubric assistance",
+    "detail": "Propose criterion-level marks and explanations grounded in the approved rubric and visible response. Show quoted/cropped supporting evidence and uncertainty; never manufacture student working.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "WRT-04",
+    "title": "Human approval",
+    "detail": "Allow manual marking when transcription/AI fails, require review under the institution's policy, support moderation and disagreement resolution, and finalize through the ordinary marking/release process.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "WRT-05",
+    "title": "Student feedback",
+    "detail": "Release approved annotations, criteria, improvement suggestions and appeals with private document access. Keep rubric/key secrecy until the result-release policy allows it.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "WRT-06",
+    "title": "Quality evaluation",
+    "detail": "Measure agreement with qualified reviewers on representative original/licensed scripts, report per-criterion disagreement, and support switching to mandatory human review when performance is inadequate.",
+    "milestone": 4,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-01",
+    "title": "Explainable error observations",
+    "detail": "Distinguish observed incorrect/blank/invalid answers from suggested causes such as concept gaps, rushed work, time shortage, or uncertainty. Show the evidence and confidence; retain unknown-cause states.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-02",
+    "title": "Consistent measures",
+    "detail": "Define accuracy as correct among genuinely answered/scored responses, attempt coverage among required opportunities, and score percentage from applicable maximum. Publish alternative weighting explicitly. Do not silently include optional blanks or unmeasured time in denominators.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-03",
+    "title": "Topic evidence",
+    "detail": "Accumulate per-topic/outcome observations over time with evidence count, recency, question quality, mode and revision provenance. Insufficient evidence is a first-class state. Apply multi-topic weights without double counting.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-04",
+    "title": "Mastery transitions",
+    "detail": "Use a documented, versioned, reproducible policy for emerging/developing/secure understanding and regression. Require adequate diverse evidence for promotion; expose history and allow review. Choose thresholds/calibration independently and validate changes before applying them.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-05",
+    "title": "Behavioral indicators",
+    "detail": "Describe observed pace, accuracy habits, unanswered patterns and strategy needs across recent comparable work. Give practical coaching recommendations rather than permanent personality labels; retain indicator/history and the source window.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-06",
+    "title": "Missing evidence",
+    "detail": "Paper sittings, interrupted sessions and uncertain timing do not produce pace values. They cannot prove a prior timing-related difficulty has vanished. Show coverage and excluded observations.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-07",
+    "title": "Focus priorities",
+    "detail": "Rank manageable learning priorities using strength of evidence, prerequisite relevance, exam/course goals and subject balance; explain why an item is recommended and permit instructor adjustment with reason.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-08",
+    "title": "Readiness",
+    "detail": "Provide a visible preparation summary with component definitions, comparable assessment coverage, confidence, goals and history. Omit unsupported dimensions or show insufficient evidence rather than assigning an invented neutral measurement.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-09",
+    "title": "Historical corrections",
+    "detail": "Rebuild evidence chronologically after regrading, deletion permitted by policy, late paper ingestion or revised scoring. A corrected old result must not simply be appended as a new learning event.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-10",
+    "title": "Cohort comparisons",
+    "detail": "Compare pace/accuracy only against an appropriate eligible cohort with minimum sample size, anonymity and published population/date. Personal practice scores must not masquerade as formal peer rank.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "EVD-11",
+    "title": "Educational policy controls",
+    "detail": "Provide an authorized settings workspace for evidence minimums, mastery criteria, historical weighting, focus limits, adaptive coverage/difficulty, retest intervals and numerical policy defaults. Validate ranges and relationships, preview effects on representative records, publish a version, reset/restore defaults and document whether existing results are recalculated. Every setting must affect the behavior its description promises.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-01",
+    "title": "Revision collection",
+    "detail": "Collect released wrong answers, required skips and learner bookmarks, grouped by course/topic/reason; preserve repeated encounters and origins while avoiding duplicate cards for the same learning target.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-02",
+    "title": "States and scheduling",
+    "detail": "Track new, practicing, demonstrated and reopened revision items. Allow personal notes and instructor guidance; schedule spaced review and require fresh evidence before calling a misunderstanding resolved.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-03",
+    "title": "Discovery",
+    "detail": "Search/filter by wording, topic, subject, assessment, date, response type and resolution state. Show figures/options/solutions, learner working, prior help and next practice action.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-04",
+    "title": "One tutor conversation",
+    "detail": "Provide a consistent persistent tutor experience from result review, revision, lessons and practice, with appropriate context and clearly separated threads/learner privacy.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-05",
+    "title": "Grounded help",
+    "detail": "Supply released question/figure/options, approved solution/rubric, actual learner response and relevant lesson sources. Explain concepts, show steps, offer hints and fresh practice, and cite institution-approved sources when retrieved.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-06",
+    "title": "Interaction quality",
+    "detail": "Support streaming with interruption/retry, starter prompts, follow-up, feedback/reporting, mathematical rendering, useful transcript search, accessible input and recovery of unsent messages.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-07",
+    "title": "Release enforcement",
+    "detail": "Re-check entitlement on every history read, message, retrieval and attachment. Previously released questions must be excluded from confidential scored reuse for that learner by default; policy exceptions need an explicit assessment design decision.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-08",
+    "title": "Abuse/privacy controls",
+    "detail": "Enforce per-person/institution request and spend limits, bounded context, attachment protections, prompt-injection resistance and approved knowledge-source scope. Never execute student-provided code or tool instructions in a privileged environment.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "REV-09",
+    "title": "Teacher escalation",
+    "detail": "Allow a learner to escalate unresolved doubt to an assigned instructor with selected context, status and notification; private tutor history is shared only through the applicable consent/policy.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-01",
+    "title": "Goals",
+    "detail": "Set target exam/course outcomes, target date, weekly availability and achievable goals; show progress and allow instructor/learner revisions without fabricated rank promises.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-02",
+    "title": "Calendar",
+    "detail": "Generate/edit daily, weekly and monthly study plans with lessons, timed drills, revision and assessments; reschedule missed tasks, avoid overload and show dependencies/estimated effort. Export calendar events with timezone correctness.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-03",
+    "title": "Instruction design",
+    "detail": "Offer reviewed topic lessons, concise notes, formulas, worked examples, misconception checks and unsolved exercises. Adapt explanation style/depth and accessibility to observed needs and learner preference.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-04",
+    "title": "Personal context",
+    "detail": "Show \u201cwhat to work on\u201d grounded in the learner's released work without leaking personal examples into shared lessons. Include useful next steps and clear rationale.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-05",
+    "title": "Consumption",
+    "detail": "Provide section navigation, reader progress, bookmarks, notes, readable maths/figures, downloads when licensed, audio/video/transcript views and remembered position.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-06",
+    "title": "Completion and understanding",
+    "detail": "Distinguish opened, viewed, activity completed and understanding demonstrated. Retain section progress and allow unmark/revisit; completion alone does not establish mastery.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-07",
+    "title": "Exercise responses",
+    "detail": "Let learners answer embedded practice/check questions, see policy-appropriate hints/feedback, and retain attempts. Connect reviewed practice evidence to learning indicators using its declared lower/high-stakes weighting.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-08",
+    "title": "Content reuse/versioning",
+    "detail": "Reuse approved material by topic/outcome/language/level/accessibility/version and compatible needs. Refresh after approved changes while retaining completed historical versions and personal progress mappings.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-09",
+    "title": "Instructor assignments",
+    "detail": "Assign learning packs or individual resources to classes/learners, set due dates, see progress and understanding checks, and intervene without overwriting a learner's private notes.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-10",
+    "title": "Adaptive papers",
+    "detail": "Generate personalized papers emphasizing current gaps and prerequisite needs while maintaining breadth, choosing suitable difficulty and avoiding recent/exposed questions. Persist the selection rationale, coverage and fallback decisions.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-11",
+    "title": "Thin-bank behavior",
+    "detail": "Show unavailable coverage, offer reviewed alternatives or explicitly disclosed repeat practice, and request authoring work. Never silently weaken a formal paper's secrecy or pretend target coverage was met.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-12",
+    "title": "Live adaptive practice",
+    "detail": "Implement a distinct practice mode that chooses subsequent questions from observed responses and uncertainty, with transparent stopping conditions. Do not mix its score/rank with fixed formal papers without validated normalization.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-13",
+    "title": "Continuity",
+    "detail": "Replace only obsolete unstarted recommended work, preserve started assignments, re-evaluate priorities after new evidence, and rotate focus after sustained improvement or regression.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "PLN-14",
+    "title": "Motivation",
+    "detail": "Offer optional streaks, achievements and progress celebrations, with rest/accommodation-aware rules. Peer leaderboards are opt-in and cohort-scoped; avoid exposing children's identities publicly.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "STU-01",
+    "title": "Resource library",
+    "detail": "Upload and organize documents, lesson notes, presentations, video/audio, worksheets and links by course/topic/outcome/language/license. Search, preview, version, approve, assign, hide/unpublish and archive with access controls.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-02",
+    "title": "Content workflows",
+    "detail": "Separate authoring, review, publication and learner visibility; retain feedback/version comparison and dependencies. Broken links, superseded material and missing accessibility assets are visible maintenance work.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-03",
+    "title": "Generated material",
+    "detail": "Generate original drafts of notes, slide lessons, teaching scripts, examples and exercises from approved sources/outcomes. Require academic review where the content may teach or assess a learner; keep source/version/model attribution.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-04",
+    "title": "Narration",
+    "detail": "Generate speech from approved scripts with voice/language/rate controls, pronunciation overrides and math-aware phrasing; provide transcript and downloadable media where licensed. Audio processing must not delay usable text.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-05",
+    "title": "Presentation-to-video",
+    "detail": "Accept PPTX/PDF slides and a custom or generated per-slide script. Select slide range, voice, presenter asset/layout, captions, output quality and target language; validate script/slide alignment.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-06",
+    "title": "Presenter generation",
+    "detail": "Create a talking-presenter video using consented/licensed presenter assets, with static-presenter or narration-only alternatives explicitly identified. Support preview and control of placement/size/background without impersonating an unconsenting person.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-07",
+    "title": "Captions and exports",
+    "detail": "Generate/edit synchronized captions, provide transcript/caption-file export, render a short preview, inspect duration/resolution, then publish/download the full result. Caption editing creates a traceable revision.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-08",
+    "title": "Concept animations",
+    "detail": "Create educational animations through controlled templates/parameters and reviewed scripts, including a representative original mathematical/scientific explanation. Generated animation instructions are untrusted; render in an isolated bounded environment without privileged execution.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-09",
+    "title": "Job operations",
+    "detail": "Queue single/batch generation, show stages/history/thumbnails, estimate available cost/time, save presets, cancel, retry, recover interrupted work, download results and purge unneeded artifacts under retention policy.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-10",
+    "title": "Topic delivery controls",
+    "detail": "Independently control generation, publication and visibility of media/resources; uploaded and generated material can coexist. Hiding output must not falsely display a generating state or delete its audit history.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "STU-11",
+    "title": "External resources",
+    "detail": "Validate resource links, preview supported embeds safely, show source attribution, and provide accessible/open-in-new-tab alternatives. Link access still respects institutional publication scope.",
+    "milestone": 6,
+    "state": "planned"
+  },
+  {
+    "id": "TCH-01",
+    "title": "Teaching home",
+    "detail": "Show assigned classes/learners, upcoming teaching and assessments, recent released results, review queues, unresolved doubts and actionable attention items.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "TCH-02",
+    "title": "Learner detail",
+    "detail": "Inspect permitted subject/outcome evidence, comparable trends, required skips/errors, revision history, study engagement, assessments and attendance. Cross-subject insight may be granted for assigned learners without granting unrelated authoring privileges.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "TCH-03",
+    "title": "Class insight",
+    "detail": "Provide student-by-topic heatmaps, subject/date/class filters, evidence counts, common misconceptions, question quality concerns, top/improving/struggling groups and exports. An empty cell is unobserved, not weak.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "TCH-04",
+    "title": "Interventions",
+    "detail": "Create a private academic note or structured intervention with reason, learner/group, assigned staff, tasks/resources, due date and follow-up outcome. Distinguish staff-only notes from family/learner-visible guidance.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "TCH-05",
+    "title": "Recommendations",
+    "detail": "Propose remedial groups, teaching sequences, targeted resources and reassessment based on actual evidence. Allow teachers to accept/edit/reject and record why; preserve human responsibility.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "TCH-06",
+    "title": "Teaching outcomes",
+    "detail": "Show cohort progress and instructional engagement with comparable populations and evidence limitations. Do not present unadjusted student scores as proof that one teacher caused improvement.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "TCH-07",
+    "title": "Professional directory",
+    "detail": "Maintain approved biography, qualifications/experience, teaching subjects, institutional contact and relevant availability. Default directory access to assigned families/learners and appropriate staff; public publication requires explicit institution/teacher policy.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "TCH-08",
+    "title": "Roster and review tasks",
+    "detail": "Search/filter assigned learners, retain bulk selections, mark/review delegated work and produce a useful student report. Remove access when the teaching assignment ends, subject to policy for retained grading obligations.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "FAM-01",
+    "title": "Child workspace",
+    "detail": "Provide a clear child switcher and read-only released progress, topic strengths/gaps, learning recommendations, assessment history, rank context where permitted, upcoming deadlines and attendance.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "FAM-02",
+    "title": "Useful reports",
+    "detail": "Show readable summaries and drill-down without overwhelming jargon, with explanation of unknown/insufficient evidence, actual dates, preparation goals and appropriate ways to support the child.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "FAM-03",
+    "title": "Communication",
+    "detail": "Contact assigned staff through permitted threads, view announcements, acknowledge requested notices and arrange meetings where configured. Do not expose staff private phone/email details by default.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "FAM-04",
+    "title": "Consent and preferences",
+    "detail": "Manage notifications, approved child data-sharing/optional-feature choices, relationship/contact verification and receipt of relevant policy changes.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "FAM-05",
+    "title": "Engagement",
+    "detail": "Record actual portal/notice engagement for authorized institution oversight, distinguishing login from meaningful activity. Show transparent definitions and avoid making judgments about parenting from visit frequency.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "FAM-06",
+    "title": "Print/download",
+    "detail": "Print or download a child's released report with clean pagination, readable charts, date range and reference/version. Missing or revoked family relationships must immediately remove private access.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "ATT-01",
+    "title": "Attendance capture",
+    "detail": "Record class attendance, late/excused/absent states, dates, sessions and authorized corrections. Support manual and validated bulk import; retain who recorded or changed each entry.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "ATT-02",
+    "title": "Timetables",
+    "detail": "Maintain recurring sessions, rooms/online links, holidays, substitutions and schedule exceptions; show appropriate learner/teacher/family calendars and handle timezone/display correctly.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "ATT-03",
+    "title": "Follow-up",
+    "detail": "Notify configured recipients of missing attendance or recurring absence, with correction/acknowledgment workflow and safeguards against duplicate notifications.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "ATT-04",
+    "title": "Analysis",
+    "detail": "Relate attendance and learning participation to observed academic outcomes with date/subject filters and explicit population; describe correlation without claiming causation.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "ATT-05",
+    "title": "Activity definitions",
+    "detail": "Define enrollment, active learner, lesson activity, assessment completion and guardian engagement consistently; show metric windows and avoid inflated activity from polling or background processes.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-01",
+    "title": "Notification inbox",
+    "detail": "Provide categorized unread/read/actioned notices for assessments, reports, lessons, messages, account security, billing and review exceptions; include deep links authorized when opened.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-02",
+    "title": "Delivery channels",
+    "detail": "Implement in-app, email and mobile/web push, plus configured SMS for selected events. Track queued/sent/provider-accepted/delivered/failed where actually observable; keep security messages reliable.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-03",
+    "title": "Preferences",
+    "detail": "Offer per-event/channel preferences, digest frequency, timezone/quiet hours, unsubscribe where applicable, and institution-mandatory notices with explicit justification.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-04",
+    "title": "Messaging",
+    "detail": "Provide scoped instructor\u2013learner and guardian\u2013staff threads, attachments, read-state policy, search, conversation assignment and escalation. Avoid unrestricted discovery/contact between minors or unrelated adults.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-05",
+    "title": "Class discussions",
+    "detail": "Support topic/class forums, questions/replies, helpful answers, attachments, reporting, moderation, locking and archival. Make participation policies and staff responsibility visible.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-06",
+    "title": "Announcements",
+    "detail": "Draft/review/publish scheduled organization/campus/class announcements, select recipients, request acknowledgment and report delivery/engagement without exposing other recipients' private data.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-07",
+    "title": "Templates and retries",
+    "detail": "Version message templates, localize, preview sample data, enforce deduplication, retry transient delivery failures and provide dead-letter recovery. Do not leak answer keys through previews or notification snippets.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-08",
+    "title": "Meetings",
+    "detail": "Offer appointment requests/time slots, confirmation/cancellation, reminders and calendar files; integrate an external meeting/calendar provider only through a configured adapter.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "COM-09",
+    "title": "Support desk",
+    "detail": "Submit a help request, attach consented evidence, track status/owner/replies and link an approved expiring support grant. Provide searchable user help and contextual guidance.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-01",
+    "title": "Personal insight",
+    "detail": "Show completed/assigned assessments, average/best normalized scores, accuracy, required coverage, trends, time quality, readiness, focus priorities, study progress and revision outcomes. Every tile drills into its underlying evidence.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-02",
+    "title": "Institution oversight",
+    "detail": "Compare authorized campuses/classes/courses/subjects with enrollment, participation, completion, learning evidence, staff responsibility and review backlog. Use consistent definitions and comparable populations.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-03",
+    "title": "Filters and comparisons",
+    "detail": "Support date range, course, campus, subject, class, instructor, assessment type/channel and evidence sufficiency; retain filter state in permitted shareable links. Compare periods with stated denominators.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-04",
+    "title": "Report builder",
+    "detail": "Select student/class/institution report scope, date range, metrics, sections, grouping/sorting, charts and privacy mode; preview, save templates and generate reports with provenance/version.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-05",
+    "title": "Export center",
+    "detail": "Produce real PDF, CSV and XLSX outputs; export allowed charts as PNG/SVG and heatmaps as appropriate. Large exports run in the background with access-controlled, expiring downloads and spreadsheet-formula injection protection.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-06",
+    "title": "Scheduled reporting",
+    "detail": "Schedule report generation/delivery to authorized recipients, honor timezone, permission changes and retention, expose run history, retry safely and stop when recipients lose entitlement.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-07",
+    "title": "Custom dashboards",
+    "detail": "Provide a constrained interactive chart builder with permitted dimensions/metrics/types/layout, accessible color choices, saved dashboards and drill-down. Do not expose arbitrary SQL or unrestricted query execution.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-08",
+    "title": "Leaderboards and benchmarking",
+    "detail": "Offer comparable assessment/cohort rankings, institution-approved anonymous peer percentiles and optional learner participation. Show cohort size, ties, eligibility and retake policy; no universal rank fabricated from adaptive practice.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-09",
+    "title": "Evidence traceability",
+    "detail": "Include calculation policy, source revision and as-of time; show incomplete/stale recalculation states. PDF/Excel/UI totals must agree for the same filters and revision.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "RPT-10",
+    "title": "Readable sharing",
+    "detail": "Create clean print layouts and explicitly authorized expiring report shares with audit and revocation. Never make a child's report publicly discoverable for convenience.",
+    "milestone": 7,
+    "state": "planned"
+  },
+  {
+    "id": "INS-01",
+    "title": "Performance trajectories",
+    "detail": "Implement explainable trend/improvement estimates from comparable historical work, with data sufficiency, uncertainty intervals, influencing factors and target gap. Do not equate extrapolation with a guaranteed exam result.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "INS-02",
+    "title": "Rank forecasting",
+    "detail": "Implement a forecast pipeline with an appropriate licensed outcome/calibration dataset, evaluation split, versioned model and out-of-sample calibration. If the necessary exam/cohort data are absent, return a structured insufficient-evidence result and explain what is needed.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "INS-03",
+    "title": "What-if tools",
+    "detail": "Offer hypothetical study/score scenarios clearly labeled as simulations, constrain inputs and show assumptions/uncertainty. Hypothetical scenarios must never update real learner evidence.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "INS-04",
+    "title": "Confidence and reflection",
+    "detail": "Provide voluntary pre/post assessment confidence, perceived time pressure, and study reflections. Separate self-report from timing inference, permit correction/withdrawal, and respect guardian/institution consent policies.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "INS-05",
+    "title": "Supportive coaching",
+    "detail": "Offer nonclinical reflection prompts, preparation/break strategies and instructor follow-up based on consented observations. Never diagnose anxiety, mental illness or personality from a score, camera, or click pattern; visibly distinguish learner statements from inferred suggestions.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "INS-06",
+    "title": "Human attention flags",
+    "detail": "Show explainable academic/support flags to authorized staff, with evidence, review, dismissal, follow-up and correction. No automated punitive or clinical decision based on a predictive score.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "INS-07",
+    "title": "Evaluation workspace",
+    "detail": "Manage original/licensed evaluation datasets and labels, model/prompt versions, test runs, drift, per-subgroup error and calibration, comparison/rollback and approval. Keep evaluation data scoped/private.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "INS-08",
+    "title": "Production gates",
+    "detail": "Expose evaluated versus experimental insight and fail closed to honest missing evidence when input distribution or model support is inadequate. Deliver the functional model training/evaluation/inference path even when a deployment still needs its real institutional dataset.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-01",
+    "title": "Plans and entitlements",
+    "detail": "Manage subscription plans/trials, seat/campus/storage/AI allowances, feature access, upgrades/downgrades, grace periods, renewal/cancellation and institution billing identity. Preserve learners' access to entitled historical records when a plan changes.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-02",
+    "title": "Checkout/payment",
+    "detail": "Implement a real payment-provider adapter with sandbox support, hosted/tokenized payment collection, state tracking, signed callbacks and idempotent settlement. The platform must not store raw payment-card details.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-03",
+    "title": "Financial records",
+    "detail": "Represent money in currency-appropriate minor units with explicit currency, rounding and discount/tax configuration. Issue immutable numbered invoices/receipts and correction/credit records instead of editing settled totals.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-04",
+    "title": "History and billing UI",
+    "detail": "Show invoices, credits, payments, failed collection, due dates, subscription state and downloadable documents to authorized finance staff and payers. Explain pending versus completed payment.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-05",
+    "title": "Refunds/cancellation",
+    "detail": "Provide permissioned refund requests, reason/approval, full/partial refund execution, provider confirmation and failure/reconciliation. Prevent concurrent or replayed requests from refunding more than the settled refundable amount.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-06",
+    "title": "Webhook/reconciliation",
+    "detail": "Verify authenticity, persist event IDs, tolerate replay/out-of-order delivery, reconcile provider status and expose discrepancies. A checkout-success page is not proof of settlement.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-07",
+    "title": "Budgets and usage",
+    "detail": "Meter billable seats/services and AI consumption transparently, show period limits and actual-versus-estimated amounts, alert budget owners and define behavior at the limit without losing exam answers.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-08",
+    "title": "Financial insight",
+    "detail": "Report collected/outstanding/refunded revenue, subscription changes and usage trends, scoped by organization/campus where meaningful. Separate accrual/invoice views from cash receipts and document definitions.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "FIN-09",
+    "title": "Provider setup and access",
+    "detail": "Validate configuration, provide test-mode indicators and controlled production activation, mask secrets, separate finance permissions, and audit refunds/plan changes. Never charge or issue refunds during automated demo seeding.",
+    "milestone": 8,
+    "state": "planned"
+  },
+  {
+    "id": "UX-01",
+    "title": "Public site",
+    "detail": "Provide original home, feature/audience explanations, company/about, pricing where configured, contact/demo request, help, terms/privacy and sign-in/enrollment entries. A demo booking/contact form must actually persist and route requests.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "UX-02",
+    "title": "Honest content",
+    "detail": "Publish only supported features and verified outcomes; show real availability/configuration rather than invented testimonials, customer numbers, prediction accuracy or locked-browser claims.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "UX-03",
+    "title": "Original visual system",
+    "detail": "Define coherent typography, spacing, color, density, components and motion; support light/dark/system preference and text-size settings. Keep complex staff tools legible and learner work calm and focused.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "UX-04",
+    "title": "Responsive behavior",
+    "detail": "Support phones, tablets, desktop and print; dense tables need usable filtering/column choices or alternate views. Maintain accessible touch targets and avoid horizontal overflow for core workflows.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "UX-05",
+    "title": "Accessibility",
+    "detail": "Target WCAG 2.2 AA through keyboard navigation, visible focus, semantic labels, error summaries, screen-reader context, contrast, reduced motion, captions/transcripts and accessible mathematical content. Test complete workflows, not only component snapshots.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "UX-06",
+    "title": "Localization",
+    "detail": "Provide an internationalization foundation and complete English/Hindi UI translations for delivered workflows, locale-aware dates/numbers and content-language selection. Keep technical identifiers stable and permit additional languages without rewriting business logic.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "UX-07",
+    "title": "State quality",
+    "detail": "Every important view needs truthful loading, empty, partial, offline, permission-denied, recoverable error and success states, including saved feedback and destructive-action confirmation. Preserve user input across retryable failures.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "UX-08",
+    "title": "Discoverability",
+    "detail": "Implement entitled global search, navigation breadcrumbs, remembered workspace context, accessible dialogs, contextual help and clear account/child switches. Do not expose records through search snippets beyond the user's scope.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "UX-09",
+    "title": "Public performance/metadata",
+    "detail": "Provide appropriate discoverability metadata, sitemap/canonical handling and fast public pages. Exclude private learner pages and reports from indexing/cache leakage.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "MOB-01",
+    "title": "Native applications",
+    "detail": "Deliver Android/iOS source/build configuration with sign-in/MFA/recovery, learner/family home, lessons, tutor, revision, eligible assessments, notifications, goals and released reports. Reuse business contracts and design tokens, not browser-only components by force.",
+    "milestone": 9,
+    "state": "planned"
+  },
+  {
+    "id": "MOB-02",
+    "title": "Secure local state",
+    "detail": "Use OS-protected credential storage, per-user/institution caches, explicit downloads and eviction, local data encryption appropriate to sensitivity, and sign-out/revocation cleanup. Do not leave another child's records accessible after switching accounts.",
+    "milestone": 9,
+    "state": "planned"
+  },
+  {
+    "id": "MOB-03",
+    "title": "Offline study",
+    "detail": "Download permitted notes/media/exercises and continue reading/progress/notes offline; show download rights, size, availability, expiry and synchronization state. Protected formal answer keys are never cached early.",
+    "milestone": 9,
+    "state": "planned"
+  },
+  {
+    "id": "MOB-04",
+    "title": "Synchronization",
+    "detail": "Use retryable versioned mutations, stable operation IDs, conflict review/resolution and server acknowledgments. Preserve edits, handle partial upload and stop sync when membership/permissions change.",
+    "milestone": 9,
+    "state": "planned"
+  },
+  {
+    "id": "MOB-05",
+    "title": "Assessment network policy",
+    "detail": "Formal examinations require server-backed eligibility/deadlines and a documented connectivity policy. Offline practice is supported; offline formal sittings are allowed only through an explicitly configured supervised delivery design, never by silently trusting device time.",
+    "milestone": 9,
+    "state": "planned"
+  },
+  {
+    "id": "MOB-06",
+    "title": "Push/deep links",
+    "detail": "Register/revoke push tokens by installation, navigate to authorized content, respect child/workspace context and preferences, and handle stale or revoked links safely.",
+    "milestone": 9,
+    "state": "planned"
+  },
+  {
+    "id": "MOB-07",
+    "title": "Web installation",
+    "detail": "Provide installable web access and offline study where browser capabilities permit, with truthful limits compared with native apps. Service workers must not cache unreleased assessments/results or private responses across users.",
+    "milestone": 9,
+    "state": "planned"
+  },
+  {
+    "id": "MOB-08",
+    "title": "Qualification",
+    "detail": "Verify interruption/resume, updates, permission revocation, accessibility, low bandwidth, storage exhaustion and basic Android/iOS flows; document store-signing/release configuration separately from source completion.",
+    "milestone": 9,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-01",
+    "title": "Capability adapters",
+    "detail": "Route text, vision/document, retrieval, speech and presenter generation through Go-controlled adapters with explicit model/provider capabilities, timeouts, cancellation and supported input limits. At least one functional adapter is required for each delivered AI capability.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-02",
+    "title": "Instruction management",
+    "detail": "Edit/review/version generation instructions, describe variables/output contracts, preview/test against fixtures, compare history, publish/reset/rollback and retain editor/approver identity.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-03",
+    "title": "Output validation",
+    "detail": "Validate structured outputs, academic references, allowed values, completeness and asset relationships before business use. Preserve malformed/failed outcomes safely for authorized debugging without exposing private data unnecessarily.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-04",
+    "title": "Reuse/invalidation",
+    "detail": "Key reusable generation by approved input, instruction, model, language and policy revisions; prevent duplicate concurrent generation; refresh dependent material after approval while preserving completed historical content.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-05",
+    "title": "Complete consumption accounting",
+    "detail": "Record requests, model/provider, feature, tenant/person scope, input/output/reasoning/cached tokens where observable, retries/failures, latency, monetary estimates and provider-reported actual cost. Distinguish missing cost data from zero.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-06",
+    "title": "Budgets/limits",
+    "detail": "Enforce per-feature/person/organization ceilings and shared provider quotas, reserve/reconcile spend for concurrent jobs, and provide warnings and admin overrides with audit. Unauthorized requests must not burn a learner's allowance.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-07",
+    "title": "Resilience",
+    "detail": "Use capability-compatible fallback and bounded retry/backoff; distinguish transient overload, authentication failure, exhausted budget and daily quota. Do not repeatedly retry a permanent error or discard approved human review.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-08",
+    "title": "Quality and feedback",
+    "detail": "Collect content/tutor reports, run repeatable evaluations, compare provider/instruction revisions and gate publication on actual evidence. Track hallucination/diagram extraction/marking failures as supportable incidents.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-09",
+    "title": "Data boundaries",
+    "detail": "Isolate retrieval/content caches by tenancy and permitted sharing; minimize personal data, redact logs and control provider retention settings. Treat document/student content as data, not instructions to access tools or secrets.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "AIO-10",
+    "title": "Operator console",
+    "detail": "Show current configuration/capabilities, consumption, budgets, failures, evaluation results, generation history and recoverable jobs. Secrets are set through controlled configuration and never revealed through the ordinary console/API.",
+    "milestone": 5,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-01",
+    "title": "Durable execution",
+    "detail": "Persist job intent with the triggering business transaction; support leases/heartbeat, retry attempts, exponential backoff where appropriate, cancellation, dead-letter inspection and crash recovery. Exactly-once business outcomes must survive at-least-once delivery.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-02",
+    "title": "Operational console",
+    "detail": "Search/filter jobs, inspect safe error context, replay failed work with authorization, cancel or reschedule, see backlog/progress, and identify orphaned records/assets. Every administrative recovery action is audited.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-03",
+    "title": "File lifecycle",
+    "detail": "Store originals and derivatives privately, validate file signatures and limits, quarantine unsafe/unscannable uploads, use bounded document/media processing, preserve provenance, handle resumable uploads and remove abandoned artifacts safely.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-04",
+    "title": "Audit",
+    "detail": "Provide append-only security/business audit records with actor, tenant, scope, operation, reason, object/revision, correlation ID and time. Search/export through appropriate permissions; logs must not contain passwords, session tokens, raw card data or unrestricted tutor transcripts.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-05",
+    "title": "Application security",
+    "detail": "Protect CSRF/session cookies, request boundaries, injection/SSRF, upload execution, object access, cross-tenant reads/writes, export abuse, output rendering and webhook integrity. Encrypt transport and restrict service credentials; use centralized secret management appropriate to deployment.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-06",
+    "title": "Privacy/consent",
+    "detail": "Provide data-access/export/correction/deletion-request workflows, guardian/optional-feature consent records, revocable shares, retention schedules and legal holds. Implement the institution's configured jurisdiction/policy requirements without claiming automatic compliance from a checkbox.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-07",
+    "title": "Resilience/health",
+    "detail": "Offer liveness/readiness, structured logs, request/job traces and metrics for API latency/errors, database saturation, job age, marking delay, file processing, provider quota and financial reconciliation. Expose safe operator dashboards and actionable alerts.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-08",
+    "title": "Backup and recovery",
+    "detail": "Schedule encrypted database/object backups, define RPO/RTO and retention, document restore, and perform a timed restore drill including academic versions, files, financial records and access controls. A backup file alone is not recovery evidence.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-09",
+    "title": "Environment/deployment",
+    "detail": "Provide local containers, migrations, validated secrets/provider settings, CI checks, staged releases, rollback procedures, maintenance mode and safe schema evolution. Reboots and deployments must not lose private files or acknowledged responses.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-10",
+    "title": "Performance/concurrency",
+    "detail": "Adopt the reference workload in section F, load-test actual behavior, bound expensive work and stream/queue large operations. Do not hardcode success claims without an observed run.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-11",
+    "title": "Support recovery",
+    "detail": "Resolve account/session issues, failed import/scan jobs, missing files, disputed marks, notification failures and payment discrepancies through authorized tools/runbooks. Operator access to private records requires a scoped support grant and audit.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-12",
+    "title": "Data portability",
+    "detail": "Export/import documented institution-owned data formats, validate mappings and reconcile counts/revisions in a fresh installation. Do not require any external historical application or its data model.",
+    "milestone": 1,
+    "state": "planned"
+  },
+  {
+    "id": "RUN-13",
+    "title": "Delivery evidence",
+    "detail": "Maintain requirement status, test results, screen/state coverage, accessibility observations, provider setup and known limitations. Distinguish source completion, local/sandbox verification and production verification.",
+    "milestone": 1,
+    "state": "planned"
+  }
+]

@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { AcademicStudio } from "./academic-studio";
 import { AdmissionPanel } from "./admission-panel";
 import { AccountPanel } from "./account-panel";
 import { SettingsPanel } from "./settings-panel";
@@ -20,6 +21,7 @@ type Person = components["schemas"]["Person"];
 type Course = components["schemas"]["Course"];
 type Row = Record<string, string | number | boolean>;
 type Pane =
+  | "education"
   | "people"
   | "campuses"
   | "courses"
@@ -35,6 +37,7 @@ type Pane =
 const text = {
   en: {
     workspace: "Workspace",
+    education: "Learning & assessment",
     people: "People",
     campuses: "Campuses",
     courses: "Courses",
@@ -90,6 +93,7 @@ const text = {
     local: "Development installation · synthetic data only",
   },
   hi: {
+    education: "अध्ययन और मूल्यांकन",
     workspace: "कार्यस्थल",
     people: "लोग",
     campuses: "परिसर",
@@ -147,7 +151,7 @@ const text = {
   },
 };
 const columns: Record<
-  Exclude<Pane, "security" | "account" | "settings" | "intake">,
+  Exclude<Pane, "education" | "security" | "account" | "settings" | "intake">,
   string[]
 > = {
   people: ["name", "email", "role", "state", "access_state"],
@@ -349,6 +353,7 @@ export function Workspace({
             signal,
           });
           break;
+        case "education":
         case "intake":
         case "account":
         case "settings":
@@ -538,6 +543,7 @@ export function Workspace({
           <nav aria-label={t.workspace}>
             {(
               [
+                "education",
                 "people",
                 "intake",
                 "enrollments",
@@ -555,7 +561,10 @@ export function Workspace({
               .filter((p) =>
                 p === "settings"
                   ? owner
-                  : manager || p === "security" || p === "account",
+                  : manager ||
+                    p === "education" ||
+                    p === "security" ||
+                    p === "account",
               )
               .map((p) => (
                 <button
@@ -697,7 +706,8 @@ export function Workspace({
                 </label>
               </form>
             )}
-            {pane !== "security" &&
+            {pane !== "education" &&
+              pane !== "security" &&
               pane !== "account" &&
               pane !== "settings" &&
               pane !== "intake" && (
@@ -1227,6 +1237,19 @@ export function Workspace({
                 org={org}
                 csrf={me.csrf}
                 onSaved={() => void loadContexts()}
+              />
+            )}
+            {pane === "education" && (
+              <AcademicStudio
+                key={org + campus}
+                org={org}
+                campus={campus}
+                csrf={me.csrf}
+                staff={contexts.some(
+                  (c) =>
+                    c.id === org &&
+                    ["owner", "coordinator", "instructor"].includes(c.role),
+                )}
               />
             )}
             {pane === "intake" && (

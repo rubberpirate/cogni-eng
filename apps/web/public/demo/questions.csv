@@ -1,0 +1,4 @@
+type,question,A,B,C,D,answer,marks,penalty,difficulty,language,solution,provenance,license
+single,"A seedling is 12 cm tall. It grows another 7 cm. What is its new height?",19 cm,18 cm,20 cm,5 cm,A,2,0,standard,en,"12 + 7 = 19 cm.",Original Learning Workspace demonstration question,CC0-1.0
+multiple,"Select every number divisible by 3.",12,14,21,25,A|C,2,0.5,standard,en,"12 = 3 × 4 and 21 = 3 × 7; the other numbers leave a remainder.",Original Learning Workspace demonstration question,CC0-1.0
+numerical,"Calculate 0.1 + 0.2 and enter a decimal.",,,,,0.3,1,0,standard,en,"One tenth plus two tenths is three tenths: 0.3.",Original Learning Workspace demonstration question,CC0-1.0

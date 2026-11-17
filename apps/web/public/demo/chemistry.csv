@@ -1,0 +1,3 @@
+type,question,A,B,C,D,answer,marks,penalty,difficulty,language,solution,provenance,license
+single,"How many oxygen atoms are represented by the formula CO2?",Two,One,Three,Zero,A,1,0,introductory,en,"The subscript 2 applies to oxygen. One CO2 molecule therefore contains two oxygen atoms.",Original Learning Workspace chemistry demonstration,CC0-1.0
+multiple,"Which changes preserve the identity of water molecules?",Melting ice,Boiling liquid water,Electrolysing water into hydrogen and oxygen,Reacting water with a reactive metal,A|B,2,0.5,standard,en,"Melting and boiling change physical state. Electrolysis and reaction with a reactive metal change chemical composition.",Original Learning Workspace chemistry demonstration,CC0-1.0

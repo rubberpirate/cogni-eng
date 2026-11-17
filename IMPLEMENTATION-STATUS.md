@@ -4,24 +4,24 @@ All scope is required. `planned` means unimplemented; `building` means partial s
 
 | Requirement | Milestone | State | Evidence | Relevant test | Blocker |
 |---|---|---|---|---|---|
-| [ID-01](#id-01) — Registration and invitations | 1 | building | internal/transport/identity.go; organization.go; web access and people forms | TestInvitationResetSingleUseAndMFA | Registration codes, approvals and phone verification outstanding; SMTP production unverified |
+| [ID-01](#id-01) — Registration and invitations | 1 | building | Registration code, verification, invitation and placement APIs/UI; policy acknowledgments | TestLearnerRegistrationRequiresVerificationAndStaffPlacement; registration browser journey | Phone verification, configurable approval policy and production email verification outstanding |
 | [ID-02](#id-02) — Credential sign-in | 1 | building | internal/access; web access form | TestPasswordAndSecretBoundaries; browser sign-in | Full accessible validation/localization and credential remediation pending |
-| [ID-03](#id-03) — Password recovery/change | 1 | building | identity.go recovery/reset; delivery worker; reset UI | TestInvitationResetSingleUseAndMFA | Password change, verified email change and security notifications outstanding |
-| [ID-04](#id-04) — MFA | 1 | building | TOTP enrollment/confirmation, encryption, single-use codes; security UI | TestInvitationResetSingleUseAndMFA | Lost-device support and organization enforcement outstanding |
+| [ID-03](#id-03) — Password recovery/change | 1 | building | Recovery/reset, password change and verified email-change APIs/UI | TestAccountChangesPreserveVerificationAndRevokeOtherSessions | Security notifications and complete recovery browser journeys outstanding |
+| [ID-04](#id-04) — MFA | 1 | building | TOTP enrollment, single-use recovery codes, institutional enforcement and security UI | TestStaffMFAEnforcementAllowsEnrollmentRecoveryPath | Lost-device support recovery and configured alternative factors outstanding |
 | [ID-05](#id-05) — Session management | 1 | building | Server sessions; session list/revoke/logout UI | TestInstitutionIsolationAndRevocation | Rotation, approximate context and complete browser recovery checks outstanding |
 | [ID-06](#id-06) — Account state | 1 | building | Membership suspension/restoration with audit and session revocation | TestInstitutionIsolationAndRevocation | Global account-state administration and complete recovery workflow outstanding |
 | [ID-07](#id-07) — Abuse controls | 1 | building | PostgreSQL sign-in/recovery/token throttles | Integration suite exercises requests | Remaining request categories and concurrent abuse tests outstanding |
-| [ID-08](#id-08) — Profile | 1 | planned | None | Not executed | Implementation outstanding |
+| [ID-08](#id-08) — Profile | 1 | building | Self profile/contact editing and account activity UI | TestAccountChangesPreserveVerificationAndRevokeOtherSessions; profile browser journey | Cropped profile image and staff-controlled academic field workflow outstanding |
 | [ID-09](#id-09) — Safe bootstrap | 1 | building | cmd/operator one-time bootstrap and development guard | Local startup exercised | Compromised-credential remediation and bootstrap acceptance test outstanding |
-| [ORG-01](#org-01) — Institution lifecycle | 1 | building | Institution creation and context switching | Local/browser workflow | Configuration, branding, lifecycle and entitlements incomplete |
-| [ORG-02](#org-02) — Campus management | 1 | building | Scoped campus list/create UI and composite foreign keys | TestScopedCoordinatorAndAuditAtomicity | Campus edit, dates, contacts and reassignment incomplete |
+| [ORG-01](#org-01) — Institution lifecycle | 1 | building | Institution creation/settings, timezone/locale/support/year and MFA policy UI | Settings browser journey; MFA policy integration test | Branding, lifecycle, closure and subscription entitlements incomplete |
+| [ORG-02](#org-02) — Campus management | 1 | building | Scoped campus creation/edit/closure checks with optimistic version UI | Campus editing browser journey; scoped coordinator tests | Contacts, responsible staff and active-date/reassignment workflows incomplete |
 | [ORG-03](#org-03) — Courses and groups | 1 | building | Campus-bound course creation/list UI | Browser course workflow | Groups, cohorts, sections and timetable management outstanding |
-| [ORG-04](#org-04) — Learner admission | 1 | building | Single enrollment with learner/course/campus validation and reference | Browser admission journey | CSV/XLSX, intake queue, eligibility and full metadata outstanding |
+| [ORG-04](#org-04) — Learner admission | 1 | building | Single admission and verified registration placement queue with permanent references | Registration/placement and admission browser journeys | CSV/XLSX, eligibility/grade and target exam metadata outstanding |
 | [ORG-05](#org-05) — Human references | 1 | building | Nonrecycled sequence-backed learner references | Browser admission journey | Paper references, aliases, external IDs and correction workflow outstanding |
-| [ORG-06](#org-06) — Transfers and withdrawal | 1 | planned | None | Not executed | Implementation outstanding |
-| [ORG-07](#org-07) — Guardian relationships | 1 | building | Institution-approved multiple family links and removal UI | Pending complete family browser journey | Verification, child workspace and custody controls outstanding |
+| [ORG-06](#org-06) — Transfers and withdrawal | 1 | building | Transfer/withdrawal API/UI with placement journal and session revocation | TestPlacementReferenceHistoryAndStaleWrite | Complete history viewing, eligibility/assignment effects and scheduled transfer handling outstanding |
+| [ORG-07](#org-07) — Guardian relationships | 1 | building | Approve/remove/reapprove multiple family links, with retained audit and UI | Family-link browser creation/removal journey | Guardian verification, child workspace and custody controls outstanding |
 | [ORG-08](#org-08) — Staff and teaching assignments | 1 | building | Course/subject/effective-period staff responsibilities UI | Integration permission boundaries | Professional profile, roster editing and pagination outstanding |
-| [ORG-09](#org-09) — Permission administration | 1 | building | Role templates, campus checks, membership suspend/restore UI | TestScopedCoordinatorAndAuditAtomicity | Custom grants, bulk preview and protected owner transfer outstanding |
+| [ORG-09](#org-09) — Permission administration | 1 | building | Role templates, scoped checks, membership state UI and password/MFA-protected owner transfer | TestOwnershipTransferNeverOrphansInstitution | Custom scoped capability grants and bulk preview outstanding |
 | [ORG-10](#org-10) — Import/reconciliation tools | 1 | planned | None | Not executed | Implementation outstanding |
 | [CAT-01](#cat-01) — Curriculum models | 2 | planned | None | Not executed | Implementation outstanding |
 | [CAT-02](#cat-02) — Question types | 2 | planned | None | Not executed | Implementation outstanding |
@@ -162,7 +162,7 @@ All scope is required. `planned` means unimplemented; `building` means partial s
 | [ATT-04](#att-04) — Analysis | 7 | planned | None | Not executed | Implementation outstanding |
 | [ATT-05](#att-05) — Activity definitions | 7 | planned | None | Not executed | Implementation outstanding |
 | [COM-01](#com-01) — Notification inbox | 7 | planned | None | Not executed | Implementation outstanding |
-| [COM-02](#com-02) — Delivery channels | 7 | building | SMTP adapter, Mailpit local capture, delivery state | Worker starts locally | Local SMTP acceptance test, push/SMS and production integration outstanding |
+| [COM-02](#com-02) — Delivery channels | 7 | building | Real STARTTLS SMTP adapter; local Mailpit acceptance and invitation/verification messages | TestSMTPAcceptanceAndExpiredLeaseRecovery; captured-email browser journey | Live SMTP, SMS, push and actual-delivery qualification outstanding |
 | [COM-03](#com-03) — Preferences | 7 | planned | None | Not executed | Implementation outstanding |
 | [COM-04](#com-04) — Messaging | 7 | planned | None | Not executed | Implementation outstanding |
 | [COM-05](#com-05) — Class discussions | 7 | planned | None | Not executed | Implementation outstanding |
@@ -232,7 +232,7 @@ All scope is required. `planned` means unimplemented; `building` means partial s
 | [RUN-06](#run-06) — Privacy/consent | 1 | planned | None | Not executed | Implementation outstanding |
 | [RUN-07](#run-07) — Resilience/health | 1 | building | Liveness/readiness and structured request logging | Local startup | Metrics, traces, alerting and operator dashboard outstanding |
 | [RUN-08](#run-08) — Backup and recovery | 1 | planned | None | Not executed | Implementation outstanding |
-| [RUN-09](#run-09) — Environment/deployment | 1 | building | Local Compose, migration/bootstrap, exact dependencies, environment validation | Local full startup; build | Application containers, CI, maintenance/rollback qualification outstanding |
+| [RUN-09](#run-09) — Environment/deployment | 1 | building | Local Compose, API/worker/web container builds, migrations, environment validation and CI source | Bun startup; Docker API and web builds; unit/integration/browser checks | Hosted CI execution, production deployment, maintenance and rollback qualification outstanding |
 | [RUN-10](#run-10) — Performance/concurrency | 1 | planned | None | Not executed | Implementation outstanding |
 | [RUN-11](#run-11) — Support recovery | 1 | planned | None | Not executed | Implementation outstanding |
 | [RUN-12](#run-12) — Data portability | 1 | planned | None | Not executed | Implementation outstanding |

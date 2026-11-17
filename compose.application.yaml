@@ -1,0 +1,36 @@
+# Run after local initialization; stop host application processes first.
+services:
+  gateway:
+    build: .
+    environment:
+      APP_ENV: development
+      HTTP_ADDR: 0.0.0.0:8080
+      PUBLIC_ORIGIN: http://localhost:3000
+      DATABASE_URL: postgres://workspace:${DATABASE_PASSWORD:?required}@database:5432/workspace?sslmode=disable
+      MFA_KEY: ${MFA_KEY:?required}
+    depends_on:
+      database:
+        condition: service_healthy
+    ports: ["127.0.0.1:8080:8080"]
+    restart: unless-stopped
+  worker:
+    build: .
+    entrypoint: [/app/worker]
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgres://workspace:${DATABASE_PASSWORD:?required}@database:5432/workspace?sslmode=disable
+      SMTP_ADDR: mail:1025
+      SMTP_FROM: security@workspace.invalid
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        API_INTERNAL_URL: http://gateway:8080
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [gateway]
+    restart: unless-stopped

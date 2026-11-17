@@ -10,8 +10,11 @@ export function AccessForm({ mode }: { mode: "sign-in" | "reset" | "join" }) {
     [recovery, setRecovery] = useState(false),
     [token, setToken] = useState("");
   useEffect(() => {
-    setToken(location.hash.slice(1));
-    if (location.hash) history.replaceState(null, "", location.pathname);
+    const incoming = location.hash.slice(1);
+    if (incoming) {
+      setToken(incoming);
+      history.replaceState(null, "", location.pathname);
+    }
   }, []);
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -185,6 +188,8 @@ export function AccessForm({ mode }: { mode: "sign-in" | "reset" | "join" }) {
           <Link href="/sign-in">Return to sign in</Link>
         )}
         <p className="muted">
+          New learner? <Link href="/register">Request enrollment</Link>
+          <br />
           Need a hand? <Link href="/help">Access help</Link>
         </p>
       </section>

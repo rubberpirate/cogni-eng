@@ -128,7 +128,10 @@ func (s *Server) createFamily(w http.ResponseWriter, r *http.Request) error {
 			return nil, fail(400, "invalid_relationship", "Select a guardian and learner in this institution and campus.")
 		}
 		id := access.Random()
-		_, err = tx.Exec(ctx, "INSERT INTO family_link(id,institution_id,guardian_id,learner_id,relationship,state,approved_by) VALUES($1,$2,$3,$4,$5,'approved',$6)", id, org, in.GuardianID, in.LearnerID, in.Relationship, a.ID)
+		err = tx.QueryRow(ctx, "INSERT INTO family_link(id,institution_id,guardian_id,learner_id,relationship,state,approved_by) VALUES($1,$2,$3,$4,$5,'approved',$6) ON CONFLICT(institution_id,guardian_id,learner_id) DO UPDATE SET state='approved',relationship=excluded.relationship,approved_by=excluded.approved_by WHERE family_link.state='removed' RETURNING id", id, org, in.GuardianID, in.LearnerID, in.Relationship, a.ID).Scan(&id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fail(409, "duplicate", "This family link is already approved.")
+		}
 		if err != nil {
 			return nil, conflict(err)
 		}

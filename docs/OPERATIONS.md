@@ -12,11 +12,11 @@ SeaweedFS 4.54 runs a private local S3 bucket with environment-provided access k
 
 ## Bootstrap and recovery
 
-Apply migrations: `go run ./cmd/operator migrate`. On an empty installation, use `go run ./cmd/operator bootstrap` with BOOTSTRAP_EMAIL, BOOTSTRAP_NAME and a generated BOOTSTRAP_PASSWORD in the process environment. Bootstrap serializes with a PostgreSQL advisory lock and refuses to run after identities exist. The demo command is rejected outside development. Bootstrap currently creates an institution with development metadata; institution editing and full production onboarding remain incomplete.
+Apply migrations: `go run ./cmd/operator migrate`. On an empty installation, use `go run ./cmd/operator bootstrap` with BOOTSTRAP_EMAIL, BOOTSTRAP_NAME, BOOTSTRAP_INSTITUTION, BOOTSTRAP_CAMPUS, BOOTSTRAP_TIMEZONE and a generated BOOTSTRAP_PASSWORD in the process environment. Bootstrap serializes with a PostgreSQL advisory lock and refuses to run after identities exist. The demo command is rejected outside development. Bootstrap accepts explicit institution/campus names and timezone. Owners can edit core institution settings; full production onboarding remains incomplete.
 
 Members use password recovery from sign-in. The reset requires MFA when enabled and invalidates every session and outstanding security token. There is no automatic MFA bypass. Lost authenticator plus lost recovery codes requires a future verified support workflow; do not weaken the database manually to present a demonstration as complete.
 
-Membership suspension preserves records and revokes all of that person's sessions. Restoring the membership never restores those sessions. Global account-state administration, protected owner transfer and organization MFA enforcement remain incomplete.
+Membership suspension preserves records and revokes all of that person's sessions. Restoring the membership never restores those sessions. Global account-state administration, global account-state recovery remain incomplete. Ownership transfer and organization MFA enforcement now have protected working paths.
 
 ## Jobs and messages
 
@@ -29,3 +29,21 @@ Do not expose development ports to the public internet. The Go gateway binds loo
 ## Backup and restore qualification
 
 Targets remain RPO 15 minutes and RTO 2 hours, unmeasured. A consistent backup must include PostgreSQL, object storage, separately protected encryption keys and configuration. A full encrypted scheduled backup workflow and restore drill are not yet delivered. Do not claim recoverability from the presence of Docker volumes. Academic, financial, retention, notification and provider runbooks must be expanded with their working features before release.
+
+## Application containers
+
+After initializing `.env`/migrations/demo with `bun run dev`, stop the host app processes and run:
+
+```sh
+docker compose -f compose.yaml -f compose.application.yaml up -d --build
+```
+
+API/worker share one Go runtime image. Web uses a standalone Next.js build on Bun. All run without root. This configuration remains a local development deployment with local SMTP; it is not a production activation. The image builds passed locally. Container-to-container journeys still need qualification. `API_INTERNAL_URL` is compiled into Next rewrites; rebuild web when changing that destination.
+
+## Enrollment and account changes
+
+Enrollment intake issues expiring bounded codes and queues learner registrations. Email must be verified before placement. Failed/expired verification can be resent; pending requests can be placed or rejected with a reason. Self-registration never accepts a role field. Existing accounts request an institution invitation rather than gaining a second membership from a public code.
+
+Password changes revoke other sessions and unused resets. Email changes retain the old verified email until confirmation, then revoke other sessions. Owners can enforce staff MFA only after enabling their own. Staff can always reach personal MFA enrollment to regain institutional capability. Owner transfer reauthenticates, checks a verified staff successor, serializes the institution change, grants the new owner before archiving the caller's owner membership, and records a reason.
+
+Browser suites create a new explicitly synthetic owner fixture per run. This preserves real shared sign-in rate limits across repeated local test runs. Test fixture creation is prohibited outside development.

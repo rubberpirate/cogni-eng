@@ -53,7 +53,7 @@
     "title": "Profile",
     "detail": "Edit permitted name/contact/academic fields and a cropped profile image; retain verified identifiers and staff-controlled fields. Support emergency contacts and user-facing account activity history.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ID-09",
@@ -102,7 +102,7 @@
     "title": "Transfers and withdrawal",
     "detail": "Transfer campus/class/course, preserve academic history and identifier continuity, update affected staff scope, and record effective dates. Withdrawal ends access/assignments according to policy without destroying evidence.",
     "milestone": 1,
-    "state": "planned"
+    "state": "building"
   },
   {
     "id": "ORG-07",

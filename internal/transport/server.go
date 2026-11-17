@@ -24,6 +24,9 @@ type Config struct {
 }
 
 func LoadConfig() (Config, error) {
+	if os.Getenv("DATABASE_URL") == "" {
+		return Config{}, errors.New("DATABASE_URL is required")
+	}
 	c := Config{Env: os.Getenv("APP_ENV"), Origin: os.Getenv("PUBLIC_ORIGIN"), Address: os.Getenv("HTTP_ADDR")}
 	if c.Address == "" {
 		c.Address = "127.0.0.1:8080"
@@ -219,6 +222,15 @@ func (s *Server) Handler() http.Handler {
 		return nil
 	}))
 	for route, handler := range map[string]endpoint{
+		"POST /api/v1/verification/resend":                              s.resendVerification,
+		"POST /api/v1/register":                                         s.register,
+		"POST /api/v1/verify-email":                                     s.verifyEmail,
+		"GET /api/v1/institutions/{org}/admission-codes":                s.admissionCodes,
+		"POST /api/v1/institutions/{org}/admission-codes":               s.createAdmissionCode,
+		"DELETE /api/v1/institutions/{org}/admission-codes/{id}":        s.revokeAdmissionCode,
+		"GET /api/v1/institutions/{org}/admission-queue":                s.admissionQueue,
+		"POST /api/v1/institutions/{org}/admission-queue/{id}/decision": s.placeAdmission,
+
 		"GET /api/v1/profile":                               s.profile,
 		"PATCH /api/v1/profile":                             s.updateProfile,
 		"POST /api/v1/password":                             s.changePassword,

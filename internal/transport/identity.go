@@ -222,6 +222,9 @@ func (s *Server) confirmMFA(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
+		if err := s.limit(ctx, "mfa-confirm:"+a.ID, 10); err != nil {
+			return nil, err
+		}
 		var encrypted []byte
 		var enabled bool
 		err := tx.QueryRow(ctx, "SELECT mfa_secret,mfa_enabled FROM person WHERE id=$1 FOR UPDATE", a.ID).Scan(&encrypted, &enabled)
@@ -368,6 +371,11 @@ func (s *Server) consumeToken(w http.ResponseWriter, r *http.Request, kind strin
 		reason := ""
 		if kind == "invitation" {
 			reason = "Accepted terms-v1 and privacy-v1"
+			for _, policy := range []string{"terms", "privacy"} {
+				if _, err = tx.Exec(ctx, "INSERT INTO policy_acknowledgment(id,person_id,policy,version) VALUES($1,$2,$3,'v1') ON CONFLICT DO NOTHING", access.Random(), id, policy); err != nil {
+					return err
+				}
+			}
 		}
 		return audit(ctx, tx, r, Actor{ID: id}, "", "credential."+kind, id, reason)
 	})

@@ -25,12 +25,26 @@ async function run(cmd: string[]) {
   if ((await p.exited) !== 0) throw new Error(`${cmd[0]} failed`);
 }
 await run(["docker", "compose", "up", "-d", "--wait"]);
-await run(["go", "run", "./cmd/operator", "migrate"]);
-await run(["go", "run", "./cmd/operator", "demo"]);
+mkdirSync(".local/bin", { recursive: true, mode: 0o700 });
+await Promise.all(
+  ["gateway", "worker", "operator"].map((name) =>
+    run(["go", "build", "-o", `.local/bin/${name}`, `./cmd/${name}`]),
+  ),
+);
+await run([".local/bin/operator", "migrate"]);
+await run([".local/bin/operator", "demo"]);
 const children = [
-  ["go", "run", "./cmd/gateway"],
-  ["go", "run", "./cmd/worker"],
-  ["bun", "run", "web"],
+  [".local/bin/gateway"],
+  [".local/bin/worker"],
+  [
+    "bun",
+    "--bun",
+    "apps/web/node_modules/next/dist/bin/next",
+    "dev",
+    "apps/web",
+    "--hostname",
+    "127.0.0.1",
+  ],
 ].map((cmd) => Bun.spawn(cmd, { env, stdout: "inherit", stderr: "inherit" }));
 console.log(
   "Workspace: http://localhost:3000 · Local mail catcher: http://localhost:58025",
@@ -40,4 +54,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
     children.forEach((p) => p.kill());
     process.exit(0);
   });
-await Promise.all(children.map((p) => p.exited));
+const result = await Promise.race(children.map((p) => p.exited));
+children.forEach((p) => p.kill());
+if (result !== 0)
+  throw new Error("An application process stopped. Review its startup error.");

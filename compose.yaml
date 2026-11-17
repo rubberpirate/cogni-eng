@@ -1,0 +1,29 @@
+services:
+  database:
+    image: postgres:18.7
+    environment:
+      POSTGRES_USER: workspace
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?run bun run dev to initialize local configuration}
+      POSTGRES_DB: workspace
+    ports: ["127.0.0.1:55432:5432"]
+    volumes: ["records:/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workspace"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  objects:
+    image: chrislusf/seaweedfs:4.54
+    command: mini -dir=/data
+    environment:
+      AWS_ACCESS_KEY_ID: ${OBJECT_USER:?required}
+      AWS_SECRET_ACCESS_KEY: ${OBJECT_PASSWORD:?required}
+      S3_BUCKET: private-workspace
+    ports: ["127.0.0.1:59000:8333"]
+    volumes: ["objects:/data"]
+  mail:
+    image: axllent/mailpit:v1.28.0
+    ports: ["127.0.0.1:51025:1025", "127.0.0.1:58025:8025"]
+volumes:
+  records:
+  objects:

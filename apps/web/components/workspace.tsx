@@ -8,6 +8,10 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { AdmissionPanel } from "./admission-panel";
+import { AccountPanel } from "./account-panel";
+import { SettingsPanel } from "./settings-panel";
+import { CampusAction, PlacementAction } from "./record-actions";
 import { apiClient, type components } from "../../../clients/http";
 type Me = components["schemas"]["Me"];
 type Context = components["schemas"]["Workspace"];
@@ -24,7 +28,10 @@ type Pane =
   | "responsibilities"
   | "audit"
   | "deliveries"
-  | "security";
+  | "security"
+  | "account"
+  | "settings"
+  | "intake";
 const text = {
   en: {
     workspace: "Workspace",
@@ -37,6 +44,9 @@ const text = {
     audit: "Audit ledger",
     deliveries: "Delivery operations",
     security: "Access and security",
+    intake: "Enrollment intake",
+    account: "My account",
+    settings: "Institution settings",
     institution: "Institution",
     campus: "Campus",
     all: "All permitted campuses",
@@ -90,6 +100,9 @@ const text = {
     audit: "लेखा परीक्षण",
     deliveries: "संदेश संचालन",
     security: "प्रवेश और सुरक्षा",
+    intake: "प्रवेश अनुरोध",
+    account: "मेरा खाता",
+    settings: "संस्थान सेटिंग्स",
     institution: "संस्थान",
     campus: "परिसर",
     all: "सभी अनुमत परिसर",
@@ -133,7 +146,10 @@ const text = {
     local: "विकास स्थापना · केवल काल्पनिक डेटा",
   },
 };
-const columns: Record<Exclude<Pane, "security">, string[]> = {
+const columns: Record<
+  Exclude<Pane, "security" | "account" | "settings" | "intake">,
+  string[]
+> = {
   people: ["name", "email", "role", "state", "access_state"],
   campuses: ["name", "code", "address", "state"],
   courses: ["name", "academic_year"],
@@ -170,7 +186,10 @@ export function Workspace() {
     [people, setPeople] = useState<Person[]>([]),
     [courses, setCourses] = useState<Course[]>([]),
     [pane, setPane] = useState<Pane>("people"),
-    [rows, setRows] = useState<Row[]>([]),
+    [dataset, setDataset] = useState<{ key: string; rows: Row[] }>({
+      key: "",
+      rows: [],
+    }),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [loading, setLoading] = useState(true),
@@ -183,6 +202,12 @@ export function Workspace() {
     [codes, setCodes] = useState<string[]>([]),
     [sessions, setSessions] = useState<components["schemas"]["Session"][]>([]);
   const pendingLoad = useRef<AbortController | null>(null);
+  const datasetKey = [org, campus, pane, query].join("|");
+  const rows = dataset.key === datasetKey ? dataset.rows : [];
+  function setRows(rows: Row[]) {
+    setDataset({ key: datasetKey, rows });
+  }
+  const memberScope = contexts.find((x) => x.id === org)?.campus_id ?? "";
   const t = text[language];
   const context = contexts.find((x) => x.id === org);
   const owner = contexts.some((x) => x.id === org && x.role === "owner");
@@ -228,6 +253,8 @@ export function Workspace() {
         const work = await apiClient().GET("/api/v1/workspaces");
         if (work.error) throw new Error(work.error.message);
         setContexts(work.data);
+        if (!work.data.some((x) => ["owner", "coordinator"].includes(x.role)))
+          setPane("account");
         const last = localStorage.getItem("workspace-institution");
         setOrg(
           work.data.find((x) => x.id === last)?.id ?? work.data[0]?.id ?? "",
@@ -257,7 +284,7 @@ export function Workspace() {
         if (r.error) setError(r.error.message);
         else {
           setCampuses(r.data);
-          const scoped = contexts.find((x) => x.id === org)?.campus_id;
+          const scoped = memberScope;
           if (scoped) setCampus(scoped);
         }
       })
@@ -265,7 +292,7 @@ export function Workspace() {
     return () => {
       active = false;
     };
-  }, [org, me, api, contexts]);
+  }, [org, me?.id, api, memberScope]);
   const load = useCallback(async () => {
     if (!me || !org) return;
     pendingLoad.current?.abort();
@@ -330,6 +357,10 @@ export function Workspace() {
             signal,
           });
           break;
+        case "intake":
+        case "account":
+        case "settings":
+          return;
         case "security": {
           const r = await api().GET("/api/v1/sessions", { signal });
           if (r.error) throw new Error(r.error.message);
@@ -514,6 +545,7 @@ export function Workspace() {
           {(
             [
               "people",
+              "intake",
               "enrollments",
               "families",
               "responsibilities",
@@ -522,9 +554,15 @@ export function Workspace() {
               "audit",
               "deliveries",
               "security",
+              "account",
+              "settings",
             ] as Pane[]
           )
-            .filter((p) => manager || p === "security")
+            .filter((p) =>
+              p === "settings"
+                ? owner
+                : manager || p === "security" || p === "account",
+            )
             .map((p) => (
               <button
                 key={p}
@@ -580,7 +618,14 @@ export function Workspace() {
             </select>
           </Label>
           <Label name={t.campus}>
-            <select value={campus} onChange={(e) => setCampus(e.target.value)}>
+            <select
+              value={campus}
+              onChange={(e) => {
+                setPeople([]);
+                setCourses([]);
+                setCampus(e.target.value);
+              }}
+            >
               <option value="">{t.all}</option>
               {campuses.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -658,106 +703,163 @@ export function Workspace() {
               </label>
             </form>
           )}
-          {pane !== "security" && (
-            <>
-              <section
-                className="ledger"
-                aria-label={t[pane]}
-                aria-busy={loading}
-              >
-                {loading ? (
-                  <p role="status">{t.loading}</p>
-                ) : rows.length === 0 ? (
-                  <p className="empty">{t.empty}</p>
-                ) : (
-                  <div
-                    className="table-scroll"
-                    tabIndex={0}
-                    role="region"
-                    aria-label={`${t[pane]} · scroll to see all columns`}
-                  >
-                    <table>
-                      <caption>
-                        {t[pane]} · {rows.length} records (bounded view)
-                      </caption>
-                      <thead>
-                        <tr>
-                          {columns[pane].map((c) => (
-                            <th key={c}>{c.replaceAll("_", " ")}</th>
-                          ))}
-                          {((pane === "people" && owner) ||
-                            (pane === "families" && owner) ||
-                            (pane === "deliveries" && owner)) && (
-                            <th>{t.access}</th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row, i) => (
-                          <tr key={String(row.id ?? i)}>
+          {pane !== "security" &&
+            pane !== "account" &&
+            pane !== "settings" &&
+            pane !== "intake" && (
+              <>
+                <section
+                  className="ledger"
+                  aria-label={t[pane]}
+                  aria-busy={loading}
+                >
+                  {loading ? (
+                    <p role="status">{t.loading}</p>
+                  ) : rows.length === 0 ? (
+                    <p className="empty">{t.empty}</p>
+                  ) : (
+                    <div
+                      className="table-scroll"
+                      tabIndex={0}
+                      role="region"
+                      aria-label={`${t[pane]} · scroll to see all columns`}
+                    >
+                      <table>
+                        <caption>
+                          {t[pane]} · {rows.length} records (bounded view)
+                        </caption>
+                        <thead>
+                          <tr>
                             {columns[pane].map((c) => (
-                              <td key={c}>
-                                {c === "time"
-                                  ? formatTime(String(row[c]))
-                                  : String(row[c] ?? "—")}
-                              </td>
+                              <th key={c}>{c.replaceAll("_", " ")}</th>
                             ))}
-                            {pane === "people" && owner && (
-                              <td>
-                                {row.role !== "owner" && row.id !== me.id && (
-                                  <MembershipAction
-                                    person={row}
-                                    label={
-                                      row.state === "active"
-                                        ? t.suspend
-                                        : t.restore
-                                    }
-                                    reasonLabel={t.reason}
-                                    disabled={busy}
-                                    onSubmit={(reason) =>
-                                      act(() =>
-                                        api().PATCH(
-                                          "/api/v1/institutions/{org}/memberships/{id}",
-                                          {
-                                            params: {
-                                              path: {
-                                                org,
-                                                id: String(row.membership_id),
-                                              },
-                                              header: {
-                                                "X-CSRF-Token": me.csrf,
-                                              },
-                                            },
-                                            body: {
-                                              state:
-                                                row.state === "active"
-                                                  ? "suspended"
-                                                  : "active",
-                                              version: Number(row.version),
-                                              reason,
-                                            },
-                                          },
-                                        ),
-                                      )
-                                    }
-                                  />
-                                )}
-                              </td>
+                            {((pane === "people" && owner) ||
+                              (pane === "families" && owner) ||
+                              (pane === "deliveries" && owner) ||
+                              (pane === "campuses" && manager) ||
+                              (pane === "enrollments" && manager)) && (
+                              <th>{t.access}</th>
                             )}
-                            {pane === "families" && owner && (
-                              <td>
-                                {row.state === "approved" && (
-                                  <button
-                                    disabled={busy}
-                                    onClick={() => {
-                                      if (
-                                        confirm(
-                                          "Remove this family link and end its access?",
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map((row, i) => (
+                            <tr key={String(row.id ?? i)}>
+                              {columns[pane].map((c) => (
+                                <td key={c}>
+                                  {c === "time"
+                                    ? formatTime(String(row[c]))
+                                    : String(row[c] ?? "—")}
+                                </td>
+                              ))}
+                              {pane === "campuses" && manager && (
+                                <td>
+                                  <CampusAction
+                                    org={org}
+                                    csrf={me.csrf}
+                                    row={row as Campus}
+                                    onSaved={() => void load()}
+                                  />
+                                </td>
+                              )}
+                              {pane === "enrollments" && manager && (
+                                <td>
+                                  <PlacementAction
+                                    org={org}
+                                    csrf={me.csrf}
+                                    row={
+                                      row as components["schemas"]["Enrollment"]
+                                    }
+                                    campuses={campuses}
+                                    onSaved={() => void load()}
+                                  />
+                                </td>
+                              )}
+                              {pane === "people" && owner && (
+                                <td>
+                                  {row.role !== "owner" && row.id !== me.id && (
+                                    <MembershipAction
+                                      person={row}
+                                      label={
+                                        row.state === "active"
+                                          ? t.suspend
+                                          : t.restore
+                                      }
+                                      reasonLabel={t.reason}
+                                      disabled={busy}
+                                      onSubmit={(reason) =>
+                                        act(() =>
+                                          api().PATCH(
+                                            "/api/v1/institutions/{org}/memberships/{id}",
+                                            {
+                                              params: {
+                                                path: {
+                                                  org,
+                                                  id: String(row.membership_id),
+                                                },
+                                                header: {
+                                                  "X-CSRF-Token": me.csrf,
+                                                },
+                                              },
+                                              body: {
+                                                state:
+                                                  row.state === "active"
+                                                    ? "suspended"
+                                                    : "active",
+                                                version: Number(row.version),
+                                                reason,
+                                              },
+                                            },
+                                          ),
                                         )
-                                      )
+                                      }
+                                    />
+                                  )}
+                                </td>
+                              )}
+                              {pane === "families" && owner && (
+                                <td>
+                                  {row.state === "approved" && (
+                                    <button
+                                      disabled={busy}
+                                      onClick={() => {
+                                        if (
+                                          confirm(
+                                            "Remove this family link and end its access?",
+                                          )
+                                        )
+                                          void act(() =>
+                                            api().DELETE(
+                                              "/api/v1/institutions/{org}/families/{id}",
+                                              {
+                                                params: {
+                                                  path: {
+                                                    org,
+                                                    id: String(row.id),
+                                                  },
+                                                  header: {
+                                                    "X-CSRF-Token": me.csrf,
+                                                  },
+                                                },
+                                              },
+                                            ),
+                                          );
+                                      }}
+                                    >
+                                      Remove link
+                                    </button>
+                                  )}
+                                </td>
+                              )}
+                              {pane === "deliveries" && owner && (
+                                <td>
+                                  {row.state === "failed" && (
+                                    <button
+                                      disabled={busy}
+                                      onClick={() =>
                                         void act(() =>
-                                          api().DELETE(
-                                            "/api/v1/institutions/{org}/families/{id}",
+                                          api().POST(
+                                            "/api/v1/institutions/{org}/deliveries/{id}/retry",
                                             {
                                               params: {
                                                 path: {
@@ -770,248 +872,224 @@ export function Workspace() {
                                               },
                                             },
                                           ),
-                                        );
-                                    }}
-                                  >
-                                    Remove link
-                                  </button>
-                                )}
-                              </td>
-                            )}
-                            {pane === "deliveries" && owner && (
-                              <td>
-                                {row.state === "failed" && (
-                                  <button
-                                    disabled={busy}
-                                    onClick={() =>
-                                      void act(() =>
-                                        api().POST(
-                                          "/api/v1/institutions/{org}/deliveries/{id}/retry",
-                                          {
-                                            params: {
-                                              path: { org, id: String(row.id) },
-                                              header: {
-                                                "X-CSRF-Token": me.csrf,
-                                              },
-                                            },
-                                          },
-                                        ),
-                                      )
-                                    }
-                                  >
-                                    {t.retry}
-                                  </button>
-                                )}
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
-              {manager &&
-                [
-                  "people",
-                  "campuses",
-                  "courses",
-                  "enrollments",
-                  "families",
-                  "responsibilities",
-                ].includes(pane) && (
-                  <section className="editor">
-                    <h2>
-                      {pane === "people"
-                        ? t.invite
-                        : t.create + " · " + t[pane]}
-                    </h2>
-                    <form
-                      onSubmit={submit}
-                      className="field-grid"
-                      aria-busy={busy}
-                    >
-                      {["people", "campuses", "courses"].includes(pane) && (
-                        <Label name={t.name}>
-                          <input
-                            name="name"
-                            required
-                            minLength={2}
-                            maxLength={120}
-                          />
-                        </Label>
-                      )}
-                      {pane === "people" && (
-                        <>
-                          <Label name={t.email}>
-                            <input
-                              type="email"
-                              name="email"
-                              required
-                              maxLength={254}
-                            />
-                          </Label>
-                          <Label name={t.role}>
-                            <select name="role">
-                              <option value="learner">Learner</option>
-                              <option value="guardian">Guardian</option>
-                              <option value="instructor">Instructor</option>
-                              <option value="reviewer">Reviewer</option>
-                              {owner && (
-                                <option value="coordinator">Coordinator</option>
+                                        )
+                                      }
+                                    >
+                                      {t.retry}
+                                    </button>
+                                  )}
+                                </td>
                               )}
-                            </select>
-                          </Label>
-                        </>
-                      )}
-                      {pane !== "campuses" && (
-                        <CampusSelect
-                          campuses={campuses}
-                          value={campus}
-                          label={t.campus}
-                        />
-                      )}
-                      {pane === "campuses" && (
-                        <>
-                          <Label name={t.code}>
-                            <input name="code" required maxLength={20} />
-                          </Label>
-                          <Label name={t.address}>
-                            <input name="address" maxLength={500} />
-                          </Label>
-                        </>
-                      )}
-                      {pane === "courses" && (
-                        <Label name={t.year}>
-                          <input
-                            name="academic_year"
-                            required
-                            minLength={4}
-                            maxLength={20}
-                          />
-                        </Label>
-                      )}
-                      {pane === "enrollments" && (
-                        <>
-                          <PersonSelect
-                            people={people}
-                            role="learner"
-                            name="person_id"
-                            label={t.learner}
-                          />
-                          <CourseSelect courses={courses} label={t.course} />
-                          <Label name={t.start}>
-                            <input type="date" name="start_date" required />
-                          </Label>
-                        </>
-                      )}
-                      {pane === "families" && (
-                        <>
-                          <PersonSelect
-                            people={people}
-                            role="guardian"
-                            name="guardian_id"
-                            label={t.guardian}
-                          />
-                          <PersonSelect
-                            people={people}
-                            role="learner"
-                            name="learner_id"
-                            label={t.learner}
-                          />
-                          <Label name={t.relationship}>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+                {manager &&
+                  [
+                    "people",
+                    "campuses",
+                    "courses",
+                    "enrollments",
+                    "families",
+                    "responsibilities",
+                  ].includes(pane) && (
+                    <section className="editor">
+                      <h2>
+                        {pane === "people"
+                          ? t.invite
+                          : t.create + " · " + t[pane]}
+                      </h2>
+                      <form
+                        onSubmit={submit}
+                        className="field-grid"
+                        aria-busy={busy}
+                      >
+                        {["people", "campuses", "courses"].includes(pane) && (
+                          <Label name={t.name}>
                             <input
-                              name="relationship"
+                              name="name"
                               required
                               minLength={2}
-                              maxLength={80}
+                              maxLength={120}
                             />
                           </Label>
-                        </>
-                      )}
-                      {pane === "responsibilities" && (
-                        <>
-                          <PersonSelect
-                            people={people}
-                            role="instructor"
-                            name="staff_id"
-                            label={t.role}
+                        )}
+                        {pane === "people" && (
+                          <>
+                            <Label name={t.email}>
+                              <input
+                                type="email"
+                                name="email"
+                                required
+                                maxLength={254}
+                              />
+                            </Label>
+                            <Label name={t.role}>
+                              <select name="role">
+                                <option value="learner">Learner</option>
+                                <option value="guardian">Guardian</option>
+                                <option value="instructor">Instructor</option>
+                                <option value="reviewer">Reviewer</option>
+                                {owner && (
+                                  <option value="coordinator">
+                                    Coordinator
+                                  </option>
+                                )}
+                              </select>
+                            </Label>
+                          </>
+                        )}
+                        {pane !== "campuses" && (
+                          <CampusSelect
+                            campuses={campuses}
+                            value={campus}
+                            label={t.campus}
                           />
-                          <CourseSelect courses={courses} label={t.course} />
-                          <Label name={t.subject}>
-                            <input name="subject" required maxLength={100} />
+                        )}
+                        {pane === "campuses" && (
+                          <>
+                            <Label name={t.code}>
+                              <input name="code" required maxLength={20} />
+                            </Label>
+                            <Label name={t.address}>
+                              <input name="address" maxLength={500} />
+                            </Label>
+                          </>
+                        )}
+                        {pane === "courses" && (
+                          <Label name={t.year}>
+                            <input
+                              name="academic_year"
+                              required
+                              minLength={4}
+                              maxLength={20}
+                            />
                           </Label>
-                          <Label name={t.start}>
-                            <input name="starts_on" type="date" required />
-                          </Label>
-                          <Label name={t.end}>
-                            <input name="ends_on" type="date" />
-                          </Label>
-                        </>
-                      )}
-                      <div className="form-actions">
-                        <button className="primary" disabled={busy}>
-                          {busy ? "…" : t.save}
-                        </button>
-                      </div>
+                        )}
+                        {pane === "enrollments" && (
+                          <>
+                            <PersonSelect
+                              people={people}
+                              role="learner"
+                              name="person_id"
+                              label={t.learner}
+                            />
+                            <CourseSelect courses={courses} label={t.course} />
+                            <Label name={t.start}>
+                              <input type="date" name="start_date" required />
+                            </Label>
+                          </>
+                        )}
+                        {pane === "families" && (
+                          <>
+                            <PersonSelect
+                              people={people}
+                              role="guardian"
+                              name="guardian_id"
+                              label={t.guardian}
+                            />
+                            <PersonSelect
+                              people={people}
+                              role="learner"
+                              name="learner_id"
+                              label={t.learner}
+                            />
+                            <Label name={t.relationship}>
+                              <input
+                                name="relationship"
+                                required
+                                minLength={2}
+                                maxLength={80}
+                              />
+                            </Label>
+                          </>
+                        )}
+                        {pane === "responsibilities" && (
+                          <>
+                            <PersonSelect
+                              people={people}
+                              role="instructor"
+                              name="staff_id"
+                              label={t.role}
+                            />
+                            <CourseSelect courses={courses} label={t.course} />
+                            <Label name={t.subject}>
+                              <input name="subject" required maxLength={100} />
+                            </Label>
+                            <Label name={t.start}>
+                              <input name="starts_on" type="date" required />
+                            </Label>
+                            <Label name={t.end}>
+                              <input name="ends_on" type="date" />
+                            </Label>
+                          </>
+                        )}
+                        <div className="form-actions">
+                          <button className="primary" disabled={busy}>
+                            {busy ? "…" : t.save}
+                          </button>
+                        </div>
+                      </form>
+                    </section>
+                  )}
+                {pane === "campuses" && owner && (
+                  <section className="editor">
+                    <h2>{t.neworg}</h2>
+                    <form
+                      className="field-grid"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const form = e.currentTarget,
+                          f = new FormData(form);
+                        void act(
+                          () =>
+                            api().POST("/api/v1/institutions", {
+                              params: { header: { "X-CSRF-Token": me.csrf } },
+                              body: {
+                                name: field(f, "name"),
+                                timezone: field(f, "timezone"),
+                                locale: field(f, "locale") as "en" | "hi",
+                              },
+                            }),
+                          () => {
+                            form.reset();
+                            void loadContexts();
+                          },
+                        );
+                      }}
+                    >
+                      <Label name={t.name}>
+                        <input
+                          name="name"
+                          required
+                          minLength={2}
+                          maxLength={120}
+                        />
+                      </Label>
+                      <Label name={t.timezone}>
+                        <input
+                          name="timezone"
+                          defaultValue="Asia/Kolkata"
+                          required
+                        />
+                      </Label>
+                      <Label name={t.locale}>
+                        <select name="locale">
+                          <option value="en">English</option>
+                          <option value="hi">हिन्दी</option>
+                        </select>
+                      </Label>
+                      <button className="primary" disabled={busy}>
+                        {t.create}
+                      </button>
                     </form>
                   </section>
                 )}
-              {pane === "campuses" && owner && (
-                <section className="editor">
-                  <h2>{t.neworg}</h2>
-                  <form
-                    className="field-grid"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const form = e.currentTarget,
-                        f = new FormData(form);
-                      void act(
-                        () =>
-                          api().POST("/api/v1/institutions", {
-                            params: { header: { "X-CSRF-Token": me.csrf } },
-                            body: {
-                              name: field(f, "name"),
-                              timezone: field(f, "timezone"),
-                              locale: field(f, "locale") as "en" | "hi",
-                            },
-                          }),
-                        () => {
-                          form.reset();
-                          void loadContexts();
-                        },
-                      );
-                    }}
-                  >
-                    <Label name={t.name}>
-                      <input
-                        name="name"
-                        required
-                        minLength={2}
-                        maxLength={120}
-                      />
-                    </Label>
-                    <Label name={t.timezone}>
-                      <input
-                        name="timezone"
-                        defaultValue="Asia/Kolkata"
-                        required
-                      />
-                    </Label>
-                    <Label name={t.locale}>
-                      <select name="locale">
-                        <option value="en">English</option>
-                        <option value="hi">हिन्दी</option>
-                      </select>
-                    </Label>
-                    <button className="primary" disabled={busy}>
-                      {t.create}
-                    </button>
-                  </form>
-                </section>
-              )}
-            </>
-          )}
+              </>
+            )}
           {pane === "security" && (
             <>
               <section className="editor">
@@ -1125,6 +1203,32 @@ export function Workspace() {
                 ))}
               </section>
             </>
+          )}
+          {pane === "account" && (
+            <AccountPanel
+              csrf={me.csrf}
+              onChanged={(profile) =>
+                setMe({ ...me, name: profile.name, email: profile.email })
+              }
+            />
+          )}
+          {pane === "settings" && (
+            <SettingsPanel
+              key={org}
+              org={org}
+              csrf={me.csrf}
+              onSaved={() => void loadContexts()}
+            />
+          )}
+          {pane === "intake" && (
+            <AdmissionPanel
+              key={org + campus}
+              org={org}
+              campus={campus}
+              csrf={me.csrf}
+              campuses={campuses}
+              timezone={context?.timezone ?? "UTC"}
+            />
           )}
         </main>
       </div>

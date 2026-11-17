@@ -43,6 +43,14 @@ schemas.update({
  'OwnerTransfer':obj({'person_id':S,'password':S,'code':S,'reason':S}),
  'PlacementChange':obj({'campus_id':S,'course_id':S,'state':{'type':'string','enum':['active','withdrawn']},'effective_on':S,'reason':S,'version':I}),
 })
+schemas.update({
+ 'Registration':obj({'name':S,'email':S,'password':S,'enrollment_code':S,'accept_policy':B}),
+ 'AdmissionCode':obj({'id':S,'campus_id':S,'label':S,'expires_at':S,'max_uses':I,'used':I,'revoked':B}),
+ 'NewAdmissionCode':obj({'campus_id':S,'label':S,'expires_at':S,'max_uses':I}),
+ 'CreatedCode':obj({'id':S,'code':S}),
+ 'Admission':obj({'id':S,'person_id':S,'name':S,'email':S,'campus_id':S,'state':S,'reason':S,'version':I}),
+ 'AdmissionDecision':obj({'course_id':S,'start_date':S,'decision':{'type':'string','enum':['placed','rejected']},'reason':S,'version':I}),
+})
 paths={}
 def route(path,method,response='Outcome',body=None,public=False,listed=False):
  path='/api/v1'+path
@@ -75,5 +83,10 @@ route('/institutions/{org}/settings','get','Settings');route('/institutions/{org
 route('/institutions/{org}/campuses/{id}','patch',body='Campus')
 route('/institutions/{org}/owner-transfer','post',body='OwnerTransfer')
 route('/institutions/{org}/enrollments/{id}','patch',body='PlacementChange')
+route('/verification/resend','post',body='RecoveryRequest',public=True)
+route('/register','post',body='Registration',public=True);route('/verify-email','post',body='Token',public=True)
+route('/institutions/{org}/admission-codes','get','AdmissionCode',listed=True);route('/institutions/{org}/admission-codes','post','CreatedCode','NewAdmissionCode')
+route('/institutions/{org}/admission-codes/{id}','delete')
+route('/institutions/{org}/admission-queue','get','Admission',listed=True);route('/institutions/{org}/admission-queue/{id}/decision','post',body='AdmissionDecision')
 doc={'openapi':'3.1.0','info':{'title':'Learning Workspace API','version':'1.0.0','description':'Go-owned business API. Mutations require exact configured Origin, opaque cookie and CSRF header. No private response may be publicly cached. Limits and incomplete functionality are tracked in IMPLEMENTATION-STATUS.md.'},'servers':[{'url':'http://localhost:3000'}],'paths':paths,'components':{'securitySchemes':{'session':{'type':'apiKey','in':'cookie','name':'workspace_session'}},'schemas':schemas}}
 Path('contracts/openapi.json').write_text(json.dumps(doc,indent=2)+'\n')

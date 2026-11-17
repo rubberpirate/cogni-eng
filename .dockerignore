@@ -1,0 +1,12 @@
+.git
+.env*
+.local
+node_modules
+**/node_modules
+**/.next
+agent
+.agents
+.claude
+skills-lock.json
+test-results
+playwright-report

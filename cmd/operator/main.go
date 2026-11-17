@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/mail"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -39,6 +41,9 @@ func run() error {
 		}
 		return goose.UpContext(ctx, db, "migrations")
 	}
+	if os.Args[1] == "browser-fixture" {
+		return browserFixture(ctx)
+	}
 	if os.Args[1] != "bootstrap" && os.Args[1] != "demo" {
 		return errors.New("unknown operator command")
 	}
@@ -54,6 +59,23 @@ func run() error {
 	}
 	if email == "" || name == "" {
 		return errors.New("set BOOTSTRAP_EMAIL, BOOTSTRAP_NAME and BOOTSTRAP_PASSWORD")
+	}
+	institutionName, campusName, zone := os.Getenv("BOOTSTRAP_INSTITUTION"), os.Getenv("BOOTSTRAP_CAMPUS"), os.Getenv("BOOTSTRAP_TIMEZONE")
+	if demo {
+		institutionName = "Demonstration Institute"
+		campusName = "River Campus"
+		zone = "Asia/Kolkata"
+	}
+	if institutionName == "" || campusName == "" {
+		return errors.New("set BOOTSTRAP_INSTITUTION, BOOTSTRAP_CAMPUS and BOOTSTRAP_TIMEZONE")
+	}
+	if _, err := time.LoadLocation(zone); err != nil {
+		return errors.New("invalid bootstrap timezone")
+	}
+	email = strings.ToLower(strings.TrimSpace(email))
+	address, err := mail.ParseAddress(email)
+	if err != nil || address.Address != email {
+		return errors.New("invalid bootstrap email")
 	}
 	hash, err := access.Password(password)
 	if err != nil {
@@ -87,10 +109,10 @@ func run() error {
 	if _, err = tx.Exec(ctx, "INSERT INTO person(id,email,name,password_hash,state,verified_at) VALUES($1,lower($2),$3,$4,'active',now())", id, email, name, hash); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, "INSERT INTO institution(id,name,timezone,locale) VALUES($1,'Demonstration Institute','Asia/Kolkata','en')", org); err != nil {
+	if _, err = tx.Exec(ctx, "INSERT INTO institution(id,name,timezone,locale) VALUES($1,$2,$3,'en')", org, institutionName, zone); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, "INSERT INTO campus(id,institution_id,name,code) VALUES($1,$2,'River Campus','RIVER')", campus, org); err != nil {
+	if _, err = tx.Exec(ctx, "INSERT INTO campus(id,institution_id,name,code) VALUES($1,$2,$3,'MAIN')", campus, org, campusName); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, "INSERT INTO membership(id,institution_id,person_id,role) VALUES($1,$2,$3,'owner')", access.Random(), org, id); err != nil {

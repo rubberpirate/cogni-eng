@@ -128,6 +128,10 @@ func (w Worker) Once(ctx context.Context) error {
 		page = "join"
 		subject = "Your Learning Workspace invitation"
 	}
+	if kind == "verify" {
+		page = "verify"
+		subject = "Verify your Learning Workspace email"
+	}
 	if kind == "email_change" {
 		page = "confirm-email"
 		subject = "Confirm your new Learning Workspace email"

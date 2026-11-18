@@ -122,7 +122,49 @@ export function AcademicStudio({
     return () => window.removeEventListener("hashchange", restore);
   }, [papers]);
   const [imports, setImports] = useState<A<"AcademicImport">[]>([]);
-  const [preview, setPreview] = useState<A<"AcademicImport"> | null>(null);
+  const [preview, setPreviewState] = useState<A<"AcademicImport"> | null>(null);
+  const previewRef = useRef(preview);
+  previewRef.current = preview;
+  const setPreview = (next: A<"AcademicImport"> | null) => {
+    setPreviewState(next);
+    if (tab !== "import") return;
+    const [route, query] = window.location.hash.split("?");
+    const params = new URLSearchParams(query);
+    if (next) {
+      params.set("import", next.id);
+      params.set("topic", next.topic_id);
+    } else {
+      params.delete("import");
+      params.delete("topic");
+    }
+    window.location.hash = route + (params.size ? "?" + params : "");
+  };
+  useEffect(() => {
+    if (tab !== "import" || !staff) return;
+    let active = true;
+    const restore = () => {
+      const params = new URLSearchParams(window.location.hash.split("?")[1]);
+      const id = params.get("import");
+      if (!id || id === previewRef.current?.id) return;
+      void api
+        .detail("imports", id)
+        .then((next) => {
+          if (active) {
+            setTopic(next.topic_id);
+            setPreviewState(next);
+          }
+        })
+        .catch((e) => {
+          if (active) setError(e.message);
+        });
+    };
+    restore();
+    window.addEventListener("hashchange", restore);
+    return () => {
+      active = false;
+      window.removeEventListener("hashchange", restore);
+    };
+  }, [api, staff, tab]);
   useEffect(() => {
     if (!preview || preview.state !== "extracting") return;
     let active = true,
@@ -487,6 +529,17 @@ export function AcademicStudio({
                           accept=".csv,.xlsx,.json,.pdf,.png,.jpg,.jpeg"
                           required
                         />
+                      </Field>
+                      <Field name="Extraction engine">
+                        <select name="engine">
+                          <option value="">Default engine</option>
+                          <option value="lightonocr">
+                            LightOnOCR-2-1B (local model)
+                          </option>
+                          <option value="tesseract">
+                            Tesseract (local text OCR)
+                          </option>
+                        </select>
                       </Field>
                       <Field name="Source / provenance">
                         <input

@@ -36,6 +36,14 @@ type Service struct {
 }
 
 func New(db *pgxpool.Pool, objects *blob.Store) (*Service, error) {
+	omr := os.Getenv("OMR_MODEL_PROVIDER")
+	if omr != "" && omr != "bubble_classifier" && omr != "qwen_vision" {
+		return nil, errors.New("OMR_MODEL_PROVIDER must be bubble_classifier or qwen_vision")
+	}
+	ocr := os.Getenv("OCR_PROVIDER")
+	if ocr != "" && ocr != "tesseract" && ocr != "lightonocr" {
+		return nil, errors.New("OCR_PROVIDER must be tesseract or lightonocr")
+	}
 	provider := os.Getenv("ACADEMIC_MODEL_PROVIDER")
 	if provider != "" && provider != "anthropic" && provider != "gemini" && provider != "development_fixture" {
 		return nil, errors.New("ACADEMIC_MODEL_PROVIDER must be gemini, anthropic or development_fixture")

@@ -1,0 +1,15 @@
+[project]
+name = "learning-vision-runtime"
+version = "0.1.0"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "torch==2.15.0",
+  "torchvision==0.29.2",
+  "transformers==5.23.0",
+  "pillow==13.0.0",
+  "accelerate==1.16.0",
+  "safetensors==0.8.0",
+]
+
+[tool.uv]
+package = false

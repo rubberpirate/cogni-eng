@@ -554,6 +554,9 @@ func (s *Service) recognize(ctx context.Context, j Job) error {
 	if err := json.Unmarshal(j.Input, &in); err != nil {
 		return err
 	}
+	if in["mode"] == "grid_model" {
+		return s.gridModel(ctx, j, in)
+	}
 	var a Asset
 	var b Batch
 	var l SheetLayout

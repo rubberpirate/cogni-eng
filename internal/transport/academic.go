@@ -73,7 +73,7 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	// Binary uploads have a bounded body and never expose an object-store URL.
-	if r.Method == "POST" && (kind == "imports" && (action == "upload" || action == "key-upload") || kind == "batches" && action == "upload" || kind == "assets" || kind == "grid-preview") {
+	if r.Method == "POST" && (kind == "imports" && (action == "upload" || action == "key-upload") || kind == "batches" && action == "upload" || kind == "assets" || kind == "grid-preview" || kind == "grid-model") {
 		if err = s.transaction(r, func(ctx context.Context, tx pgx.Tx) error { _, err := s.actor(ctx, tx, r, true); return err }); err != nil {
 			return err
 		}
@@ -104,19 +104,22 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		}
 		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
 			switch kind {
-			case "grid-preview":
+			case "grid-preview", "grid-model":
 				var c academic.GridCalibration
 				if json.Unmarshal([]byte(r.FormValue("calibration")), &c) != nil {
 					return nil, fail(400, "invalid_calibration", "Provide the bubble-center calibration.")
 				}
+				if kind == "grid-model" {
+					return svc.StageGridModel(ctx, tx, a.ID, org, r.FormValue("course_id"), header.Filename, data, c)
+				}
 				return svc.GridPreview(ctx, tx, a.ID, org, r.FormValue("course_id"), data, c)
 			case "imports":
 				if action == "key-upload" {
-					return svc.StageKey(ctx, tx, a.ID, org, id, header.Filename, data)
+					return svc.StageKey(ctx, tx, a.ID, org, id, header.Filename, data, r.FormValue("engine"))
 				}
 				mime := http.DetectContentType(data)
 				if mime == "application/pdf" || mime == "image/png" || mime == "image/jpeg" {
-					return svc.StageDocument(ctx, tx, a.ID, org, r.FormValue("topic_id"), header.Filename, data, r.FormValue("provenance"), r.FormValue("license"))
+					return svc.StageDocument(ctx, tx, a.ID, org, r.FormValue("topic_id"), header.Filename, data, r.FormValue("provenance"), r.FormValue("license"), r.FormValue("engine"))
 				}
 				return svc.StageImport(ctx, tx, a.ID, org, r.FormValue("topic_id"), header.Filename, data, r.FormValue("provenance"), r.FormValue("license"))
 			case "batches":

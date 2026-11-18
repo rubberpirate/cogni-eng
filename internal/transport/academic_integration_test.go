@@ -602,7 +602,7 @@ func TestSeparateKeyRequiresFacultyApplicationAndRejectsStaleOrForeignImports(t 
 		if imp.Rows[0].Error == "" {
 			t.Fatal("missing key accepted")
 		}
-		job, err = svc.StageKey(ctx, tx, h.owner, h.org, imp.ID, "key.csv", []byte("question,answer\n1,B\n"))
+		job, err = svc.StageKey(ctx, tx, h.owner, h.org, imp.ID, "key.csv", []byte("question,answer\n1,B\n"), "tesseract")
 		return err
 	})
 	worker, err := svc.WorkerClient()
@@ -718,5 +718,120 @@ func TestCalibratedGridPreviewRequiresActiveCourseStaffAndCreatesNoMarks(t *test
 	var n int
 	if err := h.db.QueryRow(ctx, "SELECT count(*) FROM result_revision").Scan(&n); err != nil || n != 0 {
 		t.Fatalf("diagnostic fabricated marks: %d %v", n, err)
+	}
+}
+
+func TestVisionModelJobsRetainDraftBoundariesAndFlagOMRDisagreement(t *testing.T) {
+	h, svc, course, learner := academicFixture(t)
+	_, _, q := academicPaper(t, h, svc, course, learner)
+	ctx := context.Background()
+	modelServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer synthetic-vision-contract-key" {
+			t.Error("missing private runtime authentication")
+		}
+		var input struct {
+			Model string `json:"model"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			t.Error(err)
+			w.WriteHeader(400)
+			return
+		}
+		text := "Q.1. Original model transcription fixture\n(a) First\n(b) Second\n(c) Third\n(d) Fourth\nAnswer: B"
+		revision := "contract-revision"
+		if input.Model == scholar.BubbleMarkModel {
+			revision = scholar.BubbleMarkRevision
+			text = `{"classes":[0,0,1,0,1,0,0,0],"margins":[5,5,5,5,5,5,5,5],"revision":"` + revision + `"}`
+		}
+		if input.Model == scholar.OMRVisionModel {
+			text = `{"rows":[{"number":1,"selection":[3],"uncertain":false},{"number":2,"selection":[1],"uncertain":false}]}`
+		}
+		if err := json.NewEncoder(w).Encode(map[string]any{"model": input.Model, "model_revision": revision, "choices": []any{map[string]any{"finish_reason": "stop", "message": map[string]string{"content": text}}}}); err != nil {
+			t.Error(err)
+		}
+	}))
+	defer modelServer.Close()
+	t.Setenv("VISION_BASE_URL", modelServer.URL+"/v1")
+	t.Setenv("VISION_API_KEY", "synthetic-vision-contract-key")
+	img := image.NewRGBA(image.Rect(0, 0, 400, 600))
+	for y := 0; y < 600; y++ {
+		for x := 0; x < 400; x++ {
+			img.Set(x, y, color.White)
+		}
+	}
+	for y := 115; y <= 125; y++ {
+		for x := 235; x <= 245; x++ {
+			img.Set(x, y, color.Black)
+		}
+	}
+	var data bytes.Buffer
+	if err := png.Encode(&data, img); err != nil {
+		t.Fatal(err)
+	}
+	calibration := academic.GridCalibration{Options: 4, Radius: .008, Blocks: []academic.GridBlock{{First: 1, Count: 2, TopLeft: academic.Point{X: .2, Y: .2}, TopRight: academic.Point{X: .8, Y: .2}, BottomLeft: academic.Point{X: .2, Y: .8}, BottomRight: academic.Point{X: .8, Y: .8}}}}
+	var imp scholar.Import
+	var job scholar.Job
+	academicTx(t, h, func(tx pgx.Tx) error {
+		var err error
+		imp, err = svc.StageDocument(ctx, tx, h.owner, h.org, q.TopicID, "original.png", data.Bytes(), "Original contract fixture", "CC0-1.0", "lightonocr")
+		if err != nil {
+			return err
+		}
+		job, err = svc.StageGridModel(ctx, tx, h.owner, h.org, course, "original-grid.png", data.Bytes(), calibration)
+		return err
+	})
+	worker, err := svc.WorkerClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	workerCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	if err = worker.Start(workerCtx); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := worker.Stop(context.Background()); err != nil {
+			t.Error(err)
+		}
+	}()
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		var count int
+		err = h.db.QueryRow(ctx, "SELECT count(*) FROM academic_job WHERE state='completed' AND (id=$1 OR resource_id=$2)", job.ID, imp.ID).Scan(&count)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count == 2 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("vision jobs did not finish")
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	academicTx(t, h, func(tx pgx.Tx) error {
+		preview, e := svc.Import(ctx, tx, h.owner, h.org, imp.ID)
+		if e != nil {
+			return e
+		}
+		if len(preview.Rows) != 1 || len(preview.Rows[0].Question.Key) != 0 || preview.Rows[0].Error == "" {
+			t.Fatal("model OCR silently approved a solved-paper key")
+		}
+		j, e := svc.Job(ctx, tx, h.owner, h.org, job.ID)
+		if e != nil {
+			return e
+		}
+		var output scholar.GridModelOutput
+		if e = json.Unmarshal(j.Output, &output); e != nil {
+			return e
+		}
+		if len(output.Reading.Rows) != 2 || output.Reading.Rows[0].ModelState != "agrees" || output.Reading.Rows[1].ModelState != "disagrees" || !output.Reading.Rows[1].Uncertain || len(output.Reading.Rows[1].Selection) != 0 {
+			t.Fatalf("model changed observed pixels: %+v", output.Reading.Rows)
+		}
+		return nil
+	})
+	var count int
+	if err = h.db.QueryRow(ctx, "SELECT count(*) FROM result_revision").Scan(&count); err != nil || count != 0 {
+		t.Fatalf("vision proposal created marks %d %v", count, err)
 	}
 }

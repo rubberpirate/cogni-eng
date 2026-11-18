@@ -17,7 +17,7 @@ import (
 	"learning.local/workspace/internal/access"
 )
 
-func (s *Service) StageDocument(ctx context.Context, tx pgx.Tx, actor, org, topic, filename string, data []byte, provenance, license string) (Import, error) {
+func (s *Service) StageDocument(ctx context.Context, tx pgx.Tx, actor, org, topic, filename string, data []byte, provenance, license, engine string) (Import, error) {
 	t, err := GetTopic(ctx, tx, org, topic)
 	if err != nil {
 		return Import{}, err
@@ -25,7 +25,16 @@ func (s *Service) StageDocument(ctx context.Context, tx pgx.Tx, actor, org, topi
 	if err = Scope(ctx, tx, actor, org, t.CampusID, t.CourseID, t.Subject); err != nil {
 		return Import{}, err
 	}
-	digest := access.Digest(string(data))
+	if engine == "" {
+		engine = os.Getenv("OCR_PROVIDER")
+	}
+	if engine == "" {
+		engine = "tesseract"
+	}
+	if engine != "tesseract" && engine != "lightonocr" {
+		return Import{}, Problem(400, "invalid_ocr_engine", "Choose Tesseract or LightOnOCR.")
+	}
+	digest := access.Digest(string(data) + "\x00" + engine)
 	var existing string
 	err = tx.QueryRow(ctx, "SELECT id FROM question_import WHERE institution_id=$1 AND topic_id=$2 AND fingerprint=$3", org, topic, digest).Scan(&existing)
 	if err == nil {
@@ -46,7 +55,7 @@ func (s *Service) StageDocument(ctx context.Context, tx pgx.Tx, actor, org, topi
 	if err != nil {
 		return Import{}, err
 	}
-	input := map[string]string{"asset_id": asset.ID, "topic_id": topic, "provenance": provenance, "license": license, "language": t.Language}
+	input := map[string]string{"asset_id": asset.ID, "topic_id": topic, "provenance": provenance, "license": license, "language": t.Language, "provider": engine}
 	_, err = tx.Exec(ctx, "INSERT INTO academic_job(id,institution_id,campus_id,course_id,actor_id,kind,resource_id,input) VALUES($1,$2,$3,$4,$5,'extract_document',$6,$7)", job, org, t.CampusID, t.CourseID, actor, id, Encode(input))
 	if err != nil {
 		return Import{}, err
@@ -80,6 +89,9 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 	pages, err := rasterPages(ctx, asset.Mime, data)
 	if err != nil {
 		return err
+	}
+	if in["provider"] == "lightonocr" {
+		return s.extractVision(ctx, j, in, pages)
 	}
 	dir, err := os.MkdirTemp("", "academic-ocr-")
 	if err != nil {
@@ -130,6 +142,7 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 		if err != nil {
 			parsed = []academic.ImportRow{}
 		}
+		parsed = academic.RequireFacultyKeys(parsed)
 		_, err = tx.Exec(ctx, "UPDATE question_import SET raw_text=$2,rows=$3,state='preview',version=version+1 WHERE id=$1 AND state<>'committed'", j.Resource, rawText.String(), Encode(parsed))
 		return err
 	})

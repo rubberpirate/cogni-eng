@@ -210,6 +210,13 @@ export function KeyImportPanel({
           }
         }}
       >
+        <Field name="Answer key extraction engine">
+          <select name="engine">
+            <option value="">Default engine</option>
+            <option value="lightonocr">LightOnOCR-2-1B (local model)</option>
+            <option value="tesseract">Tesseract (local text OCR)</option>
+          </select>
+        </Field>
         <Field name="Separate answer key file">
           <input
             type="file"

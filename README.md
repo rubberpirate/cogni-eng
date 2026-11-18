@@ -17,6 +17,10 @@ Open http://localhost:3000. Read `.local/demo-access.txt` for the random synthet
 
 Do not use real children or financial records in this development installation. Never copy its `.env` to production.
 
+## Optional local OCR and OMR models
+
+Run `bun run vision --warm lightonai/LightOnOCR-2-1B` to install the pinned image-inference runtime. Select LightOnOCR in paper/key uploads; faculty receives ordered editable questions and explicitly chooses or applies a reviewed key. Existing OMR formats support calibrated pixel inspection and an optional original CPU bubble classifier. See [runtime configuration](inference/README.md), [manual workflows](docs/CORE-EDUCATION.md) and [actual sample evaluation](docs/TEST-REPORT.md). These models were exercised locally; wider scan and deployment qualification remain open.
+
 ## Current operations
 
 - Sign in with an opaque server session, inspect/revoke sessions, enroll TOTP, save single-use recovery codes, reset/change passwords, confirm email changes and accept invitations.

@@ -85,6 +85,10 @@ test("a two-column question image becomes ordered editable options; faculty sele
     .getByRole("button", { name: "Upload questions", exact: true })
     .click();
   await page.getByLabel("Topic", { exact: true }).selectOption(topic.id);
+  // Keep this native-OCR journey independent of the configured default model.
+  await page
+    .getByLabel("Extraction engine", { exact: true })
+    .selectOption("tesseract");
   await page.getByLabel("Question file", { exact: true }).setInputFiles({
     name: "original-columns.png",
     mimeType: "image/png",
@@ -129,6 +133,9 @@ test("a two-column question image becomes ordered editable options; faculty sele
   await expect(
     page.getByText("Reviewed question saved.", { exact: true }),
   ).toBeVisible();
+  await page
+    .getByLabel("Answer key extraction engine", { exact: true })
+    .selectOption("tesseract");
   await page
     .getByLabel("Separate answer key file", { exact: true })
     .setInputFiles({
@@ -181,6 +188,10 @@ test("a two-column question image becomes ordered editable options; faculty sele
       exact: true,
     }),
   ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByLabel("Question 1 wording", { exact: true }),
+  ).toHaveValue("How many straight sides does a triangle have?");
   const bank = await (
     await page.request.get(
       `/api/v1/institutions/${fixture.org}/education/questions?topic=${topic.id}`,

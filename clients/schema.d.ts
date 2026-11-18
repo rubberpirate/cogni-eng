@@ -1534,6 +1534,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/institutions/{org}/education/grid-model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** POST /api/v1/institutions/{org}/education/grid-model */
+        post: operations["post__api_v1_institutions_org_education_grid-model"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1978,6 +1995,8 @@ export interface components {
             blocks: components["schemas"]["AcademicGridBlock"][];
         };
         AcademicGridRow: {
+            model_selection?: number[];
+            model_state?: string;
             number: number;
             selection: number[];
             fill: number[];
@@ -2201,6 +2220,25 @@ export interface components {
             layout_id: string;
             title: string;
         };
+        AcademicGridModelOutput: {
+            reading: components["schemas"]["AcademicGridReading"];
+            inferences: components["schemas"]["AcademicVisionOutput"][];
+        };
+        AcademicmodelGridRow: {
+            number: number;
+            selection: number[];
+            uncertain?: boolean;
+        };
+        AcademicVisionOutput: {
+            runtime_version?: string;
+            text: string;
+            model: string;
+            revision: string;
+            input_tokens?: number;
+            output_tokens?: number;
+            duration_ms: number;
+        };
+        AcademicVision: Record<string, never>;
         AcademicGeneration: {
             topic: components["schemas"]["AcademicTopic"];
             count: number;
@@ -10240,6 +10278,7 @@ export interface operations {
                     topic_id: string;
                     provenance: string;
                     license: string;
+                    engine?: string;
                 };
             };
         };
@@ -11606,6 +11645,7 @@ export interface operations {
                 "multipart/form-data": {
                     /** Format: binary */
                     file: string;
+                    engine?: string;
                 };
             };
         };
@@ -11713,6 +11753,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcademicGridReading"];
+                };
+            };
+            /** @description Structured error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    "post__api_v1_institutions_org_education_grid-model": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": string;
+            };
+            path: {
+                org: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    course_id: string;
+                    calibration: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful committed operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicJob"];
                 };
             };
             /** @description Structured error */

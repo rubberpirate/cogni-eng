@@ -50,6 +50,8 @@ export function GridInspection({
   const [reading, setReading] = useState<A<"AcademicGridReading"> | null>(null);
   const [review, setReview] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);
+  const [modelCheck, setModelCheck] = useState(false);
+  const [modelJob, setModelJob] = useState<A<"AcademicJob"> | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
     if (!file) return;
@@ -57,8 +59,41 @@ export function GridInspection({
     setUrl(next);
     return () => URL.revokeObjectURL(next);
   }, [file]);
+  useEffect(() => {
+    if (!modelJob || !["queued", "running"].includes(modelJob.state)) return;
+    let active = true,
+      pending = false;
+    const timer = setInterval(async () => {
+      if (pending) return;
+      pending = true;
+      try {
+        const next = await api.detail("jobs", modelJob.id);
+        if (active) {
+          setModelJob(next);
+          if (next.state === "completed") {
+            const out = next.output as A<"AcademicGridModelOutput">;
+            if (Array.isArray(out?.reading?.rows)) setReading(out.reading);
+          }
+        }
+      } catch (e) {
+        if (active)
+          setError(
+            e instanceof Error
+              ? e.message
+              : "Could not refresh model progress.",
+          );
+      } finally {
+        pending = false;
+      }
+    }, 2000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [api, modelJob?.id, modelJob?.state]);
   function change(c: Calibration) {
     setCalibration(c);
+    setModelJob(null);
     setReading(null);
     setReview({});
   }
@@ -84,6 +119,14 @@ export function GridInspection({
             f.set("calibration", JSON.stringify(calibration));
             setReading(await api.previewGrid(f));
             setReview({});
+            if (modelCheck) {
+              const next = await api.modelGrid(f);
+              setModelJob(next);
+              if (next.state === "completed") {
+                const out = next.output as A<"AcademicGridModelOutput">;
+                if (Array.isArray(out?.reading?.rows)) setReading(out.reading);
+              }
+            }
           } catch (e) {
             setError(
               e instanceof Error ? e.message : "Could not read the image.",
@@ -111,6 +154,7 @@ export function GridInspection({
               required
               onChange={(e) => {
                 setFile(e.target.files?.[0] ?? null);
+                setModelJob(null);
                 setReading(null);
                 setReview({});
               }}
@@ -350,6 +394,21 @@ export function GridInspection({
             </div>
           )}
         </div>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={modelCheck}
+            onChange={(e) => setModelCheck(e.target.checked)}
+          />
+          Also compare with a local mark model
+        </label>
+        <p className="muted">
+          The default classifier was trained on synthetic marks; field
+          qualification is still pending. Model readings are proposals.
+          Disagreements with measured fill require review. The image is retained
+          privately for a durable model job; the pixel-only diagnostic is not
+          stored.
+        </p>
         {error && (
           <p role="alert" className="error">
             {error}
@@ -359,6 +418,68 @@ export function GridInspection({
           {busy ? "Reading bubbles…" : "Read calibrated answers"}
         </button>
       </form>
+      {modelJob && (
+        <section className="model-inspection-state" aria-live="polite">
+          <h3>
+            Vision comparison:{" "}
+            {{
+              queued: "Waiting to start",
+              running: "Comparing responses",
+              completed: "Ready for review",
+              failed: "Could not finish",
+              configuration_required: "The vision service needs setup",
+              cancelled: "Cancelled",
+            }[modelJob.state] ?? modelJob.state}
+          </h3>
+          {modelJob.model && <p className="muted">Model: {modelJob.model}</p>}
+          <p>
+            {modelJob.error ||
+              "The saved comparison runs in the background. Pixel readings remain available below."}
+          </p>
+          {["queued", "running"].includes(modelJob.state) && (
+            <button
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await api.jobAction(modelJob.id, "cancel");
+                  setModelJob(await api.detail("jobs", modelJob.id));
+                } catch (e) {
+                  setError(
+                    e instanceof Error
+                      ? e.message
+                      : "Could not cancel the comparison.",
+                  );
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Cancel model comparison
+            </button>
+          )}
+          {["failed", "configuration_required", "cancelled"].includes(
+            modelJob.state,
+          ) && (
+            <button
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await api.jobAction(modelJob.id, "retry");
+                  setModelJob(await api.detail("jobs", modelJob.id));
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Retry failed");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Retry model comparison
+            </button>
+          )}
+        </section>
+      )}
       {reading && (
         <section aria-live="polite">
           <h3>
@@ -402,6 +523,17 @@ export function GridInspection({
                   </select>
                 </Field>
                 <small>
+                  {r.model_state && (
+                    <span>
+                      Model:{" "}
+                      {r.model_selection?.join(" + ") ||
+                        (r.model_state === "uncertain"
+                          ? "needs confirmation"
+                          : "blank")}{" "}
+                      · {r.model_state}
+                      <br />
+                    </span>
+                  )}
                   {review[r.number] !== undefined
                     ? "Manually reviewed"
                     : r.uncertain
@@ -416,6 +548,13 @@ export function GridInspection({
               const data = {
                 calibration,
                 notice: reading.notice,
+                model_job_id: modelJob?.id ?? null,
+                model: modelJob?.model ?? null,
+                model_observations:
+                  modelJob?.state === "completed"
+                    ? (modelJob.output as A<"AcademicGridModelOutput">)
+                        .inferences
+                    : [],
                 rows: reading.rows.map((r) => ({
                   ...r,
                   reviewed_selection: review[r.number] ?? null,

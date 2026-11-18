@@ -47,3 +47,11 @@ Core education priority (2026-11-17):
 - Preserve native OCR text and the original private file separately from geometry-ordered question proposals. Preserve source question numbers; normalize numbered/inline option notation; never accept printed `Ans.` lines as faculty-approved keys.
 - Add ordered inline editors and explicit numbered-key previews. Reuse durable Go extraction jobs and JSON rows with version checks; no migration is necessary because existing JSON columns hold the additional source-number metadata and job output.
 - Add a bounded staff-only calibrated OMR diagnostic, independent of keys/learner identity. Export corrections/measurements without creating marks. A single matching 180-response image is a regression example, not a field accuracy claim.
+
+2026-11-18 local model OCR and OMR comparison:
+
+- Select revision-pinned LightOnOCR-2-1B for document transcription on the observed 8 GB RTX 4060. Actual Qwen3.5-2B OMR probes failed; keep that candidate experimental. Default OMR comparison uses an original small CPU bubble classifier trained on synthetic patches, with its exact weight hash pinned by Go. Published OCR benchmarks are not an OMR validation dataset or a universal best-model claim.
+- Keep the narrow Python process limited to authenticated image inference; Go owns durable work, interpretation, authorization and marking. No remote image URLs, arbitrary models, remote Python model code, shared prompt history or database credentials enter that runtime.
+- Pin the selected document engine at intake and distinguish provider output from the private original. Clear every OCR-derived choice key regardless of whether a model normalizes Ans. to Answer:. Faculty selects a key or explicitly applies a separately reviewed numbered key.
+- Store acknowledged model/page/band outputs with real model/revision/token observations and reuse them after retry. Keep calibrated pixel measurements authoritative observations and expose model disagreement; diagnostic outputs never assign identity or award marks.
+- An optional development inference process can stop without taking down gateway, worker and web. Model jobs retain their sources and recovery state. Default-engine activation follows live local checks, separately from HTTP contract evidence.

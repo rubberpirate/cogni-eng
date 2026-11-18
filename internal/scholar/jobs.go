@@ -56,6 +56,21 @@ func (s *Service) Job(ctx context.Context, tx pgx.Tx, actor, org, id string) (Jo
 	if err = Scope(ctx, tx, actor, org, j.Campus, j.Course, ""); err != nil {
 		return Job{}, err
 	}
+	if j.Kind == "recognize_scan" && j.Actor != actor {
+		var input map[string]string
+		if err = json.Unmarshal(j.Input, &input); err != nil {
+			return Job{}, err
+		}
+		if input["mode"] == "grid_model" {
+			var broad bool
+			if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM membership WHERE institution_id=$1 AND person_id=$2 AND state='active' AND role IN ('owner','coordinator') AND (campus_id IS NULL OR campus_id=$3))", org, actor, j.Campus).Scan(&broad); err != nil {
+				return Job{}, err
+			}
+			if !broad {
+				return Job{}, Problem(403, "diagnostic_private", "This diagnostic belongs to another staff member.")
+			}
+		}
+	}
 	if j.Kind == "generate_questions" || j.Kind == "extract_document" {
 		topicID := j.Resource
 		if j.Kind == "extract_document" {

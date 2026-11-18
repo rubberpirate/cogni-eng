@@ -10436,6 +10436,9 @@
                   },
                   "license": {
                     "type": "string"
+                  },
+                  "engine": {
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -12353,6 +12356,9 @@
                   "file": {
                     "type": "string",
                     "format": "binary"
+                  },
+                  "engine": {
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -12450,6 +12456,145 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AcademicGridReading"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "course_id": {
+                    "type": "string"
+                  },
+                  "calibration": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "course_id",
+                  "calibration"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{org}/education/grid-model": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_grid-model",
+        "summary": "POST /api/v1/institutions/{org}/education/grid-model",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicJob"
                 }
               }
             }
@@ -14283,6 +14428,15 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "model_selection": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "model_state": {
+            "type": "string"
+          },
           "number": {
             "type": "integer"
           },
@@ -15193,6 +15347,86 @@
           "layout_id",
           "title"
         ]
+      },
+      "AcademicGridModelOutput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reading": {
+            "$ref": "#/components/schemas/AcademicGridReading"
+          },
+          "inferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicVisionOutput"
+            }
+          }
+        },
+        "required": [
+          "reading",
+          "inferences"
+        ]
+      },
+      "AcademicmodelGridRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "selection": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "uncertain": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "number",
+          "selection"
+        ]
+      },
+      "AcademicVisionOutput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runtime_version": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "input_tokens": {
+            "type": "integer"
+          },
+          "output_tokens": {
+            "type": "integer"
+          },
+          "duration_ms": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "text",
+          "model",
+          "revision",
+          "duration_ms"
+        ]
+      },
+      "AcademicVision": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
       },
       "AcademicGeneration": {
         "type": "object",

@@ -1,7 +1,7 @@
 """Academic API schemas and operations, loaded by contract.py. Go tagged structs are the DTO source."""
 import re
 names={}
-for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/academic/grid.go','internal/academic/key.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go']:
+for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/academic/grid.go','internal/academic/key.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go','internal/scholar/grid_model.go','internal/scholar/vision.go']:
  for name,body in re.findall(r'type (\w+) struct \{\n(.*?)\n\}',Path(source).read_text(),re.S):
   names[name]=body
 
@@ -55,9 +55,9 @@ for path,response,body in [
  ('imports/{id}/edit','Import','ImportChange'),('imports/{id}/commit','Import','ImportChange'),('papers','PaperRecord','Compose'),('papers/{id}/publish','Saved','Version'),
  ('blueprint','Strings','Generate'),('assignments','Strings','Assign'),('assignments/{id}/start','Sitting','Start'),('sittings/{id}/save','Sitting','Save'),('sittings/{id}/submit','Sitting','Empty'),('sittings/{id}/release','Saved','Empty'),('sittings/{id}/review','Sitting','ReviewMarks'),
  ('layouts','SheetLayout','NewLayout'),('batches','Batch','NewBatch'),('scan-sheets/{id}/review','Saved','ScanReview'),('generate','Job','Generate'),('jobs/{id}/retry','Saved','Empty'),('jobs/{id}/cancel','Saved','Empty')]:route(base+path,'post','Academic'+response,'Academic'+body)
-for path,entity,fields in [('imports/{id}/upload','Import',{'file':{'type':'string','format':'binary'},'topic_id':S,'provenance':S,'license':S}),('batches/{id}/upload','Job',{'file':{'type':'string','format':'binary'}}),('assets','Asset',{'file':{'type':'string','format':'binary'},'campus_id':S,'course_id':S,'purpose':S})]:
+for path,entity,fields in [('imports/{id}/upload','Import',{'file':{'type':'string','format':'binary'},'topic_id':S,'provenance':S,'license':S,'engine':S}),('batches/{id}/upload','Job',{'file':{'type':'string','format':'binary'}}),('assets','Asset',{'file':{'type':'string','format':'binary'},'campus_id':S,'course_id':S,'purpose':S})]:
  route(base+path,'post','Academic'+entity)
- paths['/api/v1'+base+path]['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj(fields)}}}
+ paths['/api/v1'+base+path]['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj(fields,('engine',) if 'engine' in fields else ())}}}
 for path in ['assets/{id}','sheet-image/{id}']:
  route(base+path,'get')
  op=paths['/api/v1'+base+path]['get'];op['responses']['200']={'description':'Authorized private binary','content':{'image/png':{'schema':{'type':'string','format':'binary'}},'application/pdf':{'schema':{'type':'string','format':'binary'}}}}
@@ -86,6 +86,9 @@ paths['/api/v1'+base+'sample-files/{id}']['get']['responses']['200']={'descripti
 
 schemas['AcademicApplyKey']=obj({'job_id':S,'version':I})
 route(base+'imports/{id}/apply-key','post','AcademicImport','AcademicApplyKey')
-for path,response,fields in [('imports/{id}/key-upload','Job',{'file':{'type':'string','format':'binary'}}),('grid-preview','GridReading',{'file':{'type':'string','format':'binary'},'course_id':S,'calibration':S})]:
+for path,response,fields in [('imports/{id}/key-upload','Job',{'file':{'type':'string','format':'binary'},'engine':S}),('grid-preview','GridReading',{'file':{'type':'string','format':'binary'},'course_id':S,'calibration':S})]:
  route(base+path,'post','Academic'+response)
- paths['/api/v1'+base+path]['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj(fields)}}}
+ paths['/api/v1'+base+path]['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj(fields,('engine',) if 'engine' in fields else ())}}}
+
+route(base+'grid-model','post','AcademicJob')
+paths['/api/v1'+base+'grid-model']['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':{'type':'string','format':'binary'},'course_id':S,'calibration':S})}}}

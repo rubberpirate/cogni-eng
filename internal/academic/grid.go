@@ -22,12 +22,14 @@ type GridCalibration struct {
 	Blocks  []GridBlock `json:"blocks"`
 }
 type GridRow struct {
-	Number    int       `json:"number"`
-	Selection []int     `json:"selection"`
-	Fill      []float64 `json:"fill"`
-	Centers   []Point   `json:"centers"`
-	Uncertain bool      `json:"uncertain"`
-	Reason    string    `json:"reason"`
+	ModelSelection []int     `json:"model_selection,omitempty"`
+	ModelState     string    `json:"model_state,omitempty"`
+	Number         int       `json:"number"`
+	Selection      []int     `json:"selection"`
+	Fill           []float64 `json:"fill"`
+	Centers        []Point   `json:"centers"`
+	Uncertain      bool      `json:"uncertain"`
+	Reason         string    `json:"reason"`
 }
 type GridReading struct {
 	Rows   []GridRow `json:"rows"`

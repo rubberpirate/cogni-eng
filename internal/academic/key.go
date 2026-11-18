@@ -38,7 +38,17 @@ func ParseAnswerKey(text string) (KeyPreview, error) {
 	}
 	seen := map[int]bool{}
 	for _, line := range strings.Split(text, "\n") {
-		line = strings.TrimSpace(line)
+		line = cleanOCRLine(line)
+		if strings.HasPrefix(line, "|") && strings.HasSuffix(line, "|") {
+			cells := strings.Split(strings.Trim(line, "|"), "|")
+			if len(cells) != 2 {
+				return out, errors.New("key tables need question and answer columns")
+			}
+			if strings.Trim(cells[0], " :-") == "" && strings.Trim(cells[1], " :-") == "" {
+				continue
+			}
+			line = strings.TrimSpace(cells[0]) + "," + strings.TrimSpace(cells[1])
+		}
 		if line == "" || strings.EqualFold(strings.ReplaceAll(line, " ", ""), "question,answer") || strings.EqualFold(line, "answer key") {
 			continue
 		}

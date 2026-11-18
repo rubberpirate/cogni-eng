@@ -323,3 +323,91 @@ test("an ambiguous sample cannot commit until the uncertain response is explicit
     .click();
   await expect(page.getByText("12 / 12", { exact: true })).toBeVisible();
 });
+
+test("a failed model comparison keeps measured OMR responses available with explicit retry", async ({
+  page,
+  browser,
+}) => {
+  const source = await browser.newPage({
+    viewport: { width: 638, height: 1208 },
+  });
+  await source.setContent(
+    '<html><body style="margin:0;background:white"></body></html>',
+  );
+  const blank = await source.screenshot();
+  await source.close();
+  await signIn(page);
+  await navigate(page, "Scan & check");
+  await page
+    .getByText("Read an existing OMR format (calibrated preview)", {
+      exact: true,
+    })
+    .click();
+  await page
+    .getByLabel("OMR preview course", { exact: true })
+    .selectOption(fixture.course);
+  await page.getByLabel("Existing OMR image", { exact: true }).setInputFiles({
+    name: "original-blank-grid.png",
+    mimeType: "image/png",
+    buffer: blank,
+  });
+  const job = {
+    id: "omr-model-ui-fixture",
+    resource_id: "fixture",
+    campus_id: "fixture",
+    course_id: fixture.course,
+    actor_id: "fixture",
+    kind: "recognize_scan",
+    state: "queued",
+    input: { mode: "grid_model" },
+    output: {},
+    progress: 0,
+    error: "",
+    attempts: 0,
+    provider: "",
+    model: "",
+    created_at: new Date().toISOString(),
+  };
+  await page.route("**/education/grid-model", async (route) => {
+    expect(route.request().headers()["content-type"]).toContain(
+      "multipart/form-data",
+    );
+    await route.fulfill({ json: job });
+  });
+  await page.route("**/education/jobs/omr-model-ui-fixture", (route) =>
+    route.fulfill({
+      json: {
+        ...job,
+        state: "configuration_required",
+        error:
+          "The private vision runtime needs configuration. Saved source retained.",
+      },
+    }),
+  );
+  await page
+    .getByLabel("Also compare with a local mark model", {
+      exact: true,
+    })
+    .check();
+  await page
+    .getByRole("button", { name: "Read calibrated answers", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Vision comparison: The vision service needs setup",
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: 10000 });
+  await expect(
+    page.getByRole("heading", {
+      name: "180 responses read · 180 need confirmation",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Detected answer 94", { exact: true }),
+  ).toHaveValue("blank");
+  await expect(
+    page.getByRole("button", { name: "Retry model comparison", exact: true }),
+  ).toBeVisible();
+});

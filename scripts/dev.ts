@@ -38,7 +38,7 @@ await Promise.all(
 );
 await run([".local/bin/operator", "migrate"]);
 await run([".local/bin/operator", "demo"]);
-const children = [
+const commands = [
   [".local/bin/gateway"],
   [".local/bin/worker"],
   [
@@ -51,17 +51,66 @@ const children = [
     "--hostname",
     "127.0.0.1",
   ],
-].map((cmd) => {
+];
+if (config.VISION_AUTOSTART === "1")
+  commands.push([
+    "uv",
+    "run",
+    "--project",
+    "inference",
+    "--frozen",
+    "--no-sync",
+    "python",
+    "inference/server.py",
+  ]);
+const children = commands.map((cmd) => {
   const childEnv = { ...env };
   if (cmd[0] !== ".local/bin/worker") {
     delete childEnv.GEMINI_API_KEY;
     delete childEnv.ANTHROPIC_API_KEY;
   }
-  return Bun.spawn(cmd, {
+  if (cmd[0] !== ".local/bin/worker" && !cmd.includes("inference/server.py"))
+    delete childEnv.VISION_API_KEY;
+  if (cmd.includes("inference/server.py"))
+    for (const key of Object.keys(childEnv))
+      if (
+        ![
+          "PATH",
+          "HOME",
+          "TMPDIR",
+          "XDG_CACHE_HOME",
+          "LD_LIBRARY_PATH",
+          "CUDA_VISIBLE_DEVICES",
+          "NVIDIA_VISIBLE_DEVICES",
+          "NVIDIA_DRIVER_CAPABILITIES",
+          "SSL_CERT_FILE",
+          "SSL_CERT_DIR",
+          "HTTPS_PROXY",
+          "HTTP_PROXY",
+          "NO_PROXY",
+          "VISION_API_KEY",
+        ].includes(key)
+      )
+        delete (childEnv as Record<string, string | undefined>)[key];
+  if (cmd.includes("inference/server.py"))
+    Object.assign(childEnv, {
+      HF_HOME: process.cwd() + "/.local/models",
+      HF_HUB_DISABLE_TELEMETRY: "1",
+      DO_NOT_TRACK: "1",
+    });
+  const child = Bun.spawn(cmd, {
     env: childEnv,
     stdout: "inherit",
     stderr: "inherit",
   });
+  if (cmd.includes("inference/server.py"))
+    void child.exited.then((code) => {
+      if (code !== 0)
+        console.error(
+          "Vision runtime stopped. Sources and jobs are retained; restart it with bun run vision.",
+        );
+    });
+  return child;
 });
 console.log(
   "Workspace: http://localhost:3000 · Local mail catcher: http://localhost:58025",
@@ -71,7 +120,11 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
     children.forEach((p) => p.kill());
     process.exit(0);
   });
-const result = await Promise.race(children.map((p) => p.exited));
+const result = await Promise.race(
+  children
+    .filter((_, i) => !commands[i].includes("inference/server.py"))
+    .map((p) => p.exited),
+);
 children.forEach((p) => p.kill());
 if (result !== 0)
   throw new Error("An application process stopped. Review its startup error.");

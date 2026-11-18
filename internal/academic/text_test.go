@@ -37,3 +37,21 @@ func TestOrderedOCRReassemblesColumnsAndKeepsNativeLineMembership(t *testing.T) 
 		t.Fatalf("column reading order: %q", text)
 	}
 }
+
+func TestModelMarkdownKeepsQuestionsEditableAndKeysUnapproved(t *testing.T) {
+	rows, err := ParseText("# Original paper\n**Q. 1.** Choose one number.\n- (a) One\n- (b) Two\nAns. (b) Two.", "topic", "Original fixture", "CC0-1.0")
+	if err != nil || len(rows) != 1 || len(rows[0].Question.Options) != 2 || len(rows[0].Question.Key) != 0 {
+		t.Fatalf("model proposal %+v %v", rows, err)
+	}
+}
+
+func TestDocumentExtractionNeverApprovesNormalizedAnswerLines(t *testing.T) {
+	rows, err := ParseText("Q.1. Original fixture\nA. First\nB. Second\nAnswer: B", "topic", "Original fixture", "CC0-1.0")
+	if err != nil || len(rows) != 1 || len(rows[0].Question.Key) != 1 {
+		t.Fatal("manual mapping fixture failed")
+	}
+	rows = RequireFacultyKeys(rows)
+	if len(rows[0].Question.Key) != 0 || rows[0].Error == "" {
+		t.Fatal("OCR silently approved a normalized answer")
+	}
+}

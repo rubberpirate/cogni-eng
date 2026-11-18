@@ -1,0 +1,17 @@
+{
+  "dataset": "Original synthetic circle/digit patches; no owner images used for training",
+  "seed": 42017,
+  "training_patches": 10000,
+  "synthetic_holdout_patches": 2000,
+  "synthetic_holdout_correct": 1999,
+  "classes": {
+    "0": "unfilled printed bubble",
+    "1": "filled bubble",
+    "2": "partial/ambiguous fill"
+  },
+  "epochs": 16,
+  "device": "cuda",
+  "seconds": 17.21,
+  "limitations": "Synthetic validation only. Not a field accuracy claim or calibrated probability. Real photos, erasures, diverse pens/layouts and calibration errors require broader evaluation.",
+  "weight_sha256": "ae8401755d721992a87790a63da31c115004de264901632864a7a50ba850d36a"
+}

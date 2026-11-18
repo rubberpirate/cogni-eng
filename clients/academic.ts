@@ -67,6 +67,8 @@ export function educationClient(org: string, csrf: string) {
       ),
     review: (id: string, body: A<"AcademicQuestionReview">) =>
       request("questions/" + id + "/review", body),
+    modelGrid: (body: FormData) =>
+      request<A<"AcademicJob">>("grid-model", body),
     previewGrid: (body: FormData) =>
       request<A<"AcademicGridReading">>("grid-preview", body),
     uploadKey: (id: string, body: FormData) =>

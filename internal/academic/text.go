@@ -28,6 +28,7 @@ func ParseText(text, topic, provenance, license string) ([]ImportRow, error) {
 		current = Question{Type: "single"}
 	}
 	for _, line := range strings.Split(text, "\n") {
+		line = cleanOCRLine(line)
 		line = strings.ReplaceAll(strings.TrimSpace(line), "{¢)", "(c)")
 		if line == "" {
 			continue
@@ -188,4 +189,36 @@ func RawOCRText(tsv string) string {
 		previous = id
 	}
 	return out.String()
+}
+
+// Model OCR commonly emits Markdown list/heading wrappers around otherwise literal text.
+func cleanOCRLine(line string) string {
+	line = strings.TrimSpace(line)
+	for _, prefix := range []string{"###### ", "##### ", "#### ", "### ", "## ", "# ", "- ", "* "} {
+		if strings.HasPrefix(line, prefix) {
+			line = strings.TrimPrefix(line, prefix)
+			break
+		}
+	}
+	if strings.HasPrefix(line, "**") {
+		if end := strings.Index(line[2:], "**"); end >= 0 {
+			line = line[2:2+end] + line[2+end+2:]
+		}
+	}
+	return line
+}
+
+// RequireFacultyKeys prevents OCR/model normalization of solved answers from approving a key.
+func RequireFacultyKeys(rows []ImportRow) []ImportRow {
+	for i := range rows {
+		if rows[i].Question.Type != "single" && rows[i].Question.Type != "multiple" {
+			continue
+		}
+		rows[i].Question.Key = nil
+		rows[i].Error = ""
+		if err := ValidateQuestion(rows[i].Question); err != nil {
+			rows[i].Error = err.Error()
+		}
+	}
+	return rows
 }

@@ -13,3 +13,5 @@ playwright-report/
 test-results/
 .agents
 **/next-env.d.ts
+.venv/
+__pycache__/

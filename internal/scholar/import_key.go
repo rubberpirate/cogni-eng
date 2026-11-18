@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -12,7 +13,7 @@ import (
 )
 
 // StageKey retains the source in a durable job; it does not replace any reviewed key.
-func (s *Service) StageKey(ctx context.Context, tx pgx.Tx, actor, org, id, filename string, data []byte) (Job, error) {
+func (s *Service) StageKey(ctx context.Context, tx pgx.Tx, actor, org, id, filename string, data []byte, engine string) (Job, error) {
 	imp, err := s.Import(ctx, tx, actor, org, id)
 	if err != nil {
 		return Job{}, err
@@ -27,6 +28,15 @@ func (s *Service) StageKey(ctx context.Context, tx pgx.Tx, actor, org, id, filen
 	if len(data) == 0 || len(data) > 8<<20 {
 		return Job{}, Problem(400, "invalid_key", "Use a key file of at most 8 MiB.")
 	}
+	if engine == "" {
+		engine = os.Getenv("OCR_PROVIDER")
+	}
+	if engine == "" {
+		engine = "tesseract"
+	}
+	if engine != "lightonocr" && engine != "tesseract" {
+		return Job{}, Problem(400, "invalid_ocr_engine", "Choose Tesseract or LightOnOCR.")
+	}
 	input := map[string]string{"mode": "answer_key", "topic_id": t.ID, "filename": filename, "sha256": access.Digest(string(data))}
 	mime := http.DetectContentType(data)
 	if mime == "image/png" || mime == "image/jpeg" || mime == "application/pdf" {
@@ -36,6 +46,7 @@ func (s *Service) StageKey(ctx context.Context, tx pgx.Tx, actor, org, id, filen
 		}
 		input["asset_id"] = asset.ID
 		input["language"] = t.Language
+		input["provider"] = engine
 	} else {
 		if _, e := academic.ParseAnswerKey(string(data)); e != nil {
 			return Job{}, Invalid(e)

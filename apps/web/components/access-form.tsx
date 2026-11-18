@@ -4,6 +4,7 @@ import Link from "next/link";
 import { StudyArtwork, WorkIcon } from "./workspace-art";
 import { apiClient } from "../../../clients/http";
 export function AccessForm({ mode }: { mode: "sign-in" | "reset" | "join" }) {
+  const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
@@ -11,6 +12,7 @@ export function AccessForm({ mode }: { mode: "sign-in" | "reset" | "join" }) {
     [recovery, setRecovery] = useState(false),
     [token, setToken] = useState("");
   useEffect(() => {
+    setHydrated(true);
     const incoming = location.hash.slice(1);
     if (incoming) {
       setToken(incoming);
@@ -110,90 +112,94 @@ export function AccessForm({ mode }: { mode: "sign-in" | "reset" | "join" }) {
             ? "Use the email associated with your institution."
             : "Links expire after use. Choose a unique password of at least 14 characters."}
         </p>
-        <form onSubmit={submit} aria-busy={busy}>
-          {(mode === "sign-in" || recovery) && (
-            <label>
-              Email address
-              <input
-                type="email"
-                name="email"
-                autoComplete="username"
-                required
-                maxLength={254}
-              />
-            </label>
-          )}
-          {!recovery && (
-            <>
-              <div>
-                <label htmlFor="password">Password</label>
-                <div className="input-action">
-                  <input
-                    id="password"
-                    type={show ? "text" : "password"}
-                    name="password"
-                    autoComplete={
-                      mode === "sign-in" ? "current-password" : "new-password"
-                    }
-                    required
-                    minLength={mode === "sign-in" ? 1 : 14}
-                    maxLength={256}
-                  />
-                  <button
-                    type="button"
-                    aria-pressed={show}
-                    onClick={() => setShow(!show)}
-                  >
-                    {show ? "Hide" : "Show"}
-                  </button>
-                </div>
-              </div>
+        <form method="post" onSubmit={submit} aria-busy={busy}>
+          <fieldset className="hydration-guard" disabled={!hydrated}>
+            {(mode === "sign-in" || recovery) && (
               <label>
-                Authenticator or recovery code{" "}
-                <span className="muted">(if enabled)</span>
+                Email address
                 <input
-                  name="code"
-                  autoComplete="one-time-code"
-                  maxLength={32}
+                  type="email"
+                  name="email"
+                  autoComplete="username"
+                  required
+                  maxLength={254}
                 />
               </label>
-            </>
-          )}
-          {mode === "sign-in" && !recovery && (
-            <label className="check">
-              <input type="checkbox" name="remember" />
-              Keep this device signed in (30 days, subject to idle expiry)
-            </label>
-          )}
-          {mode === "join" && (
-            <label className="check">
-              <input type="checkbox" name="policy" required />I accept the{" "}
-              <Link href="/policies">development terms and privacy policy</Link>
-              .
-            </label>
-          )}
-          {error && (
-            <p role="alert" className="error">
-              {error}
-            </p>
-          )}
-          {message && (
-            <p role="status" className="notice">
-              {message}
-            </p>
-          )}
-          <button
-            className="primary"
-            disabled={busy || (!token && mode !== "sign-in")}
-          >
-            {busy
-              ? "Working…"
-              : recovery
-                ? "Request recovery"
-                : mode === "sign-in"
-                  ? "Sign in"
-                  : "Set password"}
-          </button>
+            )}
+            {!recovery && (
+              <>
+                <div>
+                  <label htmlFor="password">Password</label>
+                  <div className="input-action">
+                    <input
+                      id="password"
+                      type={show ? "text" : "password"}
+                      name="password"
+                      autoComplete={
+                        mode === "sign-in" ? "current-password" : "new-password"
+                      }
+                      required
+                      minLength={mode === "sign-in" ? 1 : 14}
+                      maxLength={256}
+                    />
+                    <button
+                      type="button"
+                      aria-pressed={show}
+                      onClick={() => setShow(!show)}
+                    >
+                      {show ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                </div>
+                <label>
+                  Authenticator or recovery code{" "}
+                  <span className="muted">(if enabled)</span>
+                  <input
+                    name="code"
+                    autoComplete="one-time-code"
+                    maxLength={32}
+                  />
+                </label>
+              </>
+            )}
+            {mode === "sign-in" && !recovery && (
+              <label className="check">
+                <input type="checkbox" name="remember" />
+                Keep this device signed in (30 days, subject to idle expiry)
+              </label>
+            )}
+            {mode === "join" && (
+              <label className="check">
+                <input type="checkbox" name="policy" required />I accept the{" "}
+                <Link href="/policies">
+                  development terms and privacy policy
+                </Link>
+                .
+              </label>
+            )}
+            {error && (
+              <p role="alert" className="error">
+                {error}
+              </p>
+            )}
+            {message && (
+              <p role="status" className="notice">
+                {message}
+              </p>
+            )}
+            <button
+              className="primary"
+              disabled={busy || (!token && mode !== "sign-in")}
+            >
+              {busy
+                ? "Working…"
+                : recovery
+                  ? "Request recovery"
+                  : mode === "sign-in"
+                    ? "Sign in"
+                    : "Set password"}
+            </button>
+          </fieldset>
         </form>
         {mode === "sign-in" ? (
           <button

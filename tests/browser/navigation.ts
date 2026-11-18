@@ -1,8 +1,13 @@
-import { type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 export async function navigate(page: Page, name: string) {
   await page.locator("#workspace-navigation").waitFor({ state: "attached" });
   const menu = page.getByRole("button", { name: "Menu", exact: true });
-  if (await menu.isVisible()) await menu.click();
+  await expect(
+    page.getByRole("group", { name: "Workspace tools", exact: true }),
+  ).toBeEnabled();
+  if (await page.evaluate(() => matchMedia("(max-width: 760px)").matches)) {
+    if (await menu.count()) await menu.click();
+  }
   const nav = page.locator("#workspace-navigation");
   const target = nav.getByRole("button", { name, exact: true });
   if (!(await target.isVisible())) {

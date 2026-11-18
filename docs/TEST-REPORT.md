@@ -115,3 +115,15 @@ The managed and standalone inference startup paths were checked for exclusion of
 Final complete browser regression: **12 passed (1.8m)** after the explicit engine selection and hydration fixes. The final strict TypeScript/Go vet/unit gate also passed. Live local model UI checks and JavaScript-disabled authentication checks were separate real browser runs.
 
 The final optimized Next.js production build passed after the browser regression and credential guard. The optional GPU inference container was not built or qualified.
+
+## Educational processing feedback — 2026-11-18
+
+The upload workspace now puts current processing above setup, collapses the original form after a saved upload, and shows an Upload → Extract → Review → Save sequence. Paper extraction, question generation, separate keys, registered sheet reading and calibrated/model inspection share a labelled spinner/progress panel. Unknown progress is indeterminate; only Go-reported stage percentages are displayed. Extraction failures offer direct retry, completion points to editable questions, and the upload screen has its own selected navigation entry. Background tasks refresh automatically. Generation status survives switching workspace sections, and old save notices clear on navigation.
+
+Acceptance evidence includes a browser-controlled delayed upload and queued → running (35 reported stage percent) → failed → retry → editable-ready transition. This UI fixture verifies state rendering, recovery requests, step/navigation state, setup collapse, 390px overflow and reduced-motion behavior; it is explicitly **not** model inference evidence. It runs as a step in the real native question-image/separate-key import journey using the existing authenticated actor. This avoids exceeding the normal 12-attempt sign-in throttle; security limits were not weakened. Existing generation checks also assert indeterminate progress and retained status after navigation.
+
+Initial checks caught a null job access during the new pre-job sheet-upload indicator; the guard was corrected. An independently signed-in thirteenth browser test hit the existing rate limit; it was combined with the authenticated import journey. Neither failing run is reported as passing. Strict TypeScript, Go vet and ordinary Go tests passed after the changes. New backend/database/provider qualification is not claimed by this frontend increment; no Go rules, schema or contracts changed. Full WCAG/screen-reader/device and production provider qualification remain open.
+
+Final complete browser regression: **12 passed (1.9m)**, including the real paper/key import and registered OMR scoring journeys plus the delayed processing-state fixture. Light/dark and 390px processing screenshots were inspected; no horizontal document overflow and reduced-motion spinner behavior passed. The final small generation-state retention and upload-status focus changes are included in that run.
+
+The final optimized production Next build passed. No new provider delivery or full accessibility certification is asserted by these UI checks.

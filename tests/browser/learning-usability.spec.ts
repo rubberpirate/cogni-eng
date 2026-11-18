@@ -166,6 +166,12 @@ test("generation failure remains understandable on the request screen and naviga
     .getByRole("button", { name: "Generate draft questions", exact: true })
     .click();
   await expect(
+    page.getByRole("progressbar", {
+      name: "Your request is queued progress",
+      exact: true,
+    }),
+  ).not.toHaveAttribute("value");
+  await expect(
     page.getByRole("heading", {
       name: "The AI service is temporarily unavailable",
       exact: true,
@@ -192,6 +198,12 @@ test("generation failure remains understandable on the request screen and naviga
   await expect(
     page.getByRole("heading", {
       name: "Create questions with AI",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "The AI service is temporarily unavailable",
       exact: true,
     }),
   ).toBeVisible();

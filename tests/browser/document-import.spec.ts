@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { checkProcessingFeedback } from "./processing-feedback";
 import { navigate } from "./navigation";
 const creds = readFileSync(
   process.env.E2E_ACCESS_FILE ?? ".local/browser-access.txt",
@@ -204,4 +205,6 @@ test("a two-column question image becomes ordered editable options; faculty sele
         q.stem === "How many straight sides does a triangle have?",
     ).key,
   ).toEqual(["B"]);
+  await test.step("upload, queue, processing, failure, retry and ready indicators", () =>
+    checkProcessingFeedback(page, fixture));
 });

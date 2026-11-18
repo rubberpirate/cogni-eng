@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { type A, type EducationClient } from "../../../clients/academic";
+import { TaskProgress } from "./task-progress";
 import { FormField as Field } from "./form-field";
 import { StudyArtwork, WorkIcon } from "./workspace-art";
 import { type LearningView } from "./learning-navigation";
@@ -204,7 +205,11 @@ export function GenerationFlow({
   onTopic,
   onReview,
   initialTopic,
+  initialJob,
+  onJob,
 }: {
+  initialJob?: Job;
+  onJob: (job: Job) => void;
   initialTopic: string;
   api: EducationClient;
   topics: Topic[];
@@ -218,7 +223,11 @@ export function GenerationFlow({
     createdTopic && !topics.some((t) => t.id === createdTopic.id)
       ? [...topics, createdTopic]
       : topics;
-  const [job, setJob] = useState<Job | null>(null);
+  const [job, setJobState] = useState<Job | null>(initialJob ?? null);
+  const setJob = (next: Job) => {
+    setJobState(next);
+    onJob(next);
+  };
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const chosen = selection || availableTopics[0]?.id || "new";
@@ -393,12 +402,30 @@ export function GenerationFlow({
               </Field>
             </div>
             <button className="primary" disabled={!courses.length}>
-              {busy ? "Starting…" : "Generate draft questions"}
+              {busy
+                ? "Starting…"
+                : running
+                  ? "Generation in progress…"
+                  : "Generate draft questions"}
             </button>
           </fieldset>
         </form>
       </section>
       <section className="card generation-status" aria-live="polite">
+        {(busy || running) && (
+          <TaskProgress
+            state={busy && !running ? "uploading" : job!.state}
+            title={
+              busy && !running
+                ? "Sending your generation request"
+                : job!.state === "queued"
+                  ? "Your request is queued"
+                  : "Generating questions and answer proposals"
+            }
+            detail="Your topic is saved with the request. Drafts will need faculty review before use."
+            progress={running ? job?.progress : undefined}
+          />
+        )}
         <p className="eyebrow">Request status</p>
         <h2>
           {job

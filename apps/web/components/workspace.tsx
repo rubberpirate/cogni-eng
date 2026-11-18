@@ -614,6 +614,7 @@ export function Workspace({
                   "home",
                   "generate",
                   "curriculum",
+                  "import",
                   "papers",
                   "scan",
                   "results",
@@ -632,7 +633,9 @@ export function Workspace({
               >
                 <WorkIcon name={id} />
                 {teaching
-                  ? learningViews[id as LearningView].title
+                  ? id === "import"
+                    ? "Upload paper"
+                    : learningViews[id as LearningView].title
                   : language === "hi"
                     ? "मेरे आकलन"
                     : "My assessments"}

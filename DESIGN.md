@@ -40,3 +40,7 @@ Pastel roles: soft teal `0.94 0.027 195`, highlight yellow `0.92 0.115 100`, lil
 ## Model-assisted source review
 
 Document/key upload forms expose the actual selected OCR engine. OMR model comparison is an explicit checkbox beside calibrated reading, with background progress/retry and clear proposal-versus-measurement labels. Preserve pixel readings when a model fails; mark disagreements without substituting a guessed mark. Engine configuration errors and external model claims never appear as delivered academic evidence.
+
+## Processing clarity — 2026-11-18
+
+Put current work before setup: paper upload shows Upload → Extract → Review → Save, collapses completed setup, and puts the extraction panel above the review. Distinguish upload transfer from saved queued/running work. Use one labelled spinner/progress pattern for paper extraction, generation, keys and sheet reading/model comparison. Only display percentages reported by Go; otherwise use indeterminate progress and no invented time estimate. Completion gives a concrete next action; failures retain source and expose recovery. Announce state changes politely, respect reduced motion, and give Upload paper its own selected navigation entry. Background tasks refresh automatically; transient save notices clear when changing sections.

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { A, EducationClient } from "../../../clients/academic";
+import { TaskProgress } from "./task-progress";
 import { FormField as Field } from "./form-field";
 type Calibration = A<"AcademicGridCalibration">;
 const corners = [
@@ -418,6 +419,19 @@ export function GridInspection({
           {busy ? "Reading bubbles…" : "Read calibrated answers"}
         </button>
       </form>
+      {(busy ||
+        (modelJob && ["queued", "running"].includes(modelJob.state))) && (
+        <TaskProgress
+          state={busy ? "uploading" : modelJob!.state}
+          title={
+            busy
+              ? "Reading calibrated bubbles"
+              : "Comparing detected marks with the model"
+          }
+          detail="Measured responses remain available. Confirm blanks, uncertain marks and any model disagreements before using the reading."
+          progress={busy ? undefined : modelJob?.progress}
+        />
+      )}
       {modelJob && (
         <section className="model-inspection-state" aria-live="polite">
           <h3>

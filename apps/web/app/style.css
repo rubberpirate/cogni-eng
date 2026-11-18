@@ -2055,3 +2055,124 @@ details p {
     gap: 4px;
   }
 }
+
+/* One visible processing language across educational workflows. */
+.task-progress {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-inline-start: 4px solid var(--accent);
+  border-radius: 16px;
+  background: var(--surface);
+  margin: 20px 0;
+  overflow-wrap: anywhere;
+}
+.task-progress.needs-attention {
+  border-inline-start-color: var(--error);
+}
+.task-progress-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.task-progress h3 {
+  margin: 2px 0 0;
+}
+.task-state {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.task-spinner,
+.task-symbol {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+}
+.task-symbol {
+  color: var(--accent);
+  font-size: 24px;
+  text-align: center;
+}
+.task-spinner {
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: task-turn 1s linear infinite;
+}
+.task-progress progress {
+  display: block;
+  width: 100%;
+  height: 10px;
+  accent-color: var(--accent);
+}
+.task-progress-caption {
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+.work-steps {
+  display: flex;
+  padding: 0;
+  list-style: none;
+  gap: 12px;
+  margin: 24px 0;
+}
+.work-steps li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 2px solid var(--border);
+  color: var(--muted);
+}
+.work-steps li > span {
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  min-width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+}
+.work-steps li[aria-current="step"] {
+  color: var(--fg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.work-steps li[aria-current="step"] > span {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.work-steps .is-done {
+  color: var(--accent);
+}
+.upload-setup > summary {
+  padding: 16px 0;
+  font-weight: 600;
+}
+@keyframes task-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .task-spinner {
+    animation: none;
+    border-style: dotted;
+  }
+}
+@media (max-width: 760px) {
+  .work-steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .work-steps li {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+  .task-progress {
+    padding: 16px;
+  }
+}

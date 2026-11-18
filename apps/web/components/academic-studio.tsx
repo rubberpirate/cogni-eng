@@ -19,6 +19,7 @@ import {
   ResultsFlow,
 } from "./academic-flows";
 import { type LearningView } from "./learning-navigation";
+import { TaskProgress } from "./task-progress";
 import { GridInspection } from "./grid-inspection";
 import { ImportChoiceRow, KeyImportPanel } from "./import-review";
 import { FormField as Field } from "./form-field";
@@ -122,6 +123,15 @@ export function AcademicStudio({
     return () => window.removeEventListener("hashchange", restore);
   }, [papers]);
   const [imports, setImports] = useState<A<"AcademicImport">[]>([]);
+  const [uploadingPaper, setUploadingPaper] = useState(false);
+  const [importPollError, setImportPollError] = useState("");
+  const importReviewRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (uploadingPaper && tab === "import")
+      document
+        .getElementById("paper-processing")
+        ?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [uploadingPaper, tab]);
   const [preview, setPreviewState] = useState<A<"AcademicImport"> | null>(null);
   const previewRef = useRef(preview);
   previewRef.current = preview;
@@ -173,10 +183,20 @@ export function AcademicStudio({
       if (pending) return;
       pending = true;
       try {
-        const next = await api.detail("imports", preview.id);
-        if (active) setPreview(next);
+        const [next, currentJobs] = await Promise.all([
+          api.detail("imports", preview.id),
+          api.list("jobs", { campus }),
+        ]);
+        if (active) {
+          setPreview(next);
+          setJobs(currentJobs);
+          setImportPollError("");
+        }
       } catch {
-        /* Manual refresh remains available after interruption. */
+        if (active)
+          setImportPollError(
+            "Connection interrupted. Your upload is saved. We are trying to reconnect; you can also reload its status.",
+          );
       } finally {
         pending = false;
       }
@@ -185,7 +205,7 @@ export function AcademicStudio({
       active = false;
       clearInterval(timer);
     };
-  }, [api, preview?.id, preview?.state]);
+  }, [api, campus, preview?.id, preview?.state]);
   const [edit, setEdit] = useState<Q | null>(null);
   const editorRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -203,6 +223,35 @@ export function AcademicStudio({
   }, [edit]);
   const [importIndex, setImportIndex] = useState<number | null>(null);
   const [jobs, setJobs] = useState<A<"AcademicJob">[]>([]);
+  const [generationJob, setGenerationJob] = useState<A<"AcademicJob">>();
+  const recordJob = useCallback((next: A<"AcademicJob">) => {
+    setGenerationJob(next);
+    setJobs((current) => [next, ...current.filter((j) => j.id !== next.id)]);
+  }, []);
+  useEffect(() => {
+    if (tab !== "jobs" || !staff) return;
+    let active = true,
+      pending = false;
+    const timer = setInterval(async () => {
+      if (pending) return;
+      pending = true;
+      try {
+        const next = await api.list("jobs", { campus });
+        if (active) setJobs(next);
+      } catch {
+        if (active)
+          setError(
+            "Task status could not refresh. Saved work is retained; reconnect or use Refresh tasks.",
+          );
+      } finally {
+        pending = false;
+      }
+    }, 2500);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [api, campus, staff, tab]);
   const [assignments, setAssignments] = useState<A<"AcademicAssigned">[]>([]);
   const [sitting, setSitting] = useState<Sitting | null>(null);
   const [error, setError] = useState("");
@@ -301,7 +350,25 @@ export function AcademicStudio({
   }, [topics, topic]);
   useEffect(() => {
     setSitting(null);
+    setNotice("");
+    setError("");
   }, [view]);
+  const extractionJob = jobs.find(
+    (j) =>
+      j.kind === "extract_document" &&
+      j.resource_id === preview?.id &&
+      (j.input as Record<string, unknown>)?.mode !== "answer_key",
+  );
+  const importState = uploadingPaper
+    ? "uploading"
+    : preview?.state === "extracting"
+      ? ((extractionJob?.state === "completed"
+          ? "running"
+          : extractionJob?.state) ?? "queued")
+      : preview
+        ? "completed"
+        : "";
+  const importActive = uploadingPaper || preview?.state === "extracting";
   const chosen = topics.find((t) => t.id === topic);
   if (!dataReady)
     return (
@@ -374,6 +441,11 @@ export function AcademicStudio({
           )}
           {tab === "generate" && (
             <GenerationFlow
+              initialJob={
+                generationJob ??
+                jobs.find((j) => j.kind === "generate_questions")
+              }
+              onJob={recordJob}
               initialTopic={topic}
               api={api}
               topics={topics}
@@ -413,176 +485,320 @@ export function AcademicStudio({
           )}
           {(tab === "curriculum" || tab === "import") && (
             <>
-              <div
-                className={
-                  tab === "import" ? "academic-columns" : "topic-toolbar"
-                }
-              >
-                <section className="card">
-                  <h2>Choose a topic</h2>
-                  <Field name="Topic">
-                    <select
-                      value={topic}
-                      onChange={(e) => {
-                        setTopic(e.target.value);
-                        setPreview(null);
-                        setEdit(null);
-                        setSelected([]);
-                      }}
+              {tab === "import" && (
+                <>
+                  <div className="actions">
+                    <button onClick={() => setTab("curriculum")}>
+                      ← Back to question bank
+                    </button>
+                  </div>
+                  <ol
+                    className="work-steps"
+                    aria-label="Question upload workflow"
+                  >
+                    {[
+                      "Upload paper",
+                      "Extract questions",
+                      "Review questions & key",
+                      "Save to bank",
+                    ].map((label, i) => {
+                      const current = !preview
+                        ? uploadingPaper
+                          ? 1
+                          : 0
+                        : preview.state === "committed"
+                          ? 3
+                          : preview.state === "extracting"
+                            ? 1
+                            : 2;
+                      return (
+                        <li
+                          key={label}
+                          aria-current={current === i ? "step" : undefined}
+                          className={i < current ? "is-done" : ""}
+                        >
+                          <span aria-hidden="true">
+                            {i < current ? "✓" : i + 1}
+                          </span>
+                          {label}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  {(uploadingPaper || preview) && (
+                    <TaskProgress
+                      id="paper-processing"
+                      state={importState}
+                      title={
+                        uploadingPaper
+                          ? "Uploading your question paper"
+                          : preview?.state === "committed"
+                            ? "Questions saved as drafts"
+                            : preview?.state === "preview"
+                              ? `${preview.rows.length} ${preview.rows.length === 1 ? "question" : "questions"} ready for review`
+                              : importState === "queued"
+                                ? "Paper saved — waiting to extract"
+                                : importState === "running"
+                                  ? "Extracting questions and options"
+                                  : "Paper extraction needs attention"
+                      }
+                      detail={
+                        uploadingPaper
+                          ? "Keep this tab open until the upload is saved."
+                          : preview?.state === "preview"
+                            ? "Check the wording and options, choose correct answers or apply a separate key, then save the reviewed questions to the bank."
+                            : preview?.state === "committed"
+                              ? "Open the question bank to approve these drafts before using them in an assessment."
+                              : extractionJob?.error ||
+                                "Your original file is saved. Reading pages and arranging questions in order. You can leave this screen; extraction continues in Background tasks."
+                      }
+                      progress={extractionJob?.progress}
                     >
-                      <option value="">Select a topic</option>
-                      {topics.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.subject} / {t.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  {chosen && <p>{chosen.outcome}</p>}
-                  <details>
-                    <summary>Add a topic</summary>
-                    <form
-                      onSubmit={(e) => {
-                        const f = values(e);
-                        void run(async () => {
-                          const c = courses.find(
-                            (c) => c.id === str(f, "course"),
-                          );
-                          if (!c)
-                            throw new Error(
-                              "Select a course. Create one in Courses if needed.",
-                            );
-                          const t = await api.topics({
-                            id: "",
-                            campus_id: c.campus_id,
-                            course_id: c.id,
-                            subject: str(f, "subject"),
-                            name: str(f, "name"),
-                            outcome: str(f, "outcome"),
-                            language: str(f, "language"),
-                          });
-                          setTopic(t.id);
-                        });
-                      }}
-                    >
-                      <Field name="Course">
-                        <select name="course" required>
-                          <option value="">Select course</option>
-                          {courses.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name} / {c.academic_year}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field name="Subject">
-                        <input name="subject" required minLength={2} />
-                      </Field>
-                      <Field name="Topic name">
-                        <input name="name" required minLength={2} />
-                      </Field>
-                      <Field name="Learning outcome">
-                        <textarea name="outcome" required minLength={5} />
-                      </Field>
-                      <Field name="Content language">
-                        <select name="language">
-                          <option value="en">English</option>
-                          <option value="hi">हिन्दी</option>
-                        </select>
-                      </Field>
-                      <button disabled={busy}>Create topic</button>
-                    </form>
-                  </details>
-                </section>
-                {tab === "import" && (
-                  <section className="card">
-                    <h2>Upload your question paper</h2>
-                    <p>
-                      Use a PDF, photo, CSV, XLSX or JSON file. We will save a
-                      preview first so you can check the questions and answers
-                      before adding them to the bank.
-                    </p>
-                    <a href="/demo/questions.csv" download>
-                      Download original mathematics CSV
-                    </a>
-                    <p className="actions">
-                      {["physics", "chemistry", "biology"].map((subject) => (
-                        <a key={subject} href={`/demo/${subject}.csv`} download>
-                          {subject} example
-                        </a>
-                      ))}
-                    </p>
-                    <form
-                      onSubmit={(e) => {
-                        const f = values(e);
-                        f.set("topic_id", topic);
-                        void run(
-                          async () => setPreview(await api.uploadImport(f)),
-                          "Import preview saved; no questions have been approved.",
-                        );
-                      }}
-                    >
-                      <Field name="Question file">
-                        <input
-                          name="file"
-                          type="file"
-                          accept=".csv,.xlsx,.json,.pdf,.png,.jpg,.jpeg"
-                          required
-                        />
-                      </Field>
-                      <Field name="Extraction engine">
-                        <select name="engine">
-                          <option value="">Default engine</option>
-                          <option value="lightonocr">
-                            LightOnOCR-2-1B (local model)
-                          </option>
-                          <option value="tesseract">
-                            Tesseract (local text OCR)
-                          </option>
-                        </select>
-                      </Field>
-                      <Field name="Source / provenance">
-                        <input
-                          name="provenance"
-                          required
-                          defaultValue="Original teacher material"
-                        />
-                      </Field>
-                      <Field name="Usage rights">
-                        <input
-                          name="license"
-                          required
-                          defaultValue="Institution-owned"
-                        />
-                      </Field>
-                      <button disabled={busy || !topic}>
-                        Upload for preview
+                      {preview?.state === "preview" && (
+                        <button
+                          className="primary"
+                          onClick={() =>
+                            importReviewRef.current?.scrollIntoView({
+                              block: "start",
+                              behavior: "instant",
+                            })
+                          }
+                        >
+                          Review extracted questions
+                        </button>
+                      )}
+                      {preview?.state === "committed" && (
+                        <button
+                          className="primary"
+                          onClick={() => setTab("curriculum")}
+                        >
+                          Open question bank
+                        </button>
+                      )}
+                      {extractionJob &&
+                        [
+                          "failed",
+                          "configuration_required",
+                          "cancelled",
+                        ].includes(extractionJob.state) &&
+                        preview?.state === "extracting" && (
+                          <button
+                            disabled={busy}
+                            onClick={() =>
+                              void run(async () => {
+                                await api.jobAction(extractionJob.id, "retry");
+                                setJobs(await api.list("jobs", { campus }));
+                              }, "")
+                            }
+                          >
+                            Retry paper extraction
+                          </button>
+                        )}
+                      <button onClick={() => setTab("jobs")}>
+                        View background tasks
                       </button>
-                    </form>
-                    <Field name="Saved imports">
+                    </TaskProgress>
+                  )}
+                  {importPollError && importActive && (
+                    <p role="alert" className="error">
+                      {importPollError}
+                    </p>
+                  )}
+                </>
+              )}
+              <details
+                className="upload-setup"
+                open={tab !== "import" || !preview}
+              >
+                <summary>
+                  {tab === "import"
+                    ? preview
+                      ? "Upload another paper or change topic"
+                      : "1. Choose a topic and upload your paper"
+                    : "Topic and learning outcome"}
+                </summary>
+                <div
+                  className={
+                    tab === "import" ? "academic-columns" : "topic-toolbar"
+                  }
+                >
+                  <section className="card">
+                    <h2>Choose a topic</h2>
+                    <Field name="Topic">
                       <select
-                        value={preview?.id ?? ""}
-                        onChange={(e) =>
-                          setPreview(
-                            imports.find((i) => i.id === e.target.value) ??
-                              null,
-                          )
-                        }
+                        value={topic}
+                        onChange={(e) => {
+                          setTopic(e.target.value);
+                          setPreview(null);
+                          setEdit(null);
+                          setSelected([]);
+                        }}
                       >
-                        <option value="">Select saved preview</option>
-                        {imports.map((i) => (
-                          <option key={i.id} value={i.id}>
-                            {i.created_at.slice(0, 16)} · {i.state} ·{" "}
-                            {i.rows.length} rows
+                        <option value="">Select a topic</option>
+                        {topics.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.subject} / {t.name}
                           </option>
                         ))}
                       </select>
                     </Field>
+                    {chosen && <p>{chosen.outcome}</p>}
+                    <details>
+                      <summary>Add a topic</summary>
+                      <form
+                        onSubmit={(e) => {
+                          const f = values(e);
+                          void run(async () => {
+                            const c = courses.find(
+                              (c) => c.id === str(f, "course"),
+                            );
+                            if (!c)
+                              throw new Error(
+                                "Select a course. Create one in Courses if needed.",
+                              );
+                            const t = await api.topics({
+                              id: "",
+                              campus_id: c.campus_id,
+                              course_id: c.id,
+                              subject: str(f, "subject"),
+                              name: str(f, "name"),
+                              outcome: str(f, "outcome"),
+                              language: str(f, "language"),
+                            });
+                            setTopic(t.id);
+                          });
+                        }}
+                      >
+                        <Field name="Course">
+                          <select name="course" required>
+                            <option value="">Select course</option>
+                            {courses.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name} / {c.academic_year}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                        <Field name="Subject">
+                          <input name="subject" required minLength={2} />
+                        </Field>
+                        <Field name="Topic name">
+                          <input name="name" required minLength={2} />
+                        </Field>
+                        <Field name="Learning outcome">
+                          <textarea name="outcome" required minLength={5} />
+                        </Field>
+                        <Field name="Content language">
+                          <select name="language">
+                            <option value="en">English</option>
+                            <option value="hi">हिन्दी</option>
+                          </select>
+                        </Field>
+                        <button disabled={busy}>Create topic</button>
+                      </form>
+                    </details>
                   </section>
-                )}
-              </div>
-              {tab === "import" && preview && (
-                <section className="card">
+                  {tab === "import" && (
+                    <section className="card">
+                      <h2>Upload your question paper</h2>
+                      <p>
+                        Use a PDF, photo, CSV, XLSX or JSON file. We will save a
+                        preview first so you can check the questions and answers
+                        before adding them to the bank.
+                      </p>
+                      <a href="/demo/questions.csv" download>
+                        Download original mathematics CSV
+                      </a>
+                      <p className="actions">
+                        {["physics", "chemistry", "biology"].map((subject) => (
+                          <a
+                            key={subject}
+                            href={`/demo/${subject}.csv`}
+                            download
+                          >
+                            {subject} example
+                          </a>
+                        ))}
+                      </p>
+                      <form
+                        onSubmit={(e) => {
+                          const f = values(e);
+                          f.set("topic_id", topic);
+                          void run(async () => {
+                            setUploadingPaper(true);
+                            setImportPollError("");
+                            try {
+                              setPreview(await api.uploadImport(f));
+                            } finally {
+                              setUploadingPaper(false);
+                            }
+                          }, "");
+                        }}
+                      >
+                        <Field name="Question file">
+                          <input
+                            name="file"
+                            type="file"
+                            accept=".csv,.xlsx,.json,.pdf,.png,.jpg,.jpeg"
+                            required
+                          />
+                        </Field>
+                        <Field name="Extraction engine">
+                          <select name="engine">
+                            <option value="">Default engine</option>
+                            <option value="lightonocr">
+                              LightOnOCR-2-1B (local model)
+                            </option>
+                            <option value="tesseract">
+                              Tesseract (local text OCR)
+                            </option>
+                          </select>
+                        </Field>
+                        <Field name="Source / provenance">
+                          <input
+                            name="provenance"
+                            required
+                            defaultValue="Original teacher material"
+                          />
+                        </Field>
+                        <Field name="Usage rights">
+                          <input
+                            name="license"
+                            required
+                            defaultValue="Institution-owned"
+                          />
+                        </Field>
+                        <button disabled={busy || !topic}>
+                          {uploadingPaper
+                            ? "Uploading paper…"
+                            : "Upload for preview"}
+                        </button>
+                      </form>
+                      <Field name="Saved imports">
+                        <select
+                          value={preview?.id ?? ""}
+                          onChange={(e) =>
+                            setPreview(
+                              imports.find((i) => i.id === e.target.value) ??
+                                null,
+                            )
+                          }
+                        >
+                          <option value="">Select saved preview</option>
+                          {imports.map((i) => (
+                            <option key={i.id} value={i.id}>
+                              {i.created_at.slice(0, 16)} · {i.state} ·{" "}
+                              {i.rows.length} rows
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                    </section>
+                  )}
+                </div>
+              </details>
+              {tab === "import" && preview && !importActive && (
+                <section className="card" ref={importReviewRef}>
                   <h2>Import review · {preview.state}</h2>
                   <button
                     disabled={busy}
@@ -1958,6 +2174,7 @@ function ScanDesk({
   const [job, setJob] = useState<A<"AcademicJob"> | null>(null);
   const [error, setError] = useState("");
   const [loadingSheets, setLoadingSheets] = useState(true);
+  const [uploadingScan, setUploadingScan] = useState(false);
   const [scanAt, setScanAt] = useState(nowLocal());
   const refresh = useCallback(async () => {
     const [l, a, b] = await Promise.all([
@@ -2132,20 +2349,25 @@ function ScanDesk({
             onSubmit={(e) => {
               const f = values(e);
               void run(async () => {
-                let id = batch;
-                const existing = batches.find((b) => b.id === id);
-                if (!existing || existing.layout_id !== layout) {
-                  const b = await api.batch({
-                    paper_id: paper.id,
-                    layout_id: layout,
-                    sitting_at: new Date(scanAt).toISOString(),
-                  });
-                  id = b.id;
-                  setBatch(id);
-                  await refresh();
+                setUploadingScan(true);
+                try {
+                  let id = batch;
+                  const existing = batches.find((b) => b.id === id);
+                  if (!existing || existing.layout_id !== layout) {
+                    const b = await api.batch({
+                      paper_id: paper.id,
+                      layout_id: layout,
+                      sitting_at: new Date(scanAt).toISOString(),
+                    });
+                    id = b.id;
+                    setBatch(id);
+                    await refresh();
+                  }
+                  setJob(await api.scanUpload(id, f));
+                } finally {
+                  setUploadingScan(false);
                 }
-                setJob(await api.scanUpload(id, f));
-              }, "Upload saved. Reading the sheet; the review will appear below when it is ready.");
+              }, "");
             }}
           >
             <Field name="Actual test date and time">
@@ -2178,44 +2400,54 @@ function ScanDesk({
                 (!!job && ["queued", "running"].includes(job.state))
               }
             >
-              Upload and read sheet
+              {uploadingScan
+                ? "Uploading sheet…"
+                : job && ["queued", "running"].includes(job.state)
+                  ? "Sheet reading in progress…"
+                  : "Upload and read sheet"}
             </button>
           </form>
-          {job && (
-            <div
-              className={
-                job.state === "failed" || job.state === "configuration_required"
-                  ? "error"
-                  : "notice"
-              }
-              role="status"
-            >
-              <strong>
-                {job.state === "completed"
-                  ? "Sheet reading finished — review below"
-                  : job.state === "running"
-                    ? "Reading your uploaded sheet…"
-                    : job.state === "queued"
+          {(uploadingScan || job) && (
+            <TaskProgress
+              state={uploadingScan ? "uploading" : job!.state}
+              progress={uploadingScan ? undefined : job?.progress}
+              title={
+                uploadingScan
+                  ? "Saving your answer sheets"
+                  : job!.state === "completed"
+                    ? "Sheet reading finished — review below"
+                    : job!.state === "queued"
                       ? "Upload saved — waiting to read"
-                      : `Reading ${job.state.replaceAll("_", " ")}`}
-              </strong>
-              {job.error && <p>{job.error}</p>}
-              {["failed", "configuration_required", "cancelled"].includes(
-                job.state,
-              ) && (
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      await api.jobAction(job.id, "retry");
-                      setJob(await api.detail("jobs", job.id));
-                    }, "Reading queued again. Your original upload is retained.")
-                  }
-                >
-                  Retry reading this upload
-                </button>
-              )}
-            </div>
+                      : job!.state === "running"
+                        ? "Reading your uploaded sheet…"
+                        : "Sheet reading needs attention"
+              }
+              detail={
+                uploadingScan
+                  ? "Keep this tab open until the upload is saved."
+                  : job!.error ||
+                    (job!.state === "completed"
+                      ? "Confirm the learner and any uncertain marks below before saving results."
+                      : "Your file is saved. Responses are being detected; no result is committed until you review the evidence.")
+              }
+            >
+              {job &&
+                ["failed", "configuration_required", "cancelled"].includes(
+                  job.state,
+                ) && (
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      void run(async () => {
+                        await api.jobAction(job!.id, "retry");
+                        setJob(await api.detail("jobs", job!.id));
+                      }, "Reading queued again. Your original upload is retained.")
+                    }
+                  >
+                    Retry reading this upload
+                  </button>
+                )}
+            </TaskProgress>
           )}
           <details>
             <summary>Resume an earlier upload group</summary>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { A, EducationClient } from "../../../clients/academic";
+import { TaskProgress } from "./task-progress";
 import { FormField as Field } from "./form-field";
 type Import = A<"AcademicImport">;
 type Job = A<"AcademicJob">;
@@ -191,6 +192,18 @@ export function KeyImportPanel({
         extracted key before applying it; mismatched question numbers are
         rejected.
       </p>
+      {(busy || (job && ["queued", "running"].includes(job.state))) && (
+        <TaskProgress
+          state={busy ? "uploading" : job!.state}
+          title={
+            busy
+              ? "Saving your answer key"
+              : "Extracting the separate answer key"
+          }
+          detail="Questions are retained. Check the numbered key preview before applying it."
+          progress={busy ? undefined : job?.progress}
+        />
+      )}
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -225,8 +238,18 @@ export function KeyImportPanel({
             required
           />
         </Field>
-        <button disabled={busy || preview.state !== "preview"}>
-          Read separate answer key
+        <button
+          disabled={
+            busy ||
+            preview.state !== "preview" ||
+            (!!job && ["queued", "running"].includes(job.state))
+          }
+        >
+          {busy
+            ? "Saving key…"
+            : job && ["queued", "running"].includes(job.state)
+              ? "Reading key…"
+              : "Read separate answer key"}
         </button>
       </form>
       {error && (

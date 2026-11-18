@@ -41,3 +41,9 @@ Core education priority (2026-11-17):
 
 - Adopt a white labelled rail, light teal workspace and rounded task/assessment panels using the existing local IBM Plex font. Original SVG artwork and actual paper/topic/job values avoid external asset dependencies and unsupported analytics.
 - Treat 502/503/504 generation errors as provider unavailability in the UI; preserve exact safe technical context in a disclosure, saved inputs and the existing authorized retry. A fresh live check timed out awaiting headers; no provider delivery is claimed. Google troubleshooting guidance still recommends bounded backoff for transient errors (https://aistudio.google.com/docs/troubleshooting); durable worker retries remain unchanged.
+
+2026-11-18 paper and OMR image review:
+
+- Preserve native OCR text and the original private file separately from geometry-ordered question proposals. Preserve source question numbers; normalize numbered/inline option notation; never accept printed `Ans.` lines as faculty-approved keys.
+- Add ordered inline editors and explicit numbered-key previews. Reuse durable Go extraction jobs and JSON rows with version checks; no migration is necessary because existing JSON columns hold the additional source-number metadata and job output.
+- Add a bounded staff-only calibrated OMR diagnostic, independent of keys/learner identity. Export corrections/measurements without creating marks. A single matching 180-response image is a regression example, not a field accuracy claim.

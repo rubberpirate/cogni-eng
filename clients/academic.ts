@@ -67,6 +67,12 @@ export function educationClient(org: string, csrf: string) {
       ),
     review: (id: string, body: A<"AcademicQuestionReview">) =>
       request("questions/" + id + "/review", body),
+    previewGrid: (body: FormData) =>
+      request<A<"AcademicGridReading">>("grid-preview", body),
+    uploadKey: (id: string, body: FormData) =>
+      request<A<"AcademicJob">>(`imports/${id}/key-upload`, body),
+    applyKey: (id: string, body: A<"AcademicApplyKey">) =>
+      request<A<"AcademicImport">>(`imports/${id}/apply-key`, body),
     uploadImport: (body: FormData) =>
       request<A<"AcademicImport">>("imports/stage/upload", body),
     importChange: (

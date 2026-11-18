@@ -19,6 +19,8 @@ import {
   ResultsFlow,
 } from "./academic-flows";
 import { type LearningView } from "./learning-navigation";
+import { GridInspection } from "./grid-inspection";
+import { ImportChoiceRow, KeyImportPanel } from "./import-review";
 import { FormField as Field } from "./form-field";
 type Q = A<"AcademicQuestion">;
 type Paper = A<"AcademicPaperRecord">;
@@ -121,6 +123,27 @@ export function AcademicStudio({
   }, [papers]);
   const [imports, setImports] = useState<A<"AcademicImport">[]>([]);
   const [preview, setPreview] = useState<A<"AcademicImport"> | null>(null);
+  useEffect(() => {
+    if (!preview || preview.state !== "extracting") return;
+    let active = true,
+      pending = false;
+    const timer = setInterval(async () => {
+      if (pending) return;
+      pending = true;
+      try {
+        const next = await api.detail("imports", preview.id);
+        if (active) setPreview(next);
+      } catch {
+        /* Manual refresh remains available after interruption. */
+      } finally {
+        pending = false;
+      }
+    }, 2000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [api, preview?.id, preview?.state]);
   const [edit, setEdit] = useState<Q | null>(null);
   const editorRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -531,8 +554,9 @@ export function AcademicStudio({
                   )}
                   {preview.state === "extracting" && (
                     <p>
-                      Extraction is queued or running. Check Job recovery for
-                      errors and retry controls.
+                      Reading the document. Questions will appear here
+                      automatically. Background tasks has errors and retry
+                      controls.
                     </p>
                   )}
                   {preview.raw_text && (
@@ -546,35 +570,75 @@ export function AcademicStudio({
                     />
                   )}
                   <p>
-                    Invalid rows stay visible. Clean selected rows become
-                    drafts.
+                    {preview.rows.length} questions detected. Compare the
+                    numbering and all options with every source page. Missing
+                    keys must be supplied by faculty before commitment.
                   </p>
-                  {preview.rows.map((row) => (
-                    <article className="academic-row" key={row.index}>
-                      <span>
-                        {row.index}. {row.question.stem}
-                      </span>
-                      <span className={row.error ? "error" : "muted"}>
-                        {row.error ||
-                          (row.committed_id
-                            ? "Committed"
-                            : row.existing_id
-                              ? "Already in bank"
-                              : "Ready for draft")}
-                      </span>
-                      <button
-                        onClick={() => {
+                  {preview.state === "preview" && preview.rows.length === 0 && (
+                    <p role="alert" className="error">
+                      No question rows were recognized. Your original source and
+                      OCR text are retained. Review and map the transcription,
+                      or upload a corrected structured file.
+                    </p>
+                  )}
+                  {preview.rows.map((row) =>
+                    ["single", "multiple"].includes(row.question.type) ? (
+                      <ImportChoiceRow
+                        key={row.index + "-" + JSON.stringify(row.question.key)}
+                        row={row}
+                        onAdvanced={() => {
                           setEdit(row.question);
                           setImportIndex(row.index);
                         }}
-                        disabled={
-                          preview.state !== "preview" || !!row.committed_id
+                        disabled={busy || preview.state !== "preview"}
+                        onSave={(q) =>
+                          void run(
+                            async () =>
+                              setPreview(
+                                await api.importChange(preview.id, "edit", {
+                                  index: row.index,
+                                  version: preview.version,
+                                  question: q,
+                                }),
+                              ),
+                            "Reviewed question saved.",
+                          )
                         }
-                      >
-                        Correct row {row.index}
-                      </button>
-                    </article>
-                  ))}
+                      />
+                    ) : (
+                      <article className="academic-row" key={row.index}>
+                        <span>
+                          {row.index}. {row.question.stem}
+                        </span>
+                        <span className={row.error ? "error" : "muted"}>
+                          {row.error ||
+                            (row.committed_id
+                              ? "Committed"
+                              : row.existing_id
+                                ? "Already in bank"
+                                : "Ready for draft")}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setEdit(row.question);
+                            setImportIndex(row.index);
+                          }}
+                          disabled={
+                            preview.state !== "preview" || !!row.committed_id
+                          }
+                        >
+                          Correct row {row.index}
+                        </button>
+                      </article>
+                    ),
+                  )}
+                  <KeyImportPanel
+                    key={preview.id}
+                    preview={preview}
+                    api={api}
+                    jobs={jobs}
+                    onApplied={setPreview}
+                  />
                   <button
                     disabled={busy || preview.state !== "preview"}
                     onClick={() =>
@@ -952,6 +1016,7 @@ export function AcademicStudio({
           )}
           {tab === "scan" && (
             <>
+              <GridInspection api={api} courses={courses} />
               <Field name="Published assessment">
                 <select
                   value={paper?.id ?? ""}

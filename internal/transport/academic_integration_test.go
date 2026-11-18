@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"image"
+	"image/color"
 	"image/png"
 	"io"
 	"net/http"
@@ -584,4 +585,138 @@ func TestSampleKitRetainsTeacherEditsAndRejectsChangedKeys(t *testing.T) {
 		}
 		return nil
 	})
+}
+
+func TestSeparateKeyRequiresFacultyApplicationAndRejectsStaleOrForeignImports(t *testing.T) {
+	h, svc, course, learner := academicFixture(t)
+	_, _, q := academicPaper(t, h, svc, course, learner)
+	ctx := context.Background()
+	var imp scholar.Import
+	var job scholar.Job
+	academicTx(t, h, func(tx pgx.Tx) error {
+		var err error
+		imp, err = svc.StageImport(ctx, tx, h.owner, h.org, q.TopicID, "original.csv", []byte("type,question,A,B,answer\nsingle,Original question without a key,First,Second,\n"), "Original fixture", "CC0-1.0")
+		if err != nil {
+			return err
+		}
+		if imp.Rows[0].Error == "" {
+			t.Fatal("missing key accepted")
+		}
+		job, err = svc.StageKey(ctx, tx, h.owner, h.org, imp.ID, "key.csv", []byte("question,answer\n1,B\n"))
+		return err
+	})
+	worker, err := svc.WorkerClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	workerCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	if err = worker.Start(workerCtx); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := worker.Stop(context.Background()); err != nil {
+			t.Error(err)
+		}
+	}()
+	deadline := time.Now().Add(8 * time.Second)
+	for {
+		var state string
+		err = h.db.QueryRow(ctx, "SELECT state FROM academic_job WHERE id=$1", job.ID).Scan(&state)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if state == "completed" {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("key worker state %s", state)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	academicTx(t, h, func(tx pgx.Tx) error {
+		before, e := svc.Import(ctx, tx, h.owner, h.org, imp.ID)
+		if e != nil {
+			return e
+		}
+		if len(before.Rows[0].Question.Key) > 0 {
+			t.Fatal("key was silently applied")
+		}
+		return nil
+	})
+	h.login("academic-learner@example.invalid", "unique learner academic phrase 91!", "")
+	h.request("POST", h.path("/education/imports/"+imp.ID+"/apply-key"), map[string]any{"job_id": job.ID, "version": imp.Version}, 403)
+	var applied scholar.Import
+	academicTx(t, h, func(tx pgx.Tx) error {
+		var e error
+		applied, e = svc.ApplyKey(ctx, tx, h.owner, h.org, imp.ID, job.ID, imp.Version)
+		return e
+	})
+	if len(applied.Rows[0].Question.Key) != 1 || applied.Rows[0].Question.Key[0] != "B" || applied.Rows[0].Error != "" {
+		t.Fatalf("applied %+v", applied)
+	}
+	if err = scholar.Tx(ctx, h.db, func(tx pgx.Tx) error {
+		_, e := svc.ApplyKey(ctx, tx, h.owner, h.org, imp.ID, job.ID, imp.Version)
+		return e
+	}); err == nil {
+		t.Fatal("stale faculty version accepted")
+	}
+	var other scholar.Import
+	academicTx(t, h, func(tx pgx.Tx) error {
+		var e error
+		other, e = svc.StageImport(ctx, tx, h.owner, h.org, q.TopicID, "other.csv", []byte("type,question,A,B,answer\nsingle,Another original question,One,Two,\n"), "Original fixture", "CC0-1.0")
+		return e
+	})
+	if err = scholar.Tx(ctx, h.db, func(tx pgx.Tx) error {
+		_, e := svc.ApplyKey(ctx, tx, h.owner, h.org, other.ID, job.ID, other.Version)
+		return e
+	}); err == nil {
+		t.Fatal("key from another import accepted")
+	}
+	academicTx(t, h, func(tx pgx.Tx) error {
+		committed, e := svc.CommitImport(ctx, tx, h.owner, h.org, imp.ID, []int{1}, applied.Version)
+		if e == nil && committed.Rows[0].CommittedID == "" {
+			t.Fatal("reviewed key did not persist to bank")
+		}
+		return e
+	})
+}
+
+func TestCalibratedGridPreviewRequiresActiveCourseStaffAndCreatesNoMarks(t *testing.T) {
+	h, svc, course, learner := academicFixture(t)
+	ctx := context.Background()
+	img := image.NewRGBA(image.Rect(0, 0, 400, 600))
+	for y := 0; y < 600; y++ {
+		for x := 0; x < 400; x++ {
+			img.Set(x, y, color.White)
+		}
+	}
+	var data bytes.Buffer
+	if err := png.Encode(&data, img); err != nil {
+		t.Fatal(err)
+	}
+	c := academic.GridCalibration{Options: 4, Radius: .008, Blocks: []academic.GridBlock{{First: 1, Count: 2, TopLeft: academic.Point{X: .2, Y: .2}, TopRight: academic.Point{X: .8, Y: .2}, BottomLeft: academic.Point{X: .2, Y: .8}, BottomRight: academic.Point{X: .8, Y: .8}}}}
+	academicTx(t, h, func(tx pgx.Tx) error {
+		out, e := svc.GridPreview(ctx, tx, h.owner, h.org, course, data.Bytes(), c)
+		if e == nil && (len(out.Rows) != 2 || !out.Rows[0].Uncertain || len(out.Rows[0].Selection) != 0) {
+			t.Fatal("blank preview fabricated a response")
+		}
+		return e
+	})
+	if err := scholar.Tx(ctx, h.db, func(tx pgx.Tx) error {
+		_, e := svc.GridPreview(ctx, tx, learner, h.org, course, data.Bytes(), c)
+		return e
+	}); err == nil {
+		t.Fatal("learner invoked staff diagnostic")
+	}
+	if err := scholar.Tx(ctx, h.db, func(tx pgx.Tx) error {
+		_, e := svc.GridPreview(ctx, tx, h.owner, h.otherOrg, course, data.Bytes(), c)
+		return e
+	}); err == nil {
+		t.Fatal("cross-institution course accepted")
+	}
+	var n int
+	if err := h.db.QueryRow(ctx, "SELECT count(*) FROM result_revision").Scan(&n); err != nil || n != 0 {
+		t.Fatalf("diagnostic fabricated marks: %d %v", n, err)
+	}
 }

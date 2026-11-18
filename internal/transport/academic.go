@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"mime"
 	"net/http"
@@ -72,7 +73,7 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	// Binary uploads have a bounded body and never expose an object-store URL.
-	if r.Method == "POST" && (kind == "imports" && action == "upload" || kind == "batches" && action == "upload" || kind == "assets") {
+	if r.Method == "POST" && (kind == "imports" && (action == "upload" || action == "key-upload") || kind == "batches" && action == "upload" || kind == "assets" || kind == "grid-preview") {
 		if err = s.transaction(r, func(ctx context.Context, tx pgx.Tx) error { _, err := s.actor(ctx, tx, r, true); return err }); err != nil {
 			return err
 		}
@@ -103,7 +104,16 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		}
 		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
 			switch kind {
+			case "grid-preview":
+				var c academic.GridCalibration
+				if json.Unmarshal([]byte(r.FormValue("calibration")), &c) != nil {
+					return nil, fail(400, "invalid_calibration", "Provide the bubble-center calibration.")
+				}
+				return svc.GridPreview(ctx, tx, a.ID, org, r.FormValue("course_id"), data, c)
 			case "imports":
+				if action == "key-upload" {
+					return svc.StageKey(ctx, tx, a.ID, org, id, header.Filename, data)
+				}
 				mime := http.DetectContentType(data)
 				if mime == "application/pdf" || mime == "image/png" || mime == "image/jpeg" {
 					return svc.StageDocument(ctx, tx, a.ID, org, r.FormValue("topic_id"), header.Filename, data, r.FormValue("provenance"), r.FormValue("license"))
@@ -230,6 +240,18 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 			return map[string]any{"question": q, "duplicate": duplicate}, e
 		})
 	case "imports":
+		if action == "apply-key" {
+			var in struct {
+				JobID   string `json:"job_id"`
+				Version int    `json:"version"`
+			}
+			if err = decode(w, r, &in); err != nil {
+				return err
+			}
+			return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
+				return svc.ApplyKey(ctx, tx, a.ID, org, id, in.JobID, in.Version)
+			})
+		}
 		if action == "parse" {
 			var in struct {
 				Text       string `json:"text"`

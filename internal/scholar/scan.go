@@ -99,7 +99,7 @@ func (s *Service) Asset(ctx context.Context, tx pgx.Tx, actor, org, id string) (
 		if a.Purpose == "question_image" || a.Purpose == "document" {
 			query := "SELECT DISTINCT q.topic_id FROM question_record q JOIN question_revision v ON v.record_id=q.id AND v.institution_id=q.institution_id WHERE q.institution_id=$1 AND (v.content->>'asset_id'=$2 OR EXISTS(SELECT 1 FROM jsonb_array_elements(coalesce(v.content->'options','[]'::jsonb)) o WHERE o->>'asset_id'=$2))"
 			if a.Purpose == "document" {
-				query = "SELECT topic_id FROM question_import WHERE institution_id=$1 AND asset_id=$2"
+				query = "SELECT topic_id FROM question_import WHERE institution_id=$1 AND asset_id=$2 UNION SELECT input->>'topic_id' FROM academic_job WHERE institution_id=$1 AND input->>'asset_id'=$2 AND kind='extract_document'"
 			}
 			topics, e := rows[subject](ctx, tx, query, org, id)
 			if e != nil {

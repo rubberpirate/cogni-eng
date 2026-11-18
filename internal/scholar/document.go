@@ -1,10 +1,12 @@
 package scholar
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -59,6 +61,9 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 	if err := json.Unmarshal(j.Input, &in); err != nil {
 		return err
 	}
+	if in["mode"] == "answer_key" && in["text"] != "" {
+		return s.finishKey(ctx, j, in["text"])
+	}
 	var asset Asset
 	err := Tx(ctx, s.DB, func(tx pgx.Tx) error {
 		var err error
@@ -81,7 +86,7 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 		return err
 	}
 	defer func() { _ = os.RemoveAll(dir) }()
-	var text strings.Builder
+	var text, rawText strings.Builder
 	language := "eng"
 	if in["language"] == "hi" {
 		language = "hin+eng"
@@ -91,14 +96,19 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 		if err = os.WriteFile(input, page, 0600); err != nil {
 			return err
 		}
-		output, err := exec.CommandContext(ctx, "tesseract", input, "stdout", "-l", language, "--psm", "3").Output()
+		output, err := exec.CommandContext(ctx, "tesseract", input, "stdout", "-l", language, "--psm", "3", "tsv").Output()
 		if err != nil {
 			return errors.New("OCR processing failed. Confirm Tesseract and the chosen language are installed, or upload a reviewed CSV/JSON transcription")
 		}
 		if text.Len()+len(output) > 1<<20 {
 			return errors.New("extracted text exceeds 1 MiB; split the document")
 		}
-		fmt.Fprintf(&text, "\n%s\n", output)
+		cfg, _, decodeErr := image.DecodeConfig(bytes.NewReader(page))
+		if decodeErr != nil {
+			return decodeErr
+		}
+		fmt.Fprintf(&rawText, "\n%s\n", academic.RawOCRText(string(output)))
+		fmt.Fprintf(&text, "\n%s\n", academic.OrderedOCRText(string(output), cfg.Width))
 		if err = Tx(ctx, s.DB, func(tx pgx.Tx) error {
 			if err := s.jobAllowed(ctx, tx, j); err != nil {
 				return err
@@ -109,6 +119,9 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 			return err
 		}
 	}
+	if in["mode"] == "answer_key" {
+		return s.finishKey(ctx, j, text.String())
+	}
 	return Tx(ctx, s.DB, func(tx pgx.Tx) error {
 		if err := s.jobAllowed(ctx, tx, j); err != nil {
 			return err
@@ -117,7 +130,7 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 		if err != nil {
 			parsed = []academic.ImportRow{}
 		}
-		_, err = tx.Exec(ctx, "UPDATE question_import SET raw_text=$2,rows=$3,state='preview',version=version+1 WHERE id=$1 AND state<>'committed'", j.Resource, text.String(), Encode(parsed))
+		_, err = tx.Exec(ctx, "UPDATE question_import SET raw_text=$2,rows=$3,state='preview',version=version+1 WHERE id=$1 AND state<>'committed'", j.Resource, rawText.String(), Encode(parsed))
 		return err
 	})
 }

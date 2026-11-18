@@ -15,11 +15,12 @@ import (
 )
 
 type ImportRow struct {
-	Index       int      `json:"index"`
-	Question    Question `json:"question"`
-	Error       string   `json:"error"`
-	ExistingID  string   `json:"existing_id,omitempty"`
-	CommittedID string   `json:"committed_id,omitempty"`
+	SourceNumber int      `json:"source_number,omitempty"`
+	Index        int      `json:"index"`
+	Question     Question `json:"question"`
+	Error        string   `json:"error"`
+	ExistingID   string   `json:"existing_id,omitempty"`
+	CommittedID  string   `json:"committed_id,omitempty"`
 }
 
 func ParseImport(filename string, data []byte, topic, provenance, license string) ([]ImportRow, error) {

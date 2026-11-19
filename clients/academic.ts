@@ -1,6 +1,7 @@
 import type { components } from "./schema";
 export type A<N extends keyof components["schemas"]> = components["schemas"][N];
 type Lists = {
+  drafts: A<"AcademicAssessmentDraft">;
   courses: A<"AcademicCourse">;
   topics: A<"AcademicTopic">;
   questions: A<"AcademicQuestion">;
@@ -13,6 +14,7 @@ type Lists = {
   jobs: A<"AcademicJob">;
 };
 type Details = {
+  drafts: A<"AcademicAssessmentDraft">;
   imports: A<"AcademicImport">;
   papers: A<"AcademicPaperRecord">;
   sittings: A<"AcademicSitting">;
@@ -48,6 +50,16 @@ export function educationClient(org: string, csrf: string) {
   }
   return {
     url: (path: string) => base + path,
+    saveDraft: (body: A<"AcademicDraftWrite">, id?: string) =>
+      request<A<"AcademicAssessmentDraft">>(
+        "drafts" + (id ? "/" + id : ""),
+        body,
+      ),
+    publishDraft: (id: string, version: number) =>
+      request<A<"AcademicAssessmentDraft">>(`drafts/${id}/publish`, {
+        version,
+        reviewed: true,
+      }),
     list: <K extends keyof Lists>(
       kind: K,
       query: Record<string, string> = {},

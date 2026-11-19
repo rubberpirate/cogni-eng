@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
-	"learning.local/workspace/internal/academic"
 )
 
 func (s *Service) extractVision(ctx context.Context, j Job, in map[string]string, pages [][]byte) error {
@@ -53,16 +52,5 @@ func (s *Service) extractVision(ctx context.Context, j Job, in map[string]string
 	if in["mode"] == "answer_key" {
 		return s.finishKey(ctx, j, raw.String())
 	}
-	parsed, err := academic.ParseText(raw.String(), in["topic_id"], in["provenance"], in["license"])
-	if err != nil {
-		parsed = []academic.ImportRow{}
-	}
-	parsed = academic.RequireFacultyKeys(parsed)
-	return Tx(ctx, s.DB, func(tx pgx.Tx) error {
-		if e := s.jobAllowed(ctx, tx, j); e != nil {
-			return e
-		}
-		_, e := tx.Exec(ctx, "UPDATE question_import SET raw_text=$2,rows=$3,state='preview',version=version+1 WHERE id=$1 AND state<>'committed'", j.Resource, raw.String(), Encode(parsed))
-		return e
-	})
+	return s.finishDocument(ctx, j, in, raw.String(), raw.String())
 }

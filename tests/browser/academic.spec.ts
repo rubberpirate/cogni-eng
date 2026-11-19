@@ -1,3 +1,4 @@
+import { signInStaff } from "./staff-sign-in";
 import { navigate } from "./navigation";
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
@@ -25,13 +26,8 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
   browser,
 }) => {
   test.setTimeout(100000);
-  await page.goto("/sign-in");
-  await page.getByLabel("Email address", { exact: true }).fill(ownerEmail);
-  await page.getByLabel("Password", { exact: true }).fill(ownerPassword);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Question bank", exact: true })
-    .click();
+  await signInStaff(page);
+  await navigate(page, "Question bank");
   await page.getByText("Add a topic", { exact: true }).click();
   const topicForm = page
     .getByRole("button", { name: "Create topic", exact: true })
@@ -69,7 +65,10 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
     page.getByRole("heading", { name: "Import review · preview" }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Save reviewed questions to bank", exact: true })
+    .getByRole("button", {
+      name: "Save reviewed questions to bank",
+      exact: true,
+    })
     .click();
   await page
     .getByRole("button", {
@@ -115,7 +114,7 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
   }
   const scanTitle = "Scanned arithmetic " + Date.now();
   await compose(scanTitle);
-  await page.getByRole("button", { name: "Scan & check", exact: true }).click();
+  await navigate(page, "Scan & check");
   await page
     .getByRole("button", { name: "Create sheet layout", exact: true })
     .click();
@@ -189,7 +188,7 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
     .click();
   await expect(page.getByText("2 / 2", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Back to work", exact: true }).click();
-  await page.getByRole("button", { name: "Assessments", exact: true }).click();
+  await navigate(page, "Assessments");
   const onlineTitle = "Online arithmetic " + Date.now();
   await compose(onlineTitle);
   const learner = await browser.newContext({

@@ -70,6 +70,13 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 	if err := json.Unmarshal(j.Input, &in); err != nil {
 		return err
 	}
+	var cached struct {
+		OCR string `json:"ocr_text"`
+		Raw string `json:"raw_ocr_text"`
+	}
+	if in["mode"] != "answer_key" && json.Unmarshal(j.Output, &cached) == nil && cached.OCR != "" {
+		return s.finishDocument(ctx, j, in, cached.Raw, cached.OCR)
+	}
 	if in["mode"] == "answer_key" && in["text"] != "" {
 		return s.finishKey(ctx, j, in["text"])
 	}
@@ -134,19 +141,41 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 	if in["mode"] == "answer_key" {
 		return s.finishKey(ctx, j, text.String())
 	}
-	return Tx(ctx, s.DB, func(tx pgx.Tx) error {
-		if err := s.jobAllowed(ctx, tx, j); err != nil {
+	return s.finishDocument(ctx, j, in, rawText.String(), text.String())
+}
+func (s *Service) finishDocument(ctx context.Context, j Job, in map[string]string, raw, text string) error {
+	parsed, err := academic.ParseText(text, in["topic_id"], in["provenance"], in["license"])
+	if err != nil {
+		parsed = []academic.ImportRow{}
+	}
+	parsed = academic.RequireFacultyKeys(parsed)
+	if os.Getenv("ACADEMIC_MODEL_PROVIDER") != "development_fixture" || (os.Getenv("APP_ENV") != "development" && os.Getenv("APP_ENV") != "test") {
+		if err = Tx(ctx, s.DB, func(tx pgx.Tx) error {
+			if e := s.jobAllowed(ctx, tx, j); e != nil {
+				return e
+			}
+			if _, e := tx.Exec(ctx, "UPDATE question_import SET raw_text=$2 WHERE id=$1 AND state='extracting'", j.Resource, raw); e != nil {
+				return e
+			}
+			_, e := tx.Exec(ctx, "UPDATE academic_job SET output=output || $2::jsonb WHERE id=$1", j.ID, Encode(map[string]string{"ocr_text": text, "raw_ocr_text": raw}))
+			return e
+		}); err != nil {
 			return err
 		}
-		parsed, err := academic.ParseText(text.String(), in["topic_id"], in["provenance"], in["license"])
+		parsed, err = s.normalizeLocalDocument(ctx, j, in, text)
 		if err != nil {
-			parsed = []academic.ImportRow{}
+			return err
 		}
-		parsed = academic.RequireFacultyKeys(parsed)
-		_, err = tx.Exec(ctx, "UPDATE question_import SET raw_text=$2,rows=$3,state='preview',version=version+1 WHERE id=$1 AND state<>'committed'", j.Resource, rawText.String(), Encode(parsed))
-		return err
+	}
+	return Tx(ctx, s.DB, func(tx pgx.Tx) error {
+		if e := s.jobAllowed(ctx, tx, j); e != nil {
+			return e
+		}
+		_, e := tx.Exec(ctx, "UPDATE question_import SET raw_text=$2,rows=$3,state='preview',version=version+1 WHERE id=$1 AND state='extracting'", j.Resource, raw, Encode(parsed))
+		return e
 	})
 }
+
 func (s *Service) ParseDocument(ctx context.Context, tx pgx.Tx, actor, org, id, text, provenance, license string, version int) (Import, error) {
 	out, err := s.Import(ctx, tx, actor, org, id)
 	if err != nil {

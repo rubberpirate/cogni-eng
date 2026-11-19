@@ -214,7 +214,13 @@ export function Workspace({
     [mfa, setMfa] = useState<{ secret: string; url: string } | null>(null),
     [codes, setCodes] = useState<string[]>([]),
     [sessions, setSessions] = useState<components["schemas"]["Session"][]>([]);
-  const [learningView, setLearningView] = useState<LearningView>("home");
+  const [learningView, setLearningView] = useState<LearningView>(
+    initialContexts.some((c) =>
+      ["owner", "coordinator", "instructor"].includes(c.role),
+    )
+      ? "draft"
+      : "home",
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -224,9 +230,11 @@ export function Workspace({
     setMenuOpen(false);
     setNotice("");
     setQuery("");
+    const params = new URLSearchParams(window.location.hash.split("?")[1]);
+    params.delete("draft");
     window.location.hash =
       next === "education"
-        ? `education/${view}${window.location.hash.includes("?") ? "?" + window.location.hash.split("?")[1] : ""}`
+        ? `education/${view}${params.size ? "?" + params : ""}`
         : next;
   };
   useEffect(() => {
@@ -614,33 +622,37 @@ export function Workspace({
               {teaching ? "Teaching" : "Learning"}
             </p>
             {(teaching
-              ? [
-                  "home",
-                  "author",
-                  "generate",
-                  "curriculum",
-                  "import",
-                  "papers",
-                  "scan",
-                  "results",
-                  "samples",
-                ]
+              ? ["draft", "active", "scan", "students", "results"]
               : ["home"]
             ).map((id) => (
               <button
                 key={id}
                 aria-current={
-                  pane === "education" && learningView === id
+                  pane === "education" &&
+                  (learningView === id ||
+                    (id === "draft" &&
+                      ["author", "generate", "curriculum", "import"].includes(
+                        learningView,
+                      )) ||
+                    (id === "active" && learningView === "papers"))
                     ? "page"
                     : undefined
                 }
                 onClick={() => navigate("education", id as LearningView)}
               >
-                <WorkIcon name={id} />
+                <WorkIcon
+                  name={
+                    id === "draft"
+                      ? "papers"
+                      : id === "active"
+                        ? "papers"
+                        : id === "students"
+                          ? "account"
+                          : id
+                  }
+                />
                 {teaching
-                  ? id === "import"
-                    ? "Upload paper"
-                    : learningViews[id as LearningView].title
+                  ? learningViews[id as LearningView].title
                   : language === "hi"
                     ? "मेरे आकलन"
                     : "My assessments"}
@@ -686,17 +698,15 @@ export function Workspace({
               </details>
             )}
             {teaching && (
-              <button
-                aria-current={
-                  pane === "education" && learningView === "jobs"
-                    ? "page"
-                    : undefined
-                }
-                onClick={() => navigate("education", "jobs")}
-              >
-                <WorkIcon name="jobs" />
-                Background tasks
-              </button>
+              <details className="nav-group">
+                <summary>Tools & resources</summary>
+                <button onClick={() => navigate("education", "jobs")}>
+                  Background tasks
+                </button>
+                <button onClick={() => navigate("education", "samples")}>
+                  Try sample files
+                </button>
+              </details>
             )}
             {owner && (
               <details
@@ -799,10 +809,10 @@ export function Workspace({
                 </button>
                 <button
                   className="primary context-ai-button"
-                  onClick={() => navigate("education", "generate")}
+                  onClick={() => navigate("education", "draft")}
                 >
                   <WorkIcon name="generate" />
-                  Create with AI
+                  Draft assessment
                 </button>
               </div>
             )}

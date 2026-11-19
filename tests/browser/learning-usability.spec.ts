@@ -1,3 +1,4 @@
+import { signInStaff } from "./staff-sign-in";
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -10,17 +11,11 @@ const fixture = JSON.parse(
   readFileSync(".local/academic-browser-access.json", "utf8"),
 ) as { org: string; course: string; learner: string; course_name: string };
 async function signIn(page: import("@playwright/test").Page) {
-  await page.goto("/sign-in");
-  await page
-    .getByLabel("Email address", { exact: true })
-    .fill(creds.match(/Email: (.+)/)![1]);
-  await page
-    .getByLabel("Password", { exact: true })
-    .fill(creds.match(/Password: (.+)/)![1]);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await signInStaff(page);
   await expect(
-    page.getByRole("heading", { name: "Home", exact: true }),
+    page.getByRole("heading", { name: "Draft assessment", exact: true }),
   ).toBeVisible();
+  await navigate(page, "Home");
 }
 test("sample kit downloads real matching PDF sheets and produces the documented score through the simplified scan flow", async ({
   page,

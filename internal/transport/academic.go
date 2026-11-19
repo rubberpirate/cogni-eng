@@ -132,6 +132,11 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "GET" {
 		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
 			switch kind {
+			case "drafts":
+				if id != "" {
+					return svc.Draft(ctx, tx, a.ID, org, id)
+				}
+				return svc.Drafts(ctx, tx, a.ID, org, query.Get("campus"))
 			case "evidence":
 				return svc.Evidence(ctx, tx, a.ID, org, id)
 			case "result-history":
@@ -183,6 +188,31 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 	}
 	// Each operation uses a narrow request type and strict JSON decoding.
 	switch kind {
+	case "drafts":
+		if action == "publish" {
+			var in struct {
+				Version  int  `json:"version"`
+				Reviewed bool `json:"reviewed"`
+			}
+			if err = decode(w, r, &in); err != nil {
+				return err
+			}
+			if !in.Reviewed {
+				return fail(400, "review_required", "Confirm faculty review before publishing.")
+			}
+			return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
+				return svc.PublishDraft(ctx, tx, a.ID, org, id, in.Version)
+			})
+		}
+		var in scholar.DraftWrite
+		d := json.NewDecoder(http.MaxBytesReader(w, r.Body, 2<<20))
+		d.DisallowUnknownFields()
+		if r.Header.Get("Content-Type") != "application/json" || d.Decode(&in) != nil || d.Decode(new(any)) != io.EOF {
+			return fail(400, "invalid_draft_body", "Send one JSON draft up to 2 MiB.")
+		}
+		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
+			return svc.SaveDraft(ctx, tx, a.ID, org, id, in)
+		})
 	case "sample-kits":
 		var in struct {
 			Course  string `json:"course_id"`
@@ -423,12 +453,13 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 			Topic      string `json:"topic_id"`
 			Count      int    `json:"count"`
 			Difficulty string `json:"difficulty"`
+			Exam       string `json:"exam"`
 		}
 		if err = decode(w, r, &in); err != nil {
 			return err
 		}
 		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
-			return svc.Generate(ctx, tx, a.ID, org, in.Topic, in.Count, in.Difficulty)
+			return svc.Generate(ctx, tx, a.ID, org, in.Topic, in.Count, in.Difficulty, in.Exam)
 		})
 	case "jobs":
 		var in struct{}

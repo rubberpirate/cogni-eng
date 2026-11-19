@@ -107,7 +107,7 @@ func (s *Service) Jobs(ctx context.Context, tx pgx.Tx, actor, org, campus string
 	}
 	return out, nil
 }
-func (s *Service) Generate(ctx context.Context, tx pgx.Tx, actor, org, topic string, count int, difficulty string) (Job, error) {
+func (s *Service) Generate(ctx context.Context, tx pgx.Tx, actor, org, topic string, count int, difficulty, exam string) (Job, error) {
 	t, err := GetTopic(ctx, tx, org, topic)
 	if err != nil {
 		return Job{}, err
@@ -115,11 +115,14 @@ func (s *Service) Generate(ctx context.Context, tx pgx.Tx, actor, org, topic str
 	if err = Scope(ctx, tx, actor, org, t.CampusID, t.CourseID, t.Subject); err != nil {
 		return Job{}, err
 	}
+	if len(exam) > 100 {
+		return Job{}, Problem(400, "invalid_exam", "Use an exam name up to 100 characters.")
+	}
 	if count < 1 || count > 20 || (difficulty != "introductory" && difficulty != "standard" && difficulty != "challenging") {
 		return Job{}, Problem(400, "invalid_generation", "Choose 1–20 questions and a supported difficulty.")
 	}
 	id := access.Random()
-	_, err = tx.Exec(ctx, "INSERT INTO academic_job(id,institution_id,campus_id,course_id,actor_id,kind,resource_id,input) VALUES($1,$2,$3,$4,$5,'generate_questions',$6,$7)", id, org, t.CampusID, t.CourseID, actor, topic, Encode(Generation{t, count, difficulty}))
+	_, err = tx.Exec(ctx, "INSERT INTO academic_job(id,institution_id,campus_id,course_id,actor_id,kind,resource_id,input) VALUES($1,$2,$3,$4,$5,'generate_questions',$6,$7)", id, org, t.CampusID, t.CourseID, actor, topic, Encode(Generation{Topic: t, Count: count, Difficulty: difficulty, Exam: exam}))
 	if err != nil {
 		return Job{}, err
 	}
@@ -187,7 +190,7 @@ type taskWorker struct {
 	Service *Service
 }
 
-func (w *taskWorker) Timeout(*river.Job[TaskArgs]) time.Duration { return 5 * time.Minute }
+func (w *taskWorker) Timeout(*river.Job[TaskArgs]) time.Duration { return 15 * time.Minute }
 func (w *taskWorker) Work(ctx context.Context, job *river.Job[TaskArgs]) error {
 	var j Job
 	s := w.Service

@@ -1,5 +1,7 @@
+import { signInStaff } from "./staff-sign-in";
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { createServer, type Server } from "node:http";
 import { checkProcessingFeedback } from "./processing-feedback";
 import { navigate } from "./navigation";
 const creds = readFileSync(
@@ -9,6 +11,68 @@ const creds = readFileSync(
 const fixture = JSON.parse(
   readFileSync(".local/academic-browser-access.json", "utf8"),
 ) as { org: string; course: string };
+
+// Explicit HTTP model contract fixture; OCR, storage and faculty edits remain real.
+let localModel: Server;
+test.beforeAll(async () => {
+  localModel = createServer((req, res) => {
+    req.resume();
+    req.on("end", () => {
+      const originals = [
+        [
+          "How many sides does a triangle have?",
+          ["Two", "Three", "Four", "Five"],
+        ],
+        ["What is four plus two?", ["Six", "Seven", "Eight", "Nine"]],
+        [
+          "Which whole number comes after eight?",
+          ["Seven", "Eight", "Nine", "Ten"],
+        ],
+        [
+          "How many minutes make one hour?",
+          ["Twenty", "Thirty", "Forty", "Sixty"],
+        ],
+      ] as const;
+      const rows = originals.map(([stem, options], i) => ({
+        index: i + 1,
+        source_number: i + 1,
+        question: {
+          topic_id: "",
+          type: "single",
+          stem,
+          options: options.map((text, j) => ({
+            id: String.fromCharCode(65 + j),
+            text,
+          })),
+          key: [],
+          rubric: [],
+          solution: "",
+          marks: "4",
+          penalty: "1",
+          difficulty: "standard",
+          language: "en",
+          provenance: "Explicit local-model fixture",
+          license: "CC0",
+        },
+      }));
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          done: true,
+          done_reason: "stop",
+          message: { content: JSON.stringify({ rows }) },
+        }),
+      );
+    });
+  });
+  await new Promise<void>((resolve, reject) => {
+    localModel.once("error", reject);
+    localModel.listen(11434, "127.0.0.1", resolve);
+  });
+});
+test.afterAll(async () => {
+  await new Promise<void>((resolve) => localModel.close(() => resolve()));
+});
 
 test("a two-column question image becomes ordered editable options; faculty selection and a separate uploaded key persist", async ({
   page,
@@ -46,16 +110,9 @@ test("a two-column question image becomes ordered editable options; faculty sele
   );
   const keyImage = await source.screenshot({ fullPage: true });
   await source.close();
-  await page.goto("/sign-in");
-  await page
-    .getByLabel("Email address", { exact: true })
-    .fill(creds.match(/Email: (.+)/)![1]);
-  await page
-    .getByLabel("Password", { exact: true })
-    .fill(creds.match(/Password: (.+)/)![1]);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await signInStaff(page);
   await expect(
-    page.getByRole("heading", { name: "Home", exact: true }),
+    page.getByRole("heading", { name: "Draft assessment", exact: true }),
   ).toBeVisible();
   const me = await (await page.request.get("/api/v1/me")).json();
   const courses = await (
@@ -81,12 +138,13 @@ test("a two-column question image becomes ordered editable options; faculty sele
       },
     )
   ).json();
+  await page.reload();
   await navigate(page, "Question bank");
   await page
     .getByRole("button", { name: "Upload questions", exact: true })
     .click();
   await page.getByLabel("Topic", { exact: true }).selectOption(topic.id);
-  // Keep this native-OCR journey independent of the configured default model.
+  // Exercise native OCR before the explicit local-model contract fixture.
   await page
     .getByLabel("Extraction engine", { exact: true })
     .selectOption("tesseract");
@@ -181,7 +239,10 @@ test("a two-column question image becomes ordered editable options; faculty sele
     page.getByLabel("Question 1 wording", { exact: true }),
   ).toHaveValue("How many straight sides does a triangle have?");
   await page
-    .getByRole("button", { name: "Save reviewed questions to bank", exact: true })
+    .getByRole("button", {
+      name: "Save reviewed questions to bank",
+      exact: true,
+    })
     .click();
   await expect(
     page.getByRole("heading", {

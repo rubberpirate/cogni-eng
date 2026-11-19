@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"learning.local/workspace/internal/academic"
 )
@@ -19,6 +18,7 @@ type Generation struct {
 	Topic      Topic  `json:"topic"`
 	Count      int    `json:"count"`
 	Difficulty string `json:"difficulty"`
+	Exam       string `json:"exam,omitempty"`
 }
 type Generated struct {
 	Questions    []academic.Question `json:"questions"`
@@ -39,10 +39,7 @@ func ProviderFromEnv() ModelProvider {
 	if os.Getenv("ACADEMIC_MODEL_PROVIDER") == "development_fixture" && (os.Getenv("APP_ENV") == "development" || os.Getenv("APP_ENV") == "test") {
 		return DevelopmentModel{}
 	}
-	if os.Getenv("ACADEMIC_MODEL_PROVIDER") == "gemini" {
-		return Gemini{Key: os.Getenv("GEMINI_API_KEY"), Model: os.Getenv("GEMINI_MODEL"), Endpoint: "https://generativelanguage.googleapis.com/v1beta", Client: &http.Client{Timeout: 90 * time.Second}}
-	}
-	return Anthropic{Key: os.Getenv("ANTHROPIC_API_KEY"), Model: os.Getenv("ANTHROPIC_MODEL"), Endpoint: "https://api.anthropic.com/v1/messages", Client: &http.Client{Timeout: 90 * time.Second}}
+	return localModel()
 }
 func (a Anthropic) Generate(ctx context.Context, in Generation) (Generated, error) {
 	if a.Key == "" || a.Model == "" {

@@ -138,7 +138,9 @@ export function KeyImportPanel({
   api,
   jobs,
   onApplied,
+  simple = false,
 }: {
+  simple?: boolean;
   preview: Import;
   api: EducationClient;
   jobs: Job[];
@@ -224,13 +226,21 @@ export function KeyImportPanel({
           }
         }}
       >
-        <Field name="Answer key extraction engine">
-          <select name="engine">
-            <option value="">Default engine</option>
-            <option value="lightonocr">LightOnOCR-2-1B (local model)</option>
-            <option value="tesseract">Tesseract (local text OCR)</option>
-          </select>
-        </Field>
+        {simple ? (
+          <input type="hidden" name="engine" value="tesseract" />
+        ) : (
+          <>
+            <Field name="Answer key extraction engine">
+              <select name="engine">
+                <option value="">Default engine</option>
+                <option value="lightonocr">
+                  LightOnOCR-2-1B (local model)
+                </option>
+                <option value="tesseract">Tesseract (local text OCR)</option>
+              </select>
+            </Field>
+          </>
+        )}
         <Field name="Separate answer key file">
           <input
             type="file"
@@ -338,12 +348,17 @@ export function MarkingRules({
   onApply: (numbers: number[], marks: string, penalty: string) => Promise<void>;
 }) {
   const [selection, setSelection] = useState("");
+  const [all, setAll] = useState(false);
   const [marks, setMarks] = useState("4");
   const [penalty, setPenalty] = useState("1");
   const [error, setError] = useState("");
   let selected: number[] = [];
   try {
-    if (selection.trim()) selected = selectQuestionNumbers(selection, numbers);
+    if (all || selection.trim())
+      selected = selectQuestionNumbers(
+        all ? numbers.join(",") : selection,
+        numbers,
+      );
   } catch {
     /* Validation appears on submit. */
   }
@@ -359,13 +374,24 @@ export function MarkingRules({
         </div>
         <span className="state-pill">{numbers.length} questions</span>
       </div>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={all}
+          onChange={(e) => setAll(e.target.checked)}
+        />
+        All questions
+      </label>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
           setError("");
           try {
             await onApply(
-              selectQuestionNumbers(selection, numbers),
+              selectQuestionNumbers(
+                all ? numbers.join(",") : selection,
+                numbers,
+              ),
               marks,
               penalty,
             );
@@ -382,7 +408,8 @@ export function MarkingRules({
               value={selection}
               onChange={(e) => setSelection(e.target.value)}
               placeholder="1-10 or 1,5,8,14,25"
-              required
+              disabled={all}
+              required={!all}
               aria-describedby="range-help"
             />
           </Field>

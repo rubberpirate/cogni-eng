@@ -1,7 +1,7 @@
 """Academic API schemas and operations, loaded by contract.py. Go tagged structs are the DTO source."""
 import re
 names={}
-for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/academic/grid.go','internal/academic/key.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go','internal/scholar/grid_model.go','internal/scholar/vision.go']:
+for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/academic/grid.go','internal/academic/key.go','internal/scholar/draft.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go','internal/scholar/grid_model.go','internal/scholar/vision.go']:
  for name,body in re.findall(r'type (\w+) struct \{\n(.*?)\n\}',Path(source).read_text(),re.S):
   names[name]=body
 
@@ -25,7 +25,7 @@ for name,body in names.items():
   if 'omitempty' in tag or typ.startswith('*'):optional.append(key)
  schemas['Academic'+name]=obj(fields,optional)
 # Types with only one-line Go declarations are explicitly described here.
-schemas['AcademicGeneration']=obj({'topic':ref('AcademicTopic'),'count':I,'difficulty':S})
+schemas['AcademicGeneration']=obj({'topic':ref('AcademicTopic'),'count':I,'difficulty':S,'exam':S},('exam',))
 schemas.update({
  'AcademicVersion':obj({'version':I}),
  'AcademicQuestionWrite':obj({'question':ref('AcademicQuestion'),'version':I},('version',)),
@@ -39,7 +39,7 @@ schemas.update({
  'AcademicNewLayout':obj({'paper_id':S,'columns':I}),
  'AcademicNewBatch':obj({'paper_id':S,'layout_id':S,'sitting_at':S}),
  'AcademicScanReview':obj({'assignment_id':S,'reason':S,'identity_confirmed':B,'version':I,'corrections':{'type':'object','additionalProperties':ref('AcademicAnswer')},'commit':B}),
- 'AcademicGenerate':obj({'topic_id':S,'count':I,'difficulty':S}),
+ 'AcademicGenerate':obj({'topic_id':S,'count':I,'difficulty':S,'exam':S},('exam',)),
  'AcademicStrings':{'type':'array','items':S},
  'AcademicEmpty':obj({}),
  'AcademicSaved':obj({'saved':B,'published':B,'released':B,'sitting_id':S},('saved','published','released','sitting_id')),
@@ -92,3 +92,10 @@ for path,response,fields in [('imports/{id}/key-upload','Job',{'file':{'type':'s
 
 route(base+'grid-model','post','AcademicJob')
 paths['/api/v1'+base+'grid-model']['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':{'type':'string','format':'binary'},'course_id':S,'calibration':S})}}}
+
+route(base+'drafts','get','AcademicAssessmentDraft',listed=True)
+route(base+'drafts/{id}','get','AcademicAssessmentDraft')
+route(base+'drafts','post','AcademicAssessmentDraft','AcademicDraftWrite')
+route(base+'drafts/{id}','post','AcademicAssessmentDraft','AcademicDraftWrite')
+schemas['AcademicDraftPublish']=obj({'version':I,'reviewed':B})
+route(base+'drafts/{id}/publish','post','AcademicAssessmentDraft','AcademicDraftPublish')

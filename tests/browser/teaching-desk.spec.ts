@@ -1,3 +1,4 @@
+import { signInStaff } from "./staff-sign-in";
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { navigate } from "./navigation";
@@ -9,17 +10,11 @@ const fixture = JSON.parse(
   readFileSync(".local/academic-browser-access.json", "utf8"),
 );
 async function signIn(page: Page) {
-  await page.goto("/sign-in");
-  await page
-    .getByLabel("Email address", { exact: true })
-    .fill(creds.match(/Email: (.+)/)![1]);
-  await page
-    .getByLabel("Password", { exact: true })
-    .fill(creds.match(/Password: (.+)/)![1]);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await signInStaff(page);
   await expect(
-    page.getByRole("heading", { name: "Home", exact: true }),
+    page.getByRole("heading", { name: "Draft assessment", exact: true }),
   ).toBeVisible();
+  await navigate(page, "Home");
 }
 async function createTopic(page: Page) {
   const me = await (await page.request.get("/api/v1/me")).json();

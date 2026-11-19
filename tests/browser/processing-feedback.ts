@@ -100,7 +100,7 @@ export async function checkProcessingFeedback(
   await navigate(page, "Upload paper");
   await expect(
     page.locator('#workspace-navigation [aria-current="page"]'),
-  ).toHaveText("Upload paper");
+  ).toHaveText("Draft assessment");
   const setup = page.getByText("Upload another paper or change topic", {
     exact: true,
   });
@@ -196,7 +196,7 @@ export async function checkProcessingFeedback(
   await navigate(page, "Scan & check");
   await expect(
     page.locator('#workspace-navigation [aria-current="page"]'),
-  ).toHaveText("Scan & check");
+  ).toHaveText("Upload OMR answer sheets");
   await expect(
     page.getByRole("heading", { name: "Upload questions", exact: true }),
   ).toHaveCount(0);

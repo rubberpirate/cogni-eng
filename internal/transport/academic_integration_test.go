@@ -313,7 +313,7 @@ func TestAcademicGenerationRequiresConfigurationAndReviewBeforeScoring(t *testin
 	var job scholar.Job
 	academicTx(t, h, func(tx pgx.Tx) error {
 		var err error
-		job, err = svc.Generate(ctx, tx, h.owner, h.org, q.TopicID, 2, "standard")
+		job, err = svc.Generate(ctx, tx, h.owner, h.org, q.TopicID, 2, "standard", "IIT-JEE")
 		return err
 	})
 	start := func() func() {

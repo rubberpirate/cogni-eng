@@ -2165,3 +2165,9 @@ Reference-dashboard follow-up: replaced the welcome hero with live two-by-two co
 
 
 Light-only owner refinement: all dark/system theme branches and the Appearance selector are removed; saved preferences migrate to light. Manrope, frosted translucent panels, requested pastel tints, an original local illustration, and live top-bar job/AI shortcuts use the shared existing routes. Dashboard coverage now asserts dark-OS/old-dark-setting migration and decoded illustration pixels. No academic API, grading rules or requirement verification status changes.
+
+## Assessment-first drafting increment — 2026-11-19
+
+Added migration 00009 and scoped/versioned `assessment_draft` persistence, generated contracts, explicit review/publish/assign transaction, separate editable revisions of published papers, five primary faculty routes, three-method setup, course-backed batch/roster/date metadata, multi-group generation, common question/key/marking editor and source-key identity matching. The existing course represents the batch; a full separate cohort/group model remains outstanding. Student admission permissions are unchanged.
+
+Question generation and OCR normalization now select the loopback-only Ollama adapter (default Qwen3.5-9B Q4_K_M); no hosted generation fallback. OCR text and normalized chunks survive failures/retries. Primary-source research and hardware assessment are in docs/LOCAL-ASSESSMENT-MODEL.md. The runtime/weights were not installed; HTTP contract fixtures establish integration behavior only. JEE/NEET quality and live performance remain unverified. New backend/browser evidence is recorded in docs/TEST-REPORT.md; no broad requirement is promoted to verified.

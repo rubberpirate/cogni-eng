@@ -1,4 +1,16 @@
 export const learningViews = {
+  draft: {
+    title: "Draft assessment",
+    hint: "Choose one way to prepare your paper, then review and publish it.",
+  },
+  active: {
+    title: "Active assessments",
+    hint: "View published assessments or prepare an edited revision.",
+  },
+  students: {
+    title: "Students",
+    hint: "View the students in your assigned batches.",
+  },
   home: { title: "Home", hint: "Choose what you want to do next." },
   author: {
     title: "Enter questions manually",
@@ -21,11 +33,11 @@ export const learningViews = {
     hint: "Build a test, publish it and choose who should take it.",
   },
   scan: {
-    title: "Scan & check",
+    title: "Upload OMR answer sheets",
     hint: "Upload completed answer sheets, check uncertain marks and save results.",
   },
   results: {
-    title: "Results & review",
+    title: "Results",
     hint: "Review submitted work, approve written marks and release results.",
   },
   samples: {

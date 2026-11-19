@@ -1,3 +1,4 @@
+import { signInStaff } from "./staff-sign-in";
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { navigate } from "./navigation";
@@ -15,14 +16,8 @@ test("reference dashboard renders live counts, searches saved papers and opens r
   await page.addInitScript(() =>
     localStorage.setItem("workspace-theme", "dark"),
   );
-  await page.goto("/sign-in");
-  await page
-    .getByLabel("Email address", { exact: true })
-    .fill(creds.match(/Email: (.+)/)![1]);
-  await page
-    .getByLabel("Password", { exact: true })
-    .fill(creds.match(/Password: (.+)/)![1]);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await signInStaff(page);
+  await navigate(page, "Home");
   await expect(page.locator(".dashboard-counts")).toBeVisible();
   await expect(page.locator(".grading-illustration")).toBeVisible();
   await expect
@@ -103,6 +98,9 @@ test("reference dashboard renders live counts, searches saved papers and opens r
     .getByRole("button", { name: "Upload OMR sheets", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Scan & check", exact: true }),
+    page.getByRole("heading", {
+      name: "Upload OMR answer sheets",
+      exact: true,
+    }),
   ).toBeVisible();
 });

@@ -11,6 +11,10 @@ const fixture = JSON.parse(
 test("reference dashboard renders live counts, searches saved papers and opens real tools at all screen sizes", async ({
   page,
 }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() =>
+    localStorage.setItem("workspace-theme", "dark"),
+  );
   await page.goto("/sign-in");
   await page
     .getByLabel("Email address", { exact: true })
@@ -20,6 +24,16 @@ test("reference dashboard renders live counts, searches saved papers and opens r
     .fill(creds.match(/Password: (.+)/)![1]);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator(".dashboard-counts")).toBeVisible();
+  await expect(page.locator(".grading-illustration")).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .locator(".grading-illustration")
+        .evaluate(
+          (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+        ),
+    )
+    .toBe(true);
   const papers = await (
     await page.request.get(
       `/api/v1/institutions/${fixture.org}/education/papers?campus=`,
@@ -71,13 +85,20 @@ test("reference dashboard renders live counts, searches saved papers and opens r
     await navigate(page, "Home");
   }
   await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  expect(
+    await page.evaluate(
+      () => getComputedStyle(document.documentElement).colorScheme,
+    ),
+  ).toBe("light");
   await page.getByText("Display & language", { exact: true }).click();
-  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+  await expect(page.getByLabel("Appearance", { exact: true })).toHaveCount(0);
   await page.getByText("Display & language", { exact: true }).click();
-  await page.screenshot({
-    path: ".local/screenshots/dashboard-reference-dark.png",
-    fullPage: true,
-  });
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  expect(
+    await page.evaluate(() => localStorage.getItem("workspace-theme")),
+  ).toBe("light");
   await page
     .getByRole("button", { name: "Upload OMR sheets", exact: true })
     .click();

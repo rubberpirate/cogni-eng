@@ -4,24 +4,27 @@ Institutional application and public introduction. Audience: staff organizing re
 
 Use a light teaching studio informed by the owner-supplied references: a white labelled navigation rail, pale blue work surface, rounded panels and restrained peach/yellow/lilac assessment covers. The signature is original response-sheet line artwork paired with direct teaching actions. Calm, approachable, precise, legible; essence: room for discovery. Public content uses the same typography without displaying invented product metrics.
 
-## Tokens
+## Current tokens — light glass (owner specification)
 
-Body: locally bundled IBM Plex Sans; headings use the same family at 600. Base 16px, ratio 1.2: 13,16,19,23,28,33. Spacing unit 4px; component gaps 8/12/16; section gaps 24/32/48. Radii 12px for controls and 16px for panels. Defined light borders, no decorative shadow.
+The 2026-11-19 light-only specification supersedes the earlier opaque/dark visual system and historical notes below. Locally bundled Manrope, weights 400/500/600; base 16px, stat numerals 28–32px, labels 12–13px, headings 16–21px. Spacing unit 4px; gutters 14–24px. Panels 24–26px, inner rows 16px, pills/circular avatar controls. A washed-out sage/lavender/blush gradient sits below a 68% milky overlay. Glass surfaces use white at 48–55%, 18–22px backdrop blur, translucent white borders and `0 8px 30px rgba(31,42,55,.055)` shadow.
 
-| Role | Light OKLCH | Dark OKLCH |
-|---|---|---|
-| background | 0.978 0.008 235 | 0.17 0.014 220 |
-| surface | 1 0 0 | 0.22 0.015 160 |
-| foreground | 0.25 0.025 210 | 0.94 0.008 160 |
-| muted | 0.48 0.018 210 | 0.74 0.018 160 |
-| border | 0.9 0.012 200 | 0.40 0.02 160 |
-| accent | 0.43 0.065 225 | 0.78 0.07 225 |
-| accent foreground | 0.99 0 0 | 0.18 0.015 160 |
-| success | 0.39 0.09 150 | 0.78 0.10 150 |
-| warning | 0.42 0.08 65 | 0.82 0.10 65 |
-| error | 0.43 0.15 25 | 0.78 0.10 25 |
+| Role | Value |
+|---|---|
+| Background base | #eef2f3 |
+| Surface fallback | #f8faf9 |
+| Glass | rgba(255,255,255,.52) |
+| Text | #1f2a37 |
+| Secondary text | #586878 |
+| Accent | #3f6f83 |
+| Accent text | #f8fbfc |
+| Sage | #bfd9d6 at 72–76% |
+| Lavender | #d3d0ee at 72–76% |
+| Blush | #f3c6da at 72% |
+| Sky | #bcd8ee at 65–76% |
+| Butter | #f6ebb4 at 64–76% |
+| Positive badge | #bfe8a8 / #3d6330 |
 
-Semantic HTML, actual labels, visible focus, 44px interaction targets, text with states, inline errors and a status region. Tables use left-aligned labels and right-aligned tabular numbers; narrow screens stack work forms and scroll tables in labeled regions. Theme and text-size preferences affect all components. Motion limited to 120ms opacity; reduced motion disables it. No stock imagery needed for record workflows.
+Semantic HTML, actual labels, visible focus, 44px interaction targets, text with states, inline errors and a status region. Tables use left-aligned labels and right-aligned tabular numbers; narrow screens stack work forms and scroll tables in labeled regions. Language and text-size preferences remain available; dark/system theme selection is removed. Controls respond over 180ms with a gentle lift/shadow; reduced motion disables movement. No stock imagery needed for record workflows.
 
 Audit: rendered desktop, narrow-screen and dark-theme review completed for the current teaching overview/sign-in. WCAG conformity is not yet established.
 
@@ -68,3 +71,10 @@ The dashboard now has a two-by-two count grid (saved/published/draft assessments
 Keep IBM Plex Sans, the shared blue accent and explicit dark tokens. Add rose `oklch(0.94 0.038 345)` / dark `oklch(0.3 0.028 345)` for draft counts; retain soft blue, lilac and pale yellow. Use 12px row/control and 16px panel radii, flat fills and aligned edges. Typography: 13–16px labels, 26px counts, 21px page heading. Hover lifts only shortcut cards by 2px over 160ms; reduced motion suppresses it. Responsive rail/menu, stacked tools and horizontally contained content keep features available at 1440/1024/768/390.
 
 Audit: authenticated browser checks compare displayed counts to real API responses, search/open real papers and navigate to OMR. Four widths and dark mode are rendered and inspected. Taste's unauthenticated generic gate redirects to the existing sign-in page: its marketing-layout findings do not establish dashboard quality. See docs/TEST-REPORT.md for the raw gate outcome and limits. Full WCAG certification remains open.
+
+
+## Milky light-only refinement — 2026-11-19
+
+The owner explicitly requests a soft frosted-glass interface. All dark CSS branches are removed, the server HTML starts with `data-theme=light`, and saved dark/system settings are migrated to light on mount. OS dark preference cannot change the palette. Keep the two-by-two overview and three-zone layout, soft outlined icon tiles, dotted stat connectors, low-opacity paper watermarks, pastel recent-paper strips, and the right illustration/tools column. Accent fills are reserved for selected navigation and primary actions. The positive publication percentage is derived from the loaded saved/published paper counts; no invented learning/score percentages are shown.
+
+`public/art/assessment-desk.webp` is an original generated flat editorial illustration (900×600, ~39KB) for the real grading shortcut; no reference character/logo copied. It is decorative, with empty alt text, and never supplies academic data. The calendar/chat/promo examples remain omitted because those features are not connected. Top-bar job and AI actions open the existing permitted routes. Manrope replaces the older font dependency. Authenticated tests emulate a dark OS and seed an old dark preference, verify migration and reload, confirm the image decodes, compare API counts, search/open real papers, and check four screen widths.

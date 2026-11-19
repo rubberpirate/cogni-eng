@@ -210,7 +210,6 @@ export function Workspace({
     [busy, setBusy] = useState(false),
     [query, setQuery] = useState(""),
     [language, setLanguage] = useState<"en" | "hi">("en"),
-    [theme, setTheme] = useState("system"),
     [large, setLarge] = useState(false),
     [mfa, setMfa] = useState<{ secret: string; url: string } | null>(null),
     [codes, setCodes] = useState<string[]>([]),
@@ -294,17 +293,15 @@ export function Workspace({
     const saved = localStorage.getItem("workspace-language");
     if (saved === "hi") setLanguage(saved);
     setLarge(localStorage.getItem("workspace-large") === "true");
-    const th = localStorage.getItem("workspace-theme") ?? "system";
-    setTheme(th);
   }, []);
   useEffect(() => {
     document.documentElement.lang = language;
-    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.theme = "light";
     document.documentElement.dataset.large = String(large);
     localStorage.setItem("workspace-language", language);
-    localStorage.setItem("workspace-theme", theme);
+    localStorage.setItem("workspace-theme", "light");
     localStorage.setItem("workspace-large", String(large));
-  }, [language, theme, large]);
+  }, [language, large]);
   const loadContexts = useCallback(async () => {
     const result = await api().GET("/api/v1/workspaces");
     if (result.error) throw new Error(result.error.message);
@@ -791,6 +788,24 @@ export function Workspace({
                 ))}
               </select>
             </Label>
+            {teaching && (
+              <div className="context-teaching-actions">
+                <button
+                  className="context-job-button"
+                  aria-label="Open background tasks"
+                  onClick={() => navigate("education", "jobs")}
+                >
+                  <WorkIcon name="jobs" />
+                </button>
+                <button
+                  className="primary context-ai-button"
+                  onClick={() => navigate("education", "generate")}
+                >
+                  <WorkIcon name="generate" />
+                  Create with AI
+                </button>
+              </div>
+            )}
             <details className="display-preferences">
               <summary>Display & language</summary>
               <div className="display-preferences-panel">
@@ -802,16 +817,6 @@ export function Workspace({
                   >
                     <option value="en">English</option>
                     <option value="hi">हिन्दी</option>
-                  </select>
-                </Label>
-                <Label name="Appearance">
-                  <select
-                    value={theme}
-                    onChange={(e) => setTheme(e.target.value)}
-                  >
-                    <option value="system">System</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
                   </select>
                 </Label>
                 <label className="check">

@@ -94,8 +94,21 @@ export function LearningHome({
                   ↗
                 </span>
               </span>
-              <strong className="stat-count">{count}</strong>
+              <div className="stat-value-row">
+                <strong className="stat-count">{count}</strong>
+                {label === "Published papers" && papers.length > 0 && (
+                  <span
+                    className="positive-badge"
+                    aria-label={`${Math.round((published / papers.length) * 100)} percent of saved assessments published`}
+                  >
+                    {Math.round((published / papers.length) * 100)}%
+                  </span>
+                )}
+              </div>
               <span className="stat-label">{label}</span>
+              <span className="stat-watermark" aria-hidden="true">
+                <WorkIcon name={view} />
+              </span>
               <small>{detail}</small>
             </button>
           ))}
@@ -227,9 +240,13 @@ export function LearningHome({
           />
         </Field>
         <section className="grading-shortcut">
-          <span className="grading-icon">
-            <WorkIcon name="scan" />
-          </span>
+          <img
+            className="grading-illustration"
+            src="/art/assessment-desk.webp"
+            alt=""
+            width={600}
+            height={400}
+          />
           <h2>Paper to results</h2>
           <p>
             Read individual or batch OMR sheets, check uncertain answers and

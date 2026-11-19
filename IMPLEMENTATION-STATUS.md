@@ -2162,3 +2162,6 @@ These are additional implementation evidence for CAT-02/04/08, DOC-02/05/06, ASM
 
 
 Reference-dashboard follow-up: replaced the welcome hero with live two-by-two counts, compact question-entry/saved-assessment lists, real search and job states, and working OMR/results/account links. Authenticated browser coverage is in `tests/browser/reference-dashboard.spec.ts`. No API, business rules, schema or requirement-verification status changed.
+
+
+Light-only owner refinement: all dark/system theme branches and the Appearance selector are removed; saved preferences migrate to light. Manrope, frosted translucent panels, requested pastel tints, an original local illustration, and live top-bar job/AI shortcuts use the shared existing routes. Dashboard coverage now asserts dark-OS/old-dark-setting migration and decoded illustration pixels. No academic API, grading rules or requirement verification status changes.

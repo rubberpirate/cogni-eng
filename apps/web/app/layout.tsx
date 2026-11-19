@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import "@fontsource/ibm-plex-sans/400.css";
-import "@fontsource/ibm-plex-sans/500.css";
-import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/manrope/400.css";
+import "@fontsource/manrope/500.css";
+import "@fontsource/manrope/600.css";
 import "./style.css";
 export const metadata: Metadata = {
   title: { default: "Learning Workspace", template: "%s · Learning Workspace" },
@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light">
       <body>
         <a className="skip" href="#main">
           Skip to content

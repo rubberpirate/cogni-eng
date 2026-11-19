@@ -2,20 +2,20 @@
 
 Institutional application and public introduction. Audience: staff organizing real work, learners concentrating, families understanding evidence. Primary first action: choose an institution and work context. Character: calm, precise, legible, accountable. Essence: records with clarity.
 
-Use a light teaching studio informed by the owner-supplied references: a white labelled navigation rail, pale teal work surface, rounded panels and restrained peach/yellow/lilac assessment covers. The signature is original response-sheet line artwork paired with direct teaching actions. Calm, approachable, precise, legible; essence: room for discovery. Public content uses the same typography without displaying invented product metrics.
+Use a light teaching studio informed by the owner-supplied references: a white labelled navigation rail, pale blue work surface, rounded panels and restrained peach/yellow/lilac assessment covers. The signature is original response-sheet line artwork paired with direct teaching actions. Calm, approachable, precise, legible; essence: room for discovery. Public content uses the same typography without displaying invented product metrics.
 
 ## Tokens
 
-Body: locally bundled IBM Plex Sans; headings use the same family at 600. Base 16px, ratio 1.2: 13,16,19,23,28,33. Spacing unit 4px; component gaps 8/12/16; section gaps 24/32/48. Radii 12px for controls and 24px for panels. Defined light borders, no decorative shadow.
+Body: locally bundled IBM Plex Sans; headings use the same family at 600. Base 16px, ratio 1.2: 13,16,19,23,28,33. Spacing unit 4px; component gaps 8/12/16; section gaps 24/32/48. Radii 12px for controls and 16px for panels. Defined light borders, no decorative shadow.
 
 | Role | Light OKLCH | Dark OKLCH |
 |---|---|---|
-| background | 0.975 0.008 195 | 0.17 0.014 160 |
+| background | 0.978 0.008 235 | 0.17 0.014 220 |
 | surface | 1 0 0 | 0.22 0.015 160 |
 | foreground | 0.25 0.025 210 | 0.94 0.008 160 |
 | muted | 0.48 0.018 210 | 0.74 0.018 160 |
 | border | 0.9 0.012 200 | 0.40 0.02 160 |
-| accent | 0.32 0.055 218 | 0.78 0.09 165 |
+| accent | 0.43 0.065 225 | 0.78 0.07 225 |
 | accent foreground | 0.99 0 0 | 0.18 0.015 160 |
 | success | 0.39 0.09 150 | 0.78 0.10 150 |
 | warning | 0.42 0.08 65 | 0.82 0.10 65 |
@@ -44,3 +44,16 @@ Document/key upload forms expose the actual selected OCR engine. OMR model compa
 ## Processing clarity — 2026-11-18
 
 Put current work before setup: paper upload shows Upload → Extract → Review → Save, collapses completed setup, and puts the extraction panel above the review. Distinguish upload transfer from saved queued/running work. Use one labelled spinner/progress pattern for paper extraction, generation, keys and sheet reading/model comparison. Only display percentages reported by Go; otherwise use indeterminate progress and no invented time estimate. Completion gives a concrete next action; failures retain source and expose recovery. Announce state changes politely, respect reduced motion, and give Upload paper its own selected navigation entry. Background tasks refresh automatically; transient save notices clear when changing sections.
+
+
+## Teaching desk — 2026-11-19
+
+Artifact: staff dashboard/data tool. Audience: coordinators, instructors and other authorized teaching staff. Character: calm, approachable, direct, legible. Essence: questions into evidence. Transpose the supplied fourth reference into a wide preparation area and compact workspace/task column, with pastel blue/yellow/lilac surfaces for the three real creation methods. Keep the bundled IBM Plex Sans and existing 1.2 type scale. Signature: numbered question-entry methods beside the next grading tasks. Retain original response-sheet artwork, real counts, scoped records and labelled navigation.
+
+The home page exposes Upload a paper, Enter manually and Create with AI. Manual entry has a dedicated deep-linkable view and explicitly selected answer keys. Existing OCR normalization and editable source/option review remain connected. Empty extraction is a recovery state, with a direct link to an opened transcription editor; zero rows cannot be saved or advertised as ready.
+
+Marking rules select printed import numbers or the displayed bank numbers using inclusive ranges and comma lists. Their preview counts selected questions, not an invented score. Each versioned Go write validates and persists marks; published assessment snapshots retain their earlier rules. Save edits before bulk updates. Bank updates create drafts that need approval again. Bulk updates use existing sequential revision writes; if interrupted, already saved changes persist and remaining work can be retried.
+
+Individual/batch OMR controls accept real files, show durable job progress and per-file upload failures, and restore available jobs on resuming a group. Registered sheet identity maps to assigned students; ambiguous responses and identities retain explicit review. The results table displays server scores, pending-mark labels, correct/wrong counts and numbered correct questions from the pinned assessment order. Search filters students; desktop tables remain horizontally scrollable on phones.
+
+Audit: inspected light desktop, 390px mobile, dark desktop and student-table renders. Labelled forms, visible focus, keyboard navigation, reduced-motion behavior and no viewport overflow exercised in browser journeys. No fabricated metrics or live AI-success claims. Full WCAG and arbitrary handwriting/field-scan qualification remain open.

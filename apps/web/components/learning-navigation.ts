@@ -1,5 +1,9 @@
 export const learningViews = {
   home: { title: "Home", hint: "Choose what you want to do next." },
+  author: {
+    title: "Enter questions manually",
+    hint: "Write a question, choose the correct answer and set the marks.",
+  },
   generate: {
     title: "Create questions with AI",
     hint: "Describe the topic, generate drafts, then check the answers.",

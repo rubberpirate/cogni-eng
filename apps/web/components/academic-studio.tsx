@@ -21,7 +21,7 @@ import {
 import { type LearningView } from "./learning-navigation";
 import { TaskProgress } from "./task-progress";
 import { GridInspection } from "./grid-inspection";
-import { ImportChoiceRow, KeyImportPanel } from "./import-review";
+import { ImportChoiceRow, KeyImportPanel, MarkingRules } from "./import-review";
 import { FormField as Field } from "./form-field";
 type Q = A<"AcademicQuestion">;
 type Paper = A<"AcademicPaperRecord">;
@@ -57,7 +57,7 @@ function emptyQuestion(topic: string): Q {
       { id: "C", text: "" },
       { id: "D", text: "" },
     ],
-    key: ["A"],
+    key: [],
     rubric: [],
     solution: "",
     marks: "1",
@@ -350,6 +350,8 @@ export function AcademicStudio({
   }, [topics, topic]);
   useEffect(() => {
     setSitting(null);
+    setEdit(null);
+    setImportIndex(null);
     setNotice("");
     setError("");
   }, [view]);
@@ -359,15 +361,19 @@ export function AcademicStudio({
       j.resource_id === preview?.id &&
       (j.input as Record<string, unknown>)?.mode !== "answer_key",
   );
+  const emptyExtraction =
+    preview?.state === "preview" && preview.rows.length === 0;
   const importState = uploadingPaper
     ? "uploading"
     : preview?.state === "extracting"
       ? ((extractionJob?.state === "completed"
           ? "running"
           : extractionJob?.state) ?? "queued")
-      : preview
-        ? "completed"
-        : "";
+      : emptyExtraction
+        ? "failed"
+        : preview
+          ? "completed"
+          : "";
   const importActive = uploadingPaper || preview?.state === "extracting";
   const chosen = topics.find((t) => t.id === topic);
   if (!dataReady)
@@ -483,7 +489,7 @@ export function AcademicStudio({
               onSitting={setSitting}
             />
           )}
-          {(tab === "curriculum" || tab === "import") && (
+          {(tab === "curriculum" || tab === "import" || tab === "author") && (
             <>
               {tab === "import" && (
                 <>
@@ -535,7 +541,9 @@ export function AcademicStudio({
                           : preview?.state === "committed"
                             ? "Questions saved as drafts"
                             : preview?.state === "preview"
-                              ? `${preview.rows.length} ${preview.rows.length === 1 ? "question" : "questions"} ready for review`
+                              ? emptyExtraction
+                                ? "No questions detected — review the extracted text"
+                                : `${preview.rows.length} ${preview.rows.length === 1 ? "question" : "questions"} ready for review`
                               : importState === "queued"
                                 ? "Paper saved — waiting to extract"
                                 : importState === "running"
@@ -545,16 +553,31 @@ export function AcademicStudio({
                       detail={
                         uploadingPaper
                           ? "Keep this tab open until the upload is saved."
-                          : preview?.state === "preview"
-                            ? "Check the wording and options, choose correct answers or apply a separate key, then save the reviewed questions to the bank."
-                            : preview?.state === "committed"
-                              ? "Open the question bank to approve these drafts before using them in an assessment."
-                              : extractionJob?.error ||
-                                "Your original file is saved. Reading pages and arranging questions in order. You can leave this screen; extraction continues in Background tasks."
+                          : emptyExtraction
+                            ? "Your source is saved. Open the review below to correct the transcription or try another OCR engine."
+                            : preview?.state === "preview"
+                              ? "Check the wording and options, choose correct answers or apply a separate key, then save the reviewed questions to the bank."
+                              : preview?.state === "committed"
+                                ? "Open the question bank to approve these drafts before using them in an assessment."
+                                : extractionJob?.error ||
+                                  "Your original file is saved. Reading pages and arranging questions in order. You can leave this screen; extraction continues in Background tasks."
                       }
                       progress={extractionJob?.progress}
                     >
-                      {preview?.state === "preview" && (
+                      {emptyExtraction && (
+                        <button
+                          className="primary"
+                          onClick={() =>
+                            importReviewRef.current?.scrollIntoView({
+                              block: "start",
+                              behavior: "instant",
+                            })
+                          }
+                        >
+                          Fix extracted text
+                        </button>
+                      )}
+                      {preview?.state === "preview" && !emptyExtraction && (
                         <button
                           className="primary"
                           onClick={() =>
@@ -850,10 +873,48 @@ export function AcademicStudio({
                       or upload a corrected structured file.
                     </p>
                   )}
+                  {preview.state === "preview" && preview.rows.length > 0 && (
+                    <>
+                      <KeyImportPanel
+                        key={preview.id}
+                        preview={preview}
+                        api={api}
+                        jobs={jobs}
+                        onApplied={setPreview}
+                      />
+                      <MarkingRules
+                        numbers={preview.rows
+                          .filter((r) => !r.committed_id)
+                          .map((r) => r.source_number || r.index)}
+                        disabled={busy}
+                        onApply={async (numbers, marks, penalty) => {
+                          await run(async () => {
+                            let current = preview;
+                            for (const row of preview.rows.filter(
+                              (r) =>
+                                numbers.includes(r.source_number || r.index) &&
+                                !r.committed_id,
+                            )) {
+                              current = await api.importChange(
+                                current.id,
+                                "edit",
+                                {
+                                  index: row.index,
+                                  version: current.version,
+                                  question: { ...row.question, marks, penalty },
+                                },
+                              );
+                              setPreview(current);
+                            }
+                          }, "Marking rules saved. Review the questions before saving to the bank.");
+                        }}
+                      />
+                    </>
+                  )}
                   {preview.rows.map((row) =>
                     ["single", "multiple"].includes(row.question.type) ? (
                       <ImportChoiceRow
-                        key={row.index + "-" + JSON.stringify(row.question.key)}
+                        key={row.index + "-" + JSON.stringify(row.question)}
                         row={row}
                         onAdvanced={() => {
                           setEdit(row.question);
@@ -901,15 +962,12 @@ export function AcademicStudio({
                       </article>
                     ),
                   )}
-                  <KeyImportPanel
-                    key={preview.id}
-                    preview={preview}
-                    api={api}
-                    jobs={jobs}
-                    onApplied={setPreview}
-                  />
                   <button
-                    disabled={busy || preview.state !== "preview"}
+                    disabled={
+                      busy ||
+                      preview.state !== "preview" ||
+                      !preview.rows.some((r) => !r.error && !r.committed_id)
+                    }
                     onClick={() =>
                       void run(
                         async () =>
@@ -925,7 +983,26 @@ export function AcademicStudio({
                       )
                     }
                   >
-                    Commit clean rows
+                    Save reviewed questions to bank
+                  </button>
+                </section>
+              )}
+              {tab === "author" && !edit && (
+                <section className="card manual-start">
+                  <h2>Write your next question</h2>
+                  <p>
+                    Choose a topic above, then add the wording, options, correct
+                    answer and marks.
+                  </p>
+                  <button
+                    className="primary"
+                    disabled={!topic}
+                    onClick={() => {
+                      setEdit(emptyQuestion(topic));
+                      setImportIndex(null);
+                    }}
+                  >
+                    Add a question
                   </button>
                 </section>
               )}
@@ -985,6 +1062,35 @@ export function AcademicStudio({
                       Author question
                     </button>
                   </div>
+                  {bank.length > 0 && (
+                    <MarkingRules
+                      numbers={bank.map((_, i) => i + 1)}
+                      disabled={busy}
+                      onApply={async (numbers, marks, penalty) => {
+                        await run(async () => {
+                          for (const number of numbers) {
+                            const q = bank[number - 1];
+                            const updated = await api.question(
+                              {
+                                question: { ...q, marks, penalty },
+                                version: q.version,
+                              },
+                              q.id,
+                            );
+                            const saved =
+                              "question" in updated
+                                ? updated.question
+                                : updated;
+                            setBank((current) =>
+                              current.map((old) =>
+                                old.id === q.id ? saved : old,
+                              ),
+                            );
+                          }
+                        }, "Marks saved as new drafts. Review and approve the changed questions before use.");
+                      }}
+                    />
+                  )}
                   <div className="bank-tools">
                     <Field name="Search questions">
                       <input
@@ -1024,7 +1130,8 @@ export function AcademicStudio({
                       <article className="question-card" key={q.id}>
                         <div className="section-heading">
                           <strong>
-                            {q.reference} · {q.state}
+                            Question {bank.indexOf(q) + 1} · {q.reference} ·{" "}
+                            {q.state}
                           </strong>
                           <span>
                             {q.type} · +{q.marks} / −{q.penalty}
@@ -1460,7 +1567,7 @@ function DocumentMapping({
 }) {
   const [text, setText] = useState(preview.raw_text);
   return (
-    <details>
+    <details open={preview.rows.length === 0 || undefined}>
       <summary>Review OCR text and map questions</summary>
       <p>
         Compare every question and key with the source. Supported text format:
@@ -2175,6 +2282,9 @@ function ScanDesk({
   const [error, setError] = useState("");
   const [loadingSheets, setLoadingSheets] = useState(true);
   const [uploadingScan, setUploadingScan] = useState(false);
+  const [uploadMode, setUploadMode] = useState("individual");
+  const [scanJobs, setScanJobs] = useState<A<"AcademicJob">[]>([]);
+  const [uploadFailures, setUploadFailures] = useState<string[]>([]);
   const [scanAt, setScanAt] = useState(nowLocal());
   const refresh = useCallback(async () => {
     const [l, a, b] = await Promise.all([
@@ -2198,29 +2308,75 @@ function ScanDesk({
   }, [refresh]);
   const load = useCallback(async () => {
     if (batch) setSheets(await api.list("scan-sheets", { batch }));
+    else setSheets([]);
+  }, [api, batch]);
+  useEffect(() => {
+    let active = true;
+    setScanJobs([]);
+    setJob(null);
+    if (batch)
+      void api
+        .list("jobs")
+        .then((jobs) => {
+          if (!active) return;
+          const matching = jobs.filter(
+            (j) =>
+              j.kind === "recognize_scan" &&
+              (j.input as Record<string, unknown>)?.batch_id === batch,
+          );
+          setScanJobs((current) => [
+            ...current,
+            ...matching.filter(
+              (j) => !current.some((saved) => saved.id === j.id),
+            ),
+          ]);
+          setJob((current) => current ?? matching[0] ?? null);
+        })
+        .catch((e) => {
+          if (active) setError(e.message);
+        });
+    return () => {
+      active = false;
+    };
   }, [api, batch]);
   useEffect(() => {
     load().catch((e) => setError(e.message));
   }, [load]);
   useEffect(() => {
-    if (!job || !["queued", "running"].includes(job.state)) return;
-    let active = true;
-    let pending = false;
+    const activeJobs = scanJobs.filter((j) =>
+      ["queued", "running"].includes(j.state),
+    );
+    if (!activeJobs.length) return;
+    let active = true,
+      pending = false;
     const timer = setInterval(async () => {
       if (pending) return;
       pending = true;
       try {
-        const next = await api.detail("jobs", job.id);
-        if (active) {
-          setJob(next);
-          if (next.state === "completed") await load();
-        }
+        const results = await Promise.allSettled(
+          activeJobs.map((j) => api.detail("jobs", j.id)),
+        );
+        if (!active) return;
+        const updated = results.flatMap((r) =>
+          r.status === "fulfilled" ? [r.value] : [],
+        );
+        setScanJobs((current) =>
+          current.map((j) => updated.find((next) => next.id === j.id) ?? j),
+        );
+        setJob(
+          (current) => updated.find((j) => j.id === current?.id) ?? current,
+        );
+        if (updated.some((j) => j.state === "completed")) await load();
+        if (results.some((r) => r.status === "rejected"))
+          setError(
+            "Connection interrupted. Saved uploads are retained; status will retry automatically.",
+          );
       } catch (e) {
         if (active)
           setError(
             e instanceof Error
               ? e.message
-              : "Connection interrupted; your upload is saved.",
+              : "Could not refresh scan review. Retry from the review panel.",
           );
       } finally {
         pending = false;
@@ -2230,7 +2386,7 @@ function ScanDesk({
       active = false;
       clearInterval(timer);
     };
-  }, [api, job?.id, job?.state, load]);
+  }, [api, scanJobs, load]);
   return (
     <>
       {error && (
@@ -2340,7 +2496,34 @@ function ScanDesk({
           </details>
         </section>
         <section className="card">
-          <h2>2. Upload a completed sheet</h2>
+          <h2>2. Upload completed OMR sheets</h2>
+          <fieldset className="upload-mode">
+            <legend>Upload mode</legend>
+            <label className="check">
+              <input
+                type="radio"
+                name="upload-mode"
+                checked={uploadMode === "individual"}
+                disabled={uploadingScan}
+                onChange={() => setUploadMode("individual")}
+              />
+              Individual sheet
+            </label>
+            <label className="check">
+              <input
+                type="radio"
+                name="upload-mode"
+                checked={uploadMode === "batch"}
+                disabled={uploadingScan}
+                onChange={() => setUploadMode("batch")}
+              />
+              Batch upload
+            </label>
+          </fieldset>
+          <p className="muted">
+            Registered sheet IDs match each page to its assigned student.
+            Unreadable identities stay in review.
+          </p>
           <p>
             Use a scanned PDF or a clear PNG/JPEG photograph. We will read the
             marks and ask you to check anything uncertain.
@@ -2350,6 +2533,7 @@ function ScanDesk({
               const f = values(e);
               void run(async () => {
                 setUploadingScan(true);
+                setUploadFailures([]);
                 try {
                   let id = batch;
                   const existing = batches.find((b) => b.id === id);
@@ -2363,7 +2547,32 @@ function ScanDesk({
                     setBatch(id);
                     await refresh();
                   }
-                  setJob(await api.scanUpload(id, f));
+                  const files = f
+                    .getAll("file")
+                    .filter(
+                      (file): file is File =>
+                        file instanceof File && file.size > 0,
+                    );
+                  if (files.length > 50)
+                    throw new Error("Choose up to 50 files per batch.");
+                  for (const file of files) {
+                    const upload = new FormData();
+                    upload.set("file", file);
+                    try {
+                      const next = await api.scanUpload(id, upload);
+                      setJob(next);
+                      setScanJobs((current) =>
+                        current.some((j) => j.id === next.id)
+                          ? current.map((j) => (j.id === next.id ? next : j))
+                          : [...current, next],
+                      );
+                    } catch (e) {
+                      setUploadFailures((current) => [
+                        ...current,
+                        `${file.name}: ${e instanceof Error ? e.message : "Upload failed"}`,
+                      ]);
+                    }
+                  }
                 } finally {
                   setUploadingScan(false);
                 }
@@ -2383,19 +2592,25 @@ function ScanDesk({
             </Field>
             <Field name="Scanned PDF or page image">
               <input
+                key={uploadMode}
                 name="file"
                 type="file"
+                multiple={uploadMode === "batch"}
                 accept="application/pdf,image/png,image/jpeg"
                 required
               />
             </Field>
             <small className="muted">
-              Up to 50 MiB. PDFs may contain up to 50 pages.
+              {uploadMode === "batch"
+                ? "Choose up to 50 files. "
+                : "Choose one image or PDF. "}
+              Up to 50 MiB per file and 50 pages per PDF.
             </small>
             <button
               className="primary"
               disabled={
                 !layout ||
+                uploadingScan ||
                 busy ||
                 (!!job && ["queued", "running"].includes(job.state))
               }
@@ -2404,9 +2619,53 @@ function ScanDesk({
                 ? "Uploading sheet…"
                 : job && ["queued", "running"].includes(job.state)
                   ? "Sheet reading in progress…"
-                  : "Upload and read sheet"}
+                  : uploadMode === "batch"
+                    ? "Upload and read batch"
+                    : "Upload and read sheet"}
             </button>
           </form>
+          {uploadFailures.length > 0 && (
+            <div className="error" role="alert">
+              <p>
+                Some files were not uploaded. Select these files again to retry;
+                saved uploads are retained.
+              </p>
+              <ul>
+                {uploadFailures.map((failure, i) => (
+                  <li key={i}>{failure}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {scanJobs.length > 1 && (
+            <div className="batch-status" aria-live="polite">
+              <h3>Batch progress</h3>
+              {scanJobs.map((j, i) => (
+                <div key={j.id}>
+                  <span>Upload {i + 1}</span>
+                  <span>{j.state.replaceAll("_", " ")}</span>
+                  {["failed", "configuration_required", "cancelled"].includes(
+                    j.state,
+                  ) && (
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        void run(async () => {
+                          await api.jobAction(j.id, "retry");
+                          const next = await api.detail("jobs", j.id);
+                          setScanJobs((current) =>
+                            current.map((v) => (v.id === j.id ? next : v)),
+                          );
+                        }, "Upload queued again.")
+                      }
+                    >
+                      Retry upload {i + 1}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           {(uploadingScan || job) && (
             <TaskProgress
               state={uploadingScan ? "uploading" : job!.state}
@@ -2440,7 +2699,11 @@ function ScanDesk({
                     onClick={() =>
                       void run(async () => {
                         await api.jobAction(job!.id, "retry");
-                        setJob(await api.detail("jobs", job!.id));
+                        const next = await api.detail("jobs", job!.id);
+                        setJob(next);
+                        setScanJobs((current) =>
+                          current.map((j) => (j.id === next.id ? next : j)),
+                        );
                       }, "Reading queued again. Your original upload is retained.")
                     }
                   >
@@ -2457,6 +2720,7 @@ function ScanDesk({
                 onChange={(e) => {
                   setBatch(e.target.value);
                   setJob(null);
+                  setScanJobs([]);
                   const b = batches.find((b) => b.id === e.target.value);
                   if (b) {
                     setLayout(b.layout_id);

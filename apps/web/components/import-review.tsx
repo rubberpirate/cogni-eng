@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { A, EducationClient } from "../../../clients/academic";
+import { selectQuestionNumbers } from "./question-selection";
 import { TaskProgress } from "./task-progress";
 import { FormField as Field } from "./form-field";
 type Import = A<"AcademicImport">;
@@ -323,6 +324,99 @@ export function KeyImportPanel({
           )}
         </div>
       )}
+    </section>
+  );
+}
+
+export function MarkingRules({
+  numbers,
+  disabled,
+  onApply,
+}: {
+  numbers: number[];
+  disabled: boolean;
+  onApply: (numbers: number[], marks: string, penalty: string) => Promise<void>;
+}) {
+  const [selection, setSelection] = useState("");
+  const [marks, setMarks] = useState("4");
+  const [penalty, setPenalty] = useState("1");
+  const [error, setError] = useState("");
+  let selected: number[] = [];
+  try {
+    if (selection.trim()) selected = selectQuestionNumbers(selection, numbers);
+  } catch {
+    /* Validation appears on submit. */
+  }
+  return (
+    <section className="marking-rules" aria-label="Marking scheme">
+      <div className="section-heading">
+        <div>
+          <h3>Set the marking scheme</h3>
+          <p className="muted">
+            Apply marks to a range or specific questions. Blank answers receive
+            0.
+          </p>
+        </div>
+        <span className="state-pill">{numbers.length} questions</span>
+      </div>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          try {
+            await onApply(
+              selectQuestionNumbers(selection, numbers),
+              marks,
+              penalty,
+            );
+          } catch (e) {
+            setError(
+              e instanceof Error ? e.message : "Could not save marking rules.",
+            );
+          }
+        }}
+      >
+        <fieldset disabled={disabled} className="marking-fields">
+          <Field name="Question numbers">
+            <input
+              value={selection}
+              onChange={(e) => setSelection(e.target.value)}
+              placeholder="1-10 or 1,5,8,14,25"
+              required
+              aria-describedby="range-help"
+            />
+          </Field>
+          <Field name="Marks for correct answer">
+            <input
+              value={marks}
+              onChange={(e) => setMarks(e.target.value)}
+              inputMode="decimal"
+              pattern="[0-9]+([.][0-9]+)?"
+              required
+            />
+          </Field>
+          <Field name="Deduction for wrong answer">
+            <input
+              value={penalty}
+              onChange={(e) => setPenalty(e.target.value)}
+              inputMode="decimal"
+              pattern="[0-9]+([.][0-9]+)?"
+              required
+            />
+          </Field>
+          <button type="submit">Apply marks</button>
+        </fieldset>
+        <small id="range-help" className="muted">
+          {selected.length
+            ? `${selected.length} selected: ${selected.join(", ")} · +${marks} correct / −${penalty} wrong`
+            : "Use the question numbers shown below. Save any question edits before applying marks."}
+        </small>
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+      </form>
     </section>
   );
 }

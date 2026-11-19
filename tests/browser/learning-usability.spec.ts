@@ -113,6 +113,27 @@ test("sample kit downloads real matching PDF sheets and produces the documented 
     path: ".local/screenshots/sample-result-mobile.png",
     fullPage: true,
   });
+  await navigate(page, "Results & review");
+  await page
+    .getByLabel("Assessment to review", { exact: true })
+    .selectOption(selected);
+  const resultRow = page.locator(".results-table tbody tr").first();
+  await expect(resultRow).toContainText("5 / 12");
+  await expect(resultRow.locator(".correct-question-list")).toHaveText(
+    "1, 3, 5",
+  );
+  await page
+    .getByLabel("Search students", { exact: true })
+    .fill("missing-student-name");
+  await expect(
+    page.getByText("No students match your search.", { exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Search students", { exact: true }).fill("");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({
+    path: ".local/screenshots/desk-student-results.png",
+    fullPage: true,
+  });
 });
 test("generation failure remains understandable on the request screen and navigation supports browser back", async ({
   page,

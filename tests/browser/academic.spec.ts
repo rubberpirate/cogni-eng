@@ -69,7 +69,7 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
     page.getByRole("heading", { name: "Import review · preview" }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Commit clean rows", exact: true })
+    .getByRole("button", { name: "Save reviewed questions to bank", exact: true })
     .click();
   await page
     .getByRole("button", {

@@ -181,7 +181,7 @@ test("a two-column question image becomes ordered editable options; faculty sele
     page.getByLabel("Question 1 wording", { exact: true }),
   ).toHaveValue("How many straight sides does a triangle have?");
   await page
-    .getByRole("button", { name: "Commit clean rows", exact: true })
+    .getByRole("button", { name: "Save reviewed questions to bank", exact: true })
     .click();
   await expect(
     page.getByRole("heading", {

@@ -612,6 +612,7 @@ export function Workspace({
             {(teaching
               ? [
                   "home",
+                  "author",
                   "generate",
                   "curriculum",
                   "import",

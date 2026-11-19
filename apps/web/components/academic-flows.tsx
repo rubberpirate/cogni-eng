@@ -31,39 +31,81 @@ export function LearningHome({
   const published = papers.filter((p) => p.state === "published").length;
   return (
     <>
-      <div className="overview-grid">
-        <section className="learning-welcome">
-          <div>
-            <p className="eyebrow">A little preparation. A clearer picture.</p>
+      <div className="studio-dashboard">
+        <div className="studio-main">
+          <section className="learning-welcome studio-welcome">
+            <p className="eyebrow">Your teaching workspace</p>
             <h2>
-              Make room for
+              Good questions.
               <br />
-              the next discovery.
+              Clearer results.
             </h2>
             <p>
-              Create thoughtful questions, prepare an assessment and turn
-              answers into useful feedback.
+              Prepare a paper, set the answers and marks, then see how every
+              student did.
             </p>
-            <div className="actions">
-              <button className="primary" onClick={() => navigate("generate")}>
-                <WorkIcon name="generate" />
-                Create questions with AI
-              </button>
-              <button onClick={() => navigate("import")}>
-                Upload a question paper
-              </button>
+            <button className="primary" onClick={() => navigate("import")}>
+              <WorkIcon name="import" /> Upload a question paper
+            </button>
+          </section>
+          <section
+            aria-labelledby="quick-actions-title"
+            className="create-section"
+          >
+            <div className="section-heading">
+              <h2 id="quick-actions-title">Start with questions</h2>
+              <span className="muted">Choose what works for you</span>
             </div>
-          </div>
-          <StudyArtwork />
-        </section>
-        <section className="overview-summary" aria-label="Workspace overview">
-          <div className="summary-heading">
-            <span className="icon-tile">
-              <WorkIcon name="papers" />
-            </span>
-            <h2>Your workspace</h2>
-          </div>
-          <div className="summary-counts">
+            <div className="creation-methods">
+              {(
+                [
+                  [
+                    "import",
+                    "01",
+                    "Upload a paper",
+                    "PDF or photo → editable questions",
+                    "OCR extracts questions and options.",
+                  ],
+                  [
+                    "author",
+                    "02",
+                    "Enter manually",
+                    "Write questions, choose answers",
+                    "Add options and marks as you go.",
+                  ],
+                  [
+                    "generate",
+                    "03",
+                    "Create with AI",
+                    "Subject, topic and difficulty",
+                    "Review generated drafts before use.",
+                  ],
+                ] as const
+              ).map(([view, number, title, subtitle, detail]) => (
+                <button
+                  className={"creation-method method-" + view}
+                  key={view}
+                  onClick={() => navigate(view)}
+                >
+                  <span className="method-top">
+                    <WorkIcon name={view === "author" ? "curriculum" : view} />
+                    <span>{number}</span>
+                  </span>
+                  <strong>{title}</strong>
+                  <span>{subtitle}</span>
+                  <small>{detail}</small>
+                  <span className="method-arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+        <aside className="studio-aside" aria-label="Workspace overview">
+          <StudyArtwork compact />
+          <h2>Your workspace</h2>
+          <div className="workspace-metrics">
             <div>
               <strong>{papers.length}</strong>
               <span>Assessments</span>
@@ -76,57 +118,38 @@ export function LearningHome({
           <p className="muted">
             {published} published · {papers.length - published} drafts
           </p>
+          <div className="next-task-list">
+            <button onClick={() => navigate("papers")}>
+              <WorkIcon name="papers" />
+              <span>
+                <strong>Answers & marking</strong>
+                <small>Build and assign an assessment</small>
+              </span>
+              <span aria-hidden="true">↗</span>
+            </button>
+            <button onClick={() => navigate("scan")}>
+              <WorkIcon name="scan" />
+              <span>
+                <strong>Grade OMR sheets</strong>
+                <small>Individual or batch upload</small>
+              </span>
+              <span aria-hidden="true">↗</span>
+            </button>
+            <button onClick={() => navigate("results")}>
+              <WorkIcon name="results" />
+              <span>
+                <strong>Student results</strong>
+                <small>Marks and question breakdown</small>
+              </span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </div>
           <button className="text-action" onClick={() => navigate("jobs")}>
             {active} processing · {failed} need attention{" "}
             <WorkIcon name="arrow" />
           </button>
-        </section>
+        </aside>
       </div>
-      <section aria-labelledby="quick-actions-title">
-        <div className="section-heading">
-          <h2 id="quick-actions-title">From questions to results</h2>
-          <span className="muted">Your everyday tools</span>
-        </div>
-        <div className="quick-action-grid">
-          {(
-            [
-              [
-                "curriculum",
-                "Prepare questions",
-                "Write, upload and check your answer keys.",
-              ],
-              [
-                "papers",
-                "Build an assessment",
-                "Choose questions and invite your learners.",
-              ],
-              [
-                "scan",
-                "Check paper answers",
-                "Read OMR sheets and review uncertain marks.",
-              ],
-              [
-                "results",
-                "Review the results",
-                "See the evidence behind every awarded mark.",
-              ],
-            ] as const
-          ).map(([view, title, description], i) => (
-            <button
-              className="quick-action"
-              onClick={() => navigate(view)}
-              key={view}
-            >
-              <span className={"icon-tile tone-" + i}>
-                <WorkIcon name={view} />
-              </span>
-              <strong>{title}</strong>
-              <span>{description}</span>
-              <WorkIcon name="arrow" />
-            </button>
-          ))}
-        </div>
-      </section>
       <section aria-labelledby="recent-assessments-title">
         <div className="section-heading assessment-heading">
           <div>
@@ -770,37 +793,97 @@ export function ResultsFlow({
   const [paper, setPaper] = useState(initialPaper);
   useEffect(() => setPaper(initialPaper), [initialPaper]);
   const [rows, setRows] = useState<A<"AcademicAssigned">[]>([]);
+  const [sittings, setSittings] = useState<
+    Record<string, A<"AcademicSitting">>
+  >({});
+  const [unavailable, setUnavailable] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [refresh, setRefresh] = useState(0);
   useEffect(() => {
     let active = true;
     setRows([]);
-    if (paper)
-      api
-        .list("assignments", { paper })
-        .then((r) => {
-          if (active) setRows(r);
-        })
-        .catch((e) => {
-          if (active) setError(e.message);
-        });
+    setSittings({});
+    setUnavailable([]);
+    setError("");
+    if (!paper) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    void (async () => {
+      try {
+        const assigned = await api.list("assignments", { paper });
+        if (!active) return;
+        setRows(assigned);
+        const submitted = assigned.filter((r) => r.sitting_id);
+        for (let i = 0; i < submitted.length && active; i += 6) {
+          const group = submitted.slice(i, i + 6);
+          const responses = await Promise.allSettled(
+            group.map((r) => api.detail("sittings", r.sitting_id)),
+          );
+          if (!active) return;
+          responses.forEach((result, j) => {
+            const id = group[j].sitting_id;
+            if (result.status === "fulfilled")
+              setSittings((current) => ({ ...current, [id]: result.value }));
+            else setUnavailable((current) => [...current, id]);
+          });
+        }
+      } catch (e) {
+        if (active)
+          setError(
+            e instanceof Error ? e.message : "Could not load student results.",
+          );
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
     return () => {
       active = false;
     };
-  }, [api, paper]);
+  }, [api, paper, refresh]);
+  const filtered = rows.filter((r) =>
+    r.learner.toLowerCase().includes(query.toLowerCase()),
+  );
+  const graded = Object.values(sittings).filter((s) => s.result).length;
   return (
-    <section className="card">
-      <Field name="Assessment to review">
-        <select value={paper} onChange={(e) => setPaper(e.target.value)}>
-          <option value="">Choose an assessment</option>
-          {papers
-            .filter((p) => p.state === "published")
-            .map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.spec.title}
-              </option>
-            ))}
-        </select>
-      </Field>
+    <section className="card student-results" aria-busy={loading}>
+      <div className="section-heading">
+        <div>
+          <h2>Student results</h2>
+          <p className="muted">Every mark, with the answers behind it.</p>
+        </div>
+        <button
+          disabled={loading || !paper}
+          onClick={() => setRefresh((n) => n + 1)}
+        >
+          Refresh results
+        </button>
+      </div>
+      <div className="results-toolbar">
+        <Field name="Assessment to review">
+          <select value={paper} onChange={(e) => setPaper(e.target.value)}>
+            <option value="">Choose an assessment</option>
+            {papers
+              .filter((p) => p.state === "published")
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.spec.title}
+                </option>
+              ))}
+          </select>
+        </Field>
+        <Field name="Search students">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Student name"
+          />
+        </Field>
+      </div>
       {error && (
         <p className="error" role="alert">
           {error}
@@ -810,36 +893,133 @@ export function ResultsFlow({
         <p className="empty-message">
           Choose an assessment to see who has submitted and what needs review.
         </p>
-      ) : rows.length === 0 ? (
-        <p>
-          No learners assigned to this assessment yet. Assign it from
-          Assessments.
-        </p>
       ) : (
-        rows.map((r) => (
-          <article className="academic-row" key={r.id}>
-            <div>
-              <strong>{r.learner}</strong>
-              <p className="muted">{r.state.replaceAll("_", " ")}</p>
+        <>
+          <div className="results-summary" role="status">
+            <span>
+              <strong>{rows.length}</strong> students
+            </span>
+            <span>
+              <strong>{graded}</strong> graded
+            </span>
+            <span>
+              <strong>{rows.filter((r) => !r.sitting_id).length}</strong> not
+              started
+            </span>
+            {loading && <span>Loading results…</span>}
+          </div>
+          {!loading && rows.length === 0 && !error ? (
+            <p className="empty-message">
+              No learners assigned to this assessment yet. Assign it from
+              Assessments.
+            </p>
+          ) : (
+            <div
+              className="results-table-wrap"
+              role="region"
+              aria-label="Student marks and question breakdown"
+              tabIndex={0}
+            >
+              <table className="results-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Student</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" className="numeric">
+                      Marks
+                    </th>
+                    <th scope="col" className="numeric">
+                      Correct / wrong
+                    </th>
+                    <th scope="col">Correct questions</th>
+                    <th scope="col">Review</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((r) => {
+                    const sitting = sittings[r.sitting_id];
+                    const result = sitting?.result;
+                    const order =
+                      sitting?.paper.spec.sections
+                        .flatMap((s) => s.questions)
+                        .map((q) => q.id) ?? [];
+                    const correct =
+                      result?.items
+                        .filter((i) => i.status === "correct")
+                        .map((i) => order.indexOf(i.question_id) + 1)
+                        .filter((n) => n > 0)
+                        .sort((a, b) => a - b) ?? [];
+                    return (
+                      <tr key={r.id}>
+                        <th scope="row">
+                          <span className="student-avatar" aria-hidden="true">
+                            {r.learner.trim().slice(0, 1)}
+                          </span>
+                          {r.learner}
+                        </th>
+                        <td>
+                          <span className="state-pill">
+                            {r.state.replaceAll("_", " ")}
+                          </span>
+                        </td>
+                        <td className="numeric">
+                          {result ? (
+                            <>
+                              <strong>{result.score}</strong>
+                              <span className="muted"> / {result.maximum}</span>
+                              {result.pending > 0 && (
+                                <small>
+                                  Provisional · {result.pending} awaiting review
+                                </small>
+                              )}
+                            </>
+                          ) : unavailable.includes(r.sitting_id) ? (
+                            "Unavailable"
+                          ) : r.sitting_id && loading ? (
+                            "Loading…"
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="numeric">
+                          {result ? `${result.correct} / ${result.wrong}` : "—"}
+                        </td>
+                        <td className="correct-question-list">
+                          {result
+                            ? correct.length
+                              ? correct.join(", ")
+                              : "None"
+                            : "—"}
+                        </td>
+                        <td>
+                          {sitting ? (
+                            <button onClick={() => onSitting(sitting)}>
+                              {r.state === "awaiting_review"
+                                ? "Mark written answers"
+                                : "Open result & answers"}
+                            </button>
+                          ) : r.sitting_id ? (
+                            <button
+                              onClick={() => setRefresh((n) => n + 1)}
+                              disabled={loading}
+                            >
+                              Retry result
+                            </button>
+                          ) : (
+                            <span className="muted">Not started</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {!loading && filtered.length === 0 && rows.length > 0 && (
+                <p className="empty-message">No students match your search.</p>
+              )}
             </div>
-            {r.sitting_id ? (
-              <button
-                onClick={() =>
-                  void api
-                    .detail("sittings", r.sitting_id)
-                    .then(onSitting)
-                    .catch((e) => setError(e.message))
-                }
-              >
-                {r.state === "awaiting_review"
-                  ? "Mark written answers"
-                  : "Open result & answers"}
-              </button>
-            ) : (
-              <span className="muted">Not started</span>
-            )}
-          </article>
-        ))
+          )}
+        </>
       )}
     </section>
   );

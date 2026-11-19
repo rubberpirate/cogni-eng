@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { type A, type EducationClient } from "../../../clients/academic";
 import { TaskProgress } from "./task-progress";
 import { FormField as Field } from "./form-field";
-import { StudyArtwork, WorkIcon } from "./workspace-art";
+import { WorkIcon } from "./workspace-art";
 import { type LearningView } from "./learning-navigation";
 type Paper = A<"AcademicPaperRecord">;
 type Job = A<"AcademicJob">;
@@ -29,195 +29,289 @@ export function LearningHome({
     ["failed", "configuration_required"].includes(j.state),
   ).length;
   const published = papers.filter((p) => p.state === "published").length;
+  const [query, setQuery] = useState("");
+  const matches = papers.filter((p) =>
+    `${p.spec.title} ${p.reference}`
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
+  const work = jobs.filter((j) =>
+    ["queued", "running", "failed", "configuration_required"].includes(j.state),
+  );
+  const jobLabels: Record<string, string> = {
+    generate_questions: "Question generation",
+    extract_document: "Paper extraction",
+    recognize_scan: "OMR reading",
+    tutor_reply: "Tutor response",
+  };
   return (
-    <>
-      <div className="studio-dashboard">
-        <div className="studio-main">
-          <section className="learning-welcome studio-welcome">
-            <p className="eyebrow">Your teaching workspace</p>
-            <h2>
-              Good questions.
-              <br />
-              Clearer results.
-            </h2>
-            <p>
-              Prepare a paper, set the answers and marks, then see how every
-              student did.
-            </p>
-            <button className="primary" onClick={() => navigate("import")}>
-              <WorkIcon name="import" /> Upload a question paper
+    <div className="teaching-dashboard">
+      <div className="dashboard-center">
+        <section className="dashboard-counts" aria-label="Workspace overview">
+          {(
+            [
+              [
+                "papers",
+                "Assessments",
+                papers.length,
+                "All saved papers",
+                "blue",
+              ],
+              [
+                "papers",
+                "Published papers",
+                published,
+                "Ready for assignments",
+                "lavender",
+              ],
+              [
+                "papers",
+                "Draft papers",
+                papers.length - published,
+                "Continue preparing",
+                "rose",
+              ],
+              [
+                "curriculum",
+                "Topics",
+                topics.length,
+                "Open the question bank",
+                "sky",
+              ],
+            ] as const
+          ).map(([view, label, count, detail, tone]) => (
+            <button
+              key={label}
+              className={`dashboard-stat stat-${tone}`}
+              onClick={() => navigate(view)}
+              aria-label={`${label}: ${count}. ${detail}`}
+            >
+              <span className="stat-top">
+                <span className="stat-icon">
+                  <WorkIcon name={view} />
+                </span>
+                <span className="stat-link" aria-hidden="true">
+                  ↗
+                </span>
+              </span>
+              <strong className="stat-count">{count}</strong>
+              <span className="stat-label">{label}</span>
+              <small>{detail}</small>
             </button>
-          </section>
-          <section
-            aria-labelledby="quick-actions-title"
-            className="create-section"
-          >
-            <div className="section-heading">
-              <h2 id="quick-actions-title">Start with questions</h2>
-              <span className="muted">Choose what works for you</span>
-            </div>
-            <div className="creation-methods">
-              {(
+          ))}
+        </section>
+        <section
+          className="dashboard-panel question-methods"
+          aria-labelledby="question-methods-heading"
+        >
+          <div className="dashboard-section-heading">
+            <h2 id="question-methods-heading">Prepare questions</h2>
+            <button
+              className="dashboard-text-link"
+              onClick={() => navigate("curriculum")}
+            >
+              Open bank ↗
+            </button>
+          </div>
+          <div className="dashboard-method-list">
+            {(
+              [
                 [
-                  [
-                    "import",
-                    "01",
-                    "Upload a paper",
-                    "PDF or photo → editable questions",
-                    "OCR extracts questions and options.",
-                  ],
-                  [
-                    "author",
-                    "02",
-                    "Enter manually",
-                    "Write questions, choose answers",
-                    "Add options and marks as you go.",
-                  ],
-                  [
-                    "generate",
-                    "03",
-                    "Create with AI",
-                    "Subject, topic and difficulty",
-                    "Review generated drafts before use.",
-                  ],
-                ] as const
-              ).map(([view, number, title, subtitle, detail]) => (
-                <button
-                  className={"creation-method method-" + view}
-                  key={view}
-                  onClick={() => navigate(view)}
-                >
-                  <span className="method-top">
-                    <WorkIcon name={view === "author" ? "curriculum" : view} />
-                    <span>{number}</span>
-                  </span>
+                  "import",
+                  "01",
+                  "Upload a paper",
+                  "Extract and edit questions from a PDF or photo",
+                  "blue",
+                ],
+                [
+                  "author",
+                  "02",
+                  "Enter manually",
+                  "Write questions, choose answers and set marks",
+                  "yellow",
+                ],
+                [
+                  "generate",
+                  "03",
+                  "Create with AI",
+                  "Choose a subject, topic and difficulty",
+                  "lavender",
+                ],
+              ] as const
+            ).map(([view, number, title, detail, tone]) => (
+              <button
+                key={view}
+                className={`dashboard-method method-${tone}`}
+                onClick={() => navigate(view)}
+              >
+                <span className="method-number">{number}</span>
+                <span className="method-copy">
                   <strong>{title}</strong>
-                  <span>{subtitle}</span>
                   <small>{detail}</small>
-                  <span className="method-arrow" aria-hidden="true">
-                    ↗
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-        </div>
-        <aside className="studio-aside" aria-label="Workspace overview">
-          <StudyArtwork compact />
-          <h2>Your workspace</h2>
-          <div className="workspace-metrics">
-            <div>
-              <strong>{papers.length}</strong>
-              <span>Assessments</span>
-            </div>
-            <div>
-              <strong>{topics.length}</strong>
-              <span>Topics</span>
-            </div>
+                </span>
+                <WorkIcon name="arrow" />
+              </button>
+            ))}
           </div>
-          <p className="muted">
-            {published} published · {papers.length - published} drafts
-          </p>
-          <div className="next-task-list">
-            <button onClick={() => navigate("papers")}>
-              <WorkIcon name="papers" />
-              <span>
-                <strong>Answers & marking</strong>
-                <small>Build and assign an assessment</small>
-              </span>
-              <span aria-hidden="true">↗</span>
-            </button>
-            <button onClick={() => navigate("scan")}>
-              <WorkIcon name="scan" />
-              <span>
-                <strong>Grade OMR sheets</strong>
-                <small>Individual or batch upload</small>
-              </span>
-              <span aria-hidden="true">↗</span>
-            </button>
-            <button onClick={() => navigate("results")}>
-              <WorkIcon name="results" />
-              <span>
-                <strong>Student results</strong>
-                <small>Marks and question breakdown</small>
-              </span>
-              <span aria-hidden="true">↗</span>
+        </section>
+        <section
+          className="dashboard-panel dashboard-papers"
+          aria-labelledby="recent-assessments-title"
+        >
+          <div className="dashboard-section-heading">
+            <h2 id="recent-assessments-title">Recent assessments</h2>
+            <button
+              className="dashboard-text-link"
+              onClick={() => navigate("papers")}
+            >
+              View all ↗
             </button>
           </div>
-          <button className="text-action" onClick={() => navigate("jobs")}>
-            {active} processing · {failed} need attention{" "}
-            <WorkIcon name="arrow" />
-          </button>
-        </aside>
-      </div>
-      <section aria-labelledby="recent-assessments-title">
-        <div className="section-heading assessment-heading">
-          <div>
-            <h2 id="recent-assessments-title">Your assessments</h2>
-            <p className="muted">Pick up where you left off.</p>
-          </div>
-          <button onClick={() => navigate("papers")}>
-            See assessments <WorkIcon name="arrow" />
-          </button>
-        </div>
-        {papers.length ? (
-          <div className="assessment-card-grid">
-            {papers.slice(0, 4).map((p, i) => (
-              <article className="assessment-tile" key={p.id}>
-                <div className={"assessment-cover tone-" + i}>
-                  <WorkIcon name="papers" />
-                  <span className="state-pill">
-                    {p.state === "draft" ? "Draft" : "Published"}
+          {matches.length ? (
+            <div className="dashboard-paper-list">
+              {matches.slice(0, 3).map((p, i) => (
+                <button
+                  className="dashboard-paper"
+                  key={p.id}
+                  onClick={() => openPaper(p)}
+                >
+                  <span className={`paper-glyph glyph-${i % 3}`}>
+                    <WorkIcon name="papers" />
                   </span>
-                  <span className="cover-lines" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                </div>
-                <div className="assessment-tile-body">
-                  <h3>{p.spec.title}</h3>
-                  <p className="muted">{p.reference}</p>
-                  <div className="assessment-meta">
-                    <span>
+                  <span className="paper-copy">
+                    <strong>{p.spec.title}</strong>
+                    <small>
+                      {p.reference} ·{" "}
                       {p.spec.sections.reduce(
-                        (n, section) => n + section.questions.length,
+                        (n, s) => n + s.questions.length,
                         0,
                       )}{" "}
                       questions
-                    </span>
-                    <span>{p.maximum} marks</span>
-                  </div>
-                  <button onClick={() => openPaper(p)}>
-                    Open assessment <WorkIcon name="arrow" />
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="empty-message">
-            No assessments yet. Build your first test or try the sample kit
-            below.
-          </p>
-        )}
-      </section>
-      <section className="sample-invitation">
-        <span className="icon-tile">
+                    </small>
+                  </span>
+                  <span className="paper-score">
+                    <strong>{p.maximum}</strong>
+                    <small>marks</small>
+                  </span>
+                  <span className="paper-state">
+                    {p.state === "draft" ? "Draft" : "Published"}
+                  </span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="dashboard-empty">
+              {query
+                ? "No assessments match your search."
+                : "No assessments yet. Prepare your questions, then build your first paper."}
+            </p>
+          )}
+        </section>
+        <button
+          className="dashboard-sample"
+          onClick={() => navigate("samples")}
+        >
           <WorkIcon name="samples" />
-        </span>
-        <div>
-          <h2>A first run, without the preparation.</h2>
-          <p>
-            Try an original question paper, answer key and filled OMR sheets.
-            Follow the complete flow with a test learner.
-          </p>
-        </div>
-        <button onClick={() => navigate("samples")}>
-          Try sample files <WorkIcon name="arrow" />
+          <span>Try the full flow with sample files</span>
+          <span aria-hidden="true">↗</span>
         </button>
-      </section>
-    </>
+      </div>
+      <aside className="dashboard-right" aria-label="Teaching tools">
+        <Field name="Search assessments">
+          <input
+            type="search"
+            placeholder="Search by title or reference"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </Field>
+        <section className="grading-shortcut">
+          <span className="grading-icon">
+            <WorkIcon name="scan" />
+          </span>
+          <h2>Paper to results</h2>
+          <p>
+            Read individual or batch OMR sheets, check uncertain answers and
+            save student marks.
+          </p>
+          <button className="primary" onClick={() => navigate("scan")}>
+            Upload OMR sheets <span aria-hidden="true">↗</span>
+          </button>
+          <button
+            className="dashboard-text-link"
+            onClick={() => navigate("results")}
+          >
+            View student results ↗
+          </button>
+        </section>
+        <section
+          className="background-work"
+          aria-labelledby="background-work-heading"
+        >
+          <div className="dashboard-section-heading">
+            <h2 id="background-work-heading">Background work</h2>
+            <button
+              className="dashboard-text-link"
+              onClick={() => navigate("jobs")}
+            >
+              View all ↗
+            </button>
+          </div>
+          <p className="work-counts">
+            {active} processing · {failed} need attention
+          </p>
+          {work.length ? (
+            <div className="dashboard-job-list">
+              {work.slice(0, 3).map((j) => (
+                <button
+                  key={j.id}
+                  className="dashboard-job"
+                  onClick={() => navigate("jobs")}
+                >
+                  <span
+                    className={`job-symbol ${["failed", "configuration_required"].includes(j.state) ? "job-attention" : ""}`}
+                    aria-hidden="true"
+                  >
+                    <WorkIcon name="jobs" />
+                  </span>
+                  <span>
+                    <strong>
+                      {jobLabels[j.kind] ?? j.kind.replaceAll("_", " ")}
+                    </strong>
+                    <small>
+                      {j.state === "configuration_required"
+                        ? "Configuration needed"
+                        : j.state.replaceAll("_", " ")}
+                    </small>
+                  </span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="dashboard-empty">
+              No work waiting. New uploads and requests will appear here.
+            </p>
+          )}
+        </section>
+        <section className="dashboard-workflow">
+          <h2>Your assessment flow</h2>
+          <ol>
+            <li>Prepare questions</li>
+            <li>Check answers & marks</li>
+            <li>Publish & assign</li>
+            <li>Grade & review results</li>
+          </ol>
+          <button
+            className="dashboard-text-link"
+            onClick={() => navigate("papers")}
+          >
+            Build an assessment ↗
+          </button>
+        </section>
+      </aside>
+    </div>
   );
 }
 

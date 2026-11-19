@@ -15,3 +15,6 @@ test-results/
 **/next-env.d.ts
 .venv/
 __pycache__/
+
+# Local Taste audit output and browser profiles
+.taste-skill/

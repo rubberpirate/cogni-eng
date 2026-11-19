@@ -587,7 +587,14 @@ export function Workspace({
   return (
     <fieldset className="hydration-guard" disabled={!hydrated}>
       <legend className="sr-only">Workspace tools</legend>
-      <div className="workspace">
+      <div
+        className={
+          "workspace" +
+          (pane === "education" && teaching && learningView === "home"
+            ? " dashboard-shell"
+            : "")
+        }
+      >
         <aside className={"rail" + (menuOpen ? " menu-open" : "")}>
           <Link href="/workspace#education/home" className="wordmark">
             <span className="brand-symbol" aria-hidden="true">
@@ -817,6 +824,20 @@ export function Workspace({
                 </label>
               </div>
             </details>
+            <button
+              className="context-account"
+              onClick={() => navigate("account")}
+              aria-label={`Open account for ${me.name}`}
+            >
+              <span className="account-initial" aria-hidden="true">
+                {me.name.trim().slice(0, 1)}
+              </span>
+              <span>
+                {me.name}
+                <small>My account</small>
+              </span>
+              <span aria-hidden="true">⌄</span>
+            </button>
           </header>
           <main id="main" className="workmain">
             <div className="page-heading">

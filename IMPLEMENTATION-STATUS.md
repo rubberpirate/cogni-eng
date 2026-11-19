@@ -2159,3 +2159,6 @@ Delivery evidence · Milestone 1
 Added direct manual authoring alongside upload/AI, inclusive range/list marking controls using versioned Go APIs, multi-file OMR intake with group recovery, and searchable student marks/correct-question tables. Empty OCR extraction now exposes recovery instead of a ready success state. Existing permission checks, human review gates and pinned assessment revisions remain authoritative. Evidence: `tests/browser/teaching-desk.spec.ts`, updated import/academic/usability journeys, `tests/question-selection.test.ts`, and `docs/TEST-REPORT.md`.
 
 These are additional implementation evidence for CAT-02/04/08, DOC-02/05/06, ASM-03, PPR-01/04/10/11 and grading/result presentation; they do not change those requirements to verified. OMR requires registered layouts and encoded assignment identity. Arbitrary handwritten-name recognition, universal OMR layouts, production provider/model quality, full permissions/recovery qualification and full acceptance layers remain outstanding.
+
+
+Reference-dashboard follow-up: replaced the welcome hero with live two-by-two counts, compact question-entry/saved-assessment lists, real search and job states, and working OMR/results/account links. Authenticated browser coverage is in `tests/browser/reference-dashboard.spec.ts`. No API, business rules, schema or requirement-verification status changed.

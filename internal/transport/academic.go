@@ -131,7 +131,11 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 				if e != nil {
 					return nil, e
 				}
-				return svc.OMRCheckerPreview(ctx, tx, a.ID, org, r.FormValue("course_id"), data, marker, reference, json.RawMessage(r.FormValue("template")), json.RawMessage(r.FormValue("config")))
+				var identity []scholar.OMRIdentityRegion
+				if raw := r.FormValue("identity_regions"); raw != "" && (len(raw) > 2048 || json.Unmarshal([]byte(raw), &identity) != nil) {
+					return nil, fail(400, "invalid_identity_regions", "Provide valid name/roll-number boxes.")
+				}
+				return svc.OMRCheckerPreview(ctx, tx, a.ID, org, r.FormValue("course_id"), data, marker, reference, json.RawMessage(r.FormValue("template")), json.RawMessage(r.FormValue("config")), identity)
 			case "grid-preview", "grid-model":
 				var c academic.GridCalibration
 				if json.Unmarshal([]byte(r.FormValue("calibration")), &c) != nil {

@@ -21,6 +21,9 @@ test("native OMRChecker template, real upload, overlay and answer download agree
   ).toBeVisible();
   await navigate(page, "Upload OMR answer sheets");
   await page
+    .getByRole("button", { name: "Use existing files", exact: true })
+    .click();
+  await page
     .getByLabel("OMRChecker student batch", { exact: true })
     .selectOption(fixture.course);
   await page

@@ -46,6 +46,7 @@ test("snipping frames drive real OMR pixels, support resize/undo, and round-trip
   await page.setViewportSize({ width: 1440, height: 1100 });
   await signInStaff(page);
   await page.goto("/workspace#education/scan");
+  await page.getByText("Advanced pixel-reader tools", { exact: true }).click();
   await page.getByText("Visual OMR calibrator", { exact: true }).click();
   await page
     .getByLabel("OMR preview course", { exact: true })

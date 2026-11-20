@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+	"learning.local/workspace/internal/academic"
 	"learning.local/workspace/internal/scholar"
 )
 
@@ -35,19 +36,26 @@ func TestOMRCheckerReadsNativeTemplateWithinStaffScopeWithoutMarks(t *testing.T)
 	}
 	ctx := context.Background()
 	academicTx(t, h, func(tx pgx.Tx) error {
-		out, e := svc.OMRCheckerPreview(ctx, tx, h.owner, h.org, course, image, nil, nil, json.RawMessage(template), nil)
+		identity := []scholar.OMRIdentityRegion{
+			{Kind: "student_name", Rect: academic.GridRect{X: .06, Y: .1, Width: .66, Height: .028}},
+			{Kind: "roll_number", Rect: academic.GridRect{X: .06, Y: .13, Width: .34, Height: .027}},
+		}
+		out, e := svc.OMRCheckerPreview(ctx, tx, h.owner, h.org, course, image, nil, nil, json.RawMessage(template), nil, identity)
 		if e != nil {
 			return e
 		}
 		if out.Engine != "OMRChecker" || len(out.Revision) != 40 || len(out.Fields) != 26 || out.Responses["Roll"] != "123456" || out.Responses["q1"] != "A" || out.Responses["q7"] != "" || out.Responses["q12"] != "AC" || !out.MultipleMarked {
 			t.Fatalf("unexpected native reading: engine=%s fields=%d", out.Engine, len(out.Fields))
 		}
+		if len(out.Identity) != 2 || out.Identity[0].Text != "Synthetic Test Learner" || out.Identity[1].Text != "123456" {
+			t.Fatalf("unexpected identity OCR: %+v", out.Identity)
+		}
 		return nil
 	})
 	for _, tc := range []struct{ name, actor, org string }{{name: "learner", actor: learner, org: h.org}, {name: "other institution", actor: h.owner, org: h.otherOrg}} {
 		t.Run(tc.name, func(t *testing.T) {
 			if err := scholar.Tx(ctx, h.db, func(tx pgx.Tx) error {
-				_, e := svc.OMRCheckerPreview(ctx, tx, tc.actor, tc.org, course, image, nil, nil, json.RawMessage(template), nil)
+				_, e := svc.OMRCheckerPreview(ctx, tx, tc.actor, tc.org, course, image, nil, nil, json.RawMessage(template), nil, nil)
 				return e
 			}); err == nil {
 				t.Fatal("unauthorized native preview accepted")

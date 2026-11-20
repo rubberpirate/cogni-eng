@@ -2141,6 +2141,125 @@ details p {
   margin: 0;
   min-width: 0;
 }
+.omr-reader-mode {
+  margin: 16px 0;
+}
+.omr-designer {
+  margin: 16px 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.4);
+  min-width: 0;
+}
+.omr-designer .section-heading {
+  align-items: start;
+}
+.omr-designer h3 {
+  margin: 0;
+}
+.omr-setup-steps {
+  display: flex;
+  padding: 0;
+  list-style: none;
+  gap: 12px;
+  margin: 18px 0;
+}
+.omr-setup-steps li {
+  flex: 1;
+  padding: 10px 4px;
+  border-bottom: 2px solid var(--border);
+  color: var(--muted);
+  font-size: 14px;
+}
+.omr-setup-steps li[aria-current] {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.omr-designer .omr-canvas-controls [role="status"] {
+  flex: 3 1 240px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--soft);
+}
+.omr-point-tool {
+  cursor: crosshair;
+}
+.omr-identity-frame {
+  stroke: #8c84ba;
+  fill: rgba(211, 208, 238, 0.16);
+  stroke-width: 2;
+  pointer-events: none;
+}
+.omr-seed-circle {
+  stroke: #3f6f83;
+  fill: rgba(191, 217, 214, 0.55);
+  stroke-width: 2;
+  pointer-events: none;
+}
+.omr-drawing-frame {
+  stroke: #3f6f83;
+  fill: rgba(191, 217, 214, 0.2);
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+  pointer-events: none;
+}
+.omr-saved-blocks {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.omr-saved-blocks > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--soft);
+  border-radius: 12px;
+}
+.omr-saved-blocks span {
+  flex: 1 1 170px;
+  font-weight: 500;
+}
+.omr-layout-ready {
+  padding: 18px;
+  background: var(--soft);
+  border-radius: 16px;
+}
+.omr-layout-ready details {
+  margin-top: 16px;
+}
+.omr-identity-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--lilac);
+}
+.omr-identity-results > div {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.omr-identity-results p {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .omr-designer {
+    padding: 12px;
+  }
+  .omr-setup-steps {
+    gap: 8px;
+  }
+  .omr-setup-steps li {
+    font-size: 12px;
+  }
+}
 .omrchecker-inputs > button {
   margin-top: 16px;
 }

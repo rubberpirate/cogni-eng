@@ -1415,7 +1415,10 @@ export function AcademicStudio({
           {tab === "scan" && (
             <>
               <OMRCheckerReader api={api} courses={courses} />
-              <GridInspection api={api} courses={courses} />
+              <details className="card">
+                <summary>Advanced pixel-reader tools</summary>
+                <GridInspection api={api} courses={courses} />
+              </details>
               <Field name="Published assessment">
                 <select
                   value={paper?.id ?? ""}

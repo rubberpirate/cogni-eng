@@ -2351,6 +2351,17 @@ export interface components {
             duration_ms: number;
         };
         AcademicVision: Record<string, never>;
+        AcademicOMRIdentityRegion: {
+            kind: string;
+            rect: components["schemas"]["AcademicGridRect"];
+        };
+        AcademicOMRIdentityReading: {
+            kind: string;
+            text: string;
+            confidence: number;
+            uncertain: boolean;
+            reason: string;
+        };
         AcademicOMRCheckerField: {
             label: string;
             value: string;
@@ -2368,6 +2379,7 @@ export interface components {
             multiple_marked: boolean;
             overlay: string;
             notice: string;
+            identity?: components["schemas"]["AcademicOMRIdentityReading"][];
         };
         AcademicGeneration: {
             topic: components["schemas"]["AcademicTopic"];
@@ -12071,6 +12083,7 @@ export interface operations {
                     course_id: string;
                     template: string;
                     config?: string;
+                    identity_regions?: string;
                     /** Format: binary */
                     marker?: string;
                     /** Format: binary */

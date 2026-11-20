@@ -93,7 +93,7 @@ for path,response,fields in [('imports/{id}/key-upload','Job',{'file':{'type':'s
 route(base+'grid-model','post','AcademicJob')
 paths['/api/v1'+base+'grid-model']['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':{'type':'string','format':'binary'},'course_id':S,'calibration':S})}}}
 route(base+'omrchecker-preview','post','AcademicOMRCheckerReading')
-paths['/api/v1'+base+'omrchecker-preview']['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':{'type':'string','format':'binary'},'course_id':S,'template':S,'config':S,'marker':{'type':'string','format':'binary'},'reference':{'type':'string','format':'binary'}},('config','marker','reference'))}}}
+paths['/api/v1'+base+'omrchecker-preview']['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':{'type':'string','format':'binary'},'course_id':S,'template':S,'config':S,'identity_regions':S,'marker':{'type':'string','format':'binary'},'reference':{'type':'string','format':'binary'}},('config','identity_regions','marker','reference'))}}}
 
 route(base+'drafts','get','AcademicAssessmentDraft',listed=True)
 route(base+'drafts/{id}','get','AcademicAssessmentDraft')

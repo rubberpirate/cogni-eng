@@ -12778,6 +12778,9 @@
                   "config": {
                     "type": "string"
                   },
+                  "identity_regions": {
+                    "type": "string"
+                  },
                   "marker": {
                     "type": "string",
                     "format": "binary"
@@ -16367,6 +16370,50 @@
         "properties": {},
         "required": []
       },
+      "AcademicOMRIdentityRegion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "rect": {
+            "$ref": "#/components/schemas/AcademicGridRect"
+          }
+        },
+        "required": [
+          "kind",
+          "rect"
+        ]
+      },
+      "AcademicOMRIdentityReading": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "uncertain": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "text",
+          "confidence",
+          "uncertain",
+          "reason"
+        ]
+      },
       "AcademicOMRCheckerField": {
         "type": "object",
         "additionalProperties": false,
@@ -16428,6 +16475,12 @@
           },
           "notice": {
             "type": "string"
+          },
+          "identity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicOMRIdentityReading"
+            }
           }
         },
         "required": [

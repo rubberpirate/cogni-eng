@@ -7,6 +7,7 @@ import (
 	"errors"
 	"image"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,7 +15,20 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"learning.local/workspace/internal/academic"
 )
+
+type OMRIdentityRegion struct {
+	Kind string            `json:"kind"`
+	Rect academic.GridRect `json:"rect"`
+}
+type OMRIdentityReading struct {
+	Kind       string  `json:"kind"`
+	Text       string  `json:"text"`
+	Confidence float64 `json:"confidence"`
+	Uncertain  bool    `json:"uncertain"`
+	Reason     string  `json:"reason"`
+}
 
 type OMRCheckerField struct {
 	Label     string   `json:"label"`
@@ -24,17 +38,18 @@ type OMRCheckerField struct {
 	Reason    string   `json:"reason"`
 }
 type OMRCheckerReading struct {
-	Engine         string            `json:"engine"`
-	Revision       string            `json:"revision"`
-	Responses      map[string]string `json:"responses"`
-	Fields         []OMRCheckerField `json:"fields"`
-	MultipleMarked bool              `json:"multiple_marked"`
-	Overlay        string            `json:"overlay"`
-	Notice         string            `json:"notice"`
+	Engine         string               `json:"engine"`
+	Revision       string               `json:"revision"`
+	Responses      map[string]string    `json:"responses"`
+	Fields         []OMRCheckerField    `json:"fields"`
+	MultipleMarked bool                 `json:"multiple_marked"`
+	Overlay        string               `json:"overlay"`
+	Notice         string               `json:"notice"`
+	Identity       []OMRIdentityReading `json:"identity,omitempty"`
 }
 
 // OMRCheckerPreview reads a native template without assigning identity or saving marks.
-func (s *Service) OMRCheckerPreview(ctx context.Context, tx pgx.Tx, actor, org, course string, data, marker, reference []byte, template, config json.RawMessage) (OMRCheckerReading, error) {
+func (s *Service) OMRCheckerPreview(ctx context.Context, tx pgx.Tx, actor, org, course string, data, marker, reference []byte, template, config json.RawMessage, identity []OMRIdentityRegion) (OMRCheckerReading, error) {
 	var campus string
 	if err := tx.QueryRow(ctx, "SELECT campus_id FROM course WHERE institution_id=$1 AND id=$2 AND state='active'", org, course).Scan(&campus); err != nil {
 		return OMRCheckerReading{}, Problem(404, "course_unavailable", "Choose an available course.")
@@ -42,13 +57,32 @@ func (s *Service) OMRCheckerPreview(ctx context.Context, tx pgx.Tx, actor, org, 
 	if err := Scope(ctx, tx, actor, org, campus, course, ""); err != nil {
 		return OMRCheckerReading{}, err
 	}
-	return runOMRChecker(ctx, data, marker, reference, template, config)
+	return runOMRChecker(ctx, data, marker, reference, template, config, identity)
 }
 
-func runOMRChecker(ctx context.Context, data, marker, reference []byte, template, config json.RawMessage) (OMRCheckerReading, error) {
+func runOMRChecker(ctx context.Context, data, marker, reference []byte, template, config json.RawMessage, identity []OMRIdentityRegion) (OMRCheckerReading, error) {
 	var out OMRCheckerReading
 	if err := ctx.Err(); err != nil {
 		return out, err
+	}
+	if len(identity) > 2 {
+		return out, Problem(400, "invalid_identity_regions", "Select at most one name and one roll-number field.")
+	}
+	seen := map[string]bool{}
+	for _, region := range identity {
+		r := region.Rect
+		if (region.Kind != "student_name" && region.Kind != "roll_number") || seen[region.Kind] {
+			return out, Problem(400, "invalid_identity_regions", "Use unique name and roll-number fields.")
+		}
+		for _, n := range []float64{r.X, r.Y, r.Width, r.Height} {
+			if math.IsNaN(n) || math.IsInf(n, 0) {
+				return out, Problem(400, "invalid_identity_regions", "Identity fields must be inside the sheet.")
+			}
+		}
+		if r.X < 0 || r.Y < 0 || r.Width <= 0 || r.Height <= 0 || r.X+r.Width > 1+1e-8 || r.Y+r.Height > 1+1e-8 {
+			return out, Problem(400, "invalid_identity_regions", "Identity fields must be inside the sheet.")
+		}
+		seen[region.Kind] = true
 	}
 	if len(template) == 0 || len(template) > 256<<10 || !json.Valid(template) || len(config) > 64<<10 || len(config) > 0 && !json.Valid(config) {
 		return out, Problem(400, "invalid_omr_template", "Provide a template JSON of at most 256 KiB and optional tuning JSON of at most 64 KiB.")
@@ -113,7 +147,7 @@ func runOMRChecker(ctx context.Context, data, marker, reference []byte, template
 	if len(config) == 0 {
 		config = json.RawMessage(`{}`)
 	}
-	input := Encode(map[string]json.RawMessage{"template": template, "config": config})
+	input := Encode(map[string]json.RawMessage{"template": template, "config": config, "identity_regions": Encode(identity)})
 	runCtx, cancel := context.WithTimeout(ctx, 40*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, python, "-I", "-B", adapter, "--root", root, "--image", filepath.Join(directory, "sheet.png"))

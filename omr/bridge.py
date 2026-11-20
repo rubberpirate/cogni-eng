@@ -128,6 +128,65 @@ def decode_values(raw: str, options: list[str]) -> list[str] | None:
     return possibilities[0] if len(possibilities) == 1 else None
 
 
+def read_identity(image, regions: list, directory: Path) -> list[dict]:
+    import cv2
+
+    if not isinstance(regions, list) or len(regions) > 2:
+        raise InputError("Select at most one name and one roll-number field.")
+    readings = []
+    seen = set()
+    height, width = image.shape[:2]
+    for region in regions:
+        if not isinstance(region, dict) or not isinstance(region.get("rect"), dict):
+            raise InputError("Select identity fields as boxes inside the sheet.")
+        kind, rect = region.get("kind"), region["rect"]
+        if (
+            kind not in {"student_name", "roll_number"}
+            or kind in seen
+            or any(not number_between(rect.get(k), 0, 1) for k in ("x", "y", "width", "height"))
+            or rect["width"] <= 0 or rect["height"] <= 0
+            or rect["x"] + rect["width"] > 1 + 1e-8
+            or rect["y"] + rect["height"] > 1 + 1e-8
+        ):
+            raise InputError("Identity fields must be unique boxes inside the sheet.")
+        seen.add(kind)
+        crop = image[
+            round(rect["y"] * height):round((rect["y"] + rect["height"]) * height),
+            round(rect["x"] * width):round((rect["x"] + rect["width"]) * width),
+        ]
+        result = {"kind": kind, "text": "", "confidence": 0, "uncertain": True,
+                  "reason": "No clear text; check this field or enter it manually."}
+        if crop.size:
+            path = directory / (kind + ".png")
+            cv2.imwrite(str(path), crop)
+            try:
+                output = subprocess.run(
+                    ["tesseract", str(path), "stdout", "-l", "eng", "--psm", "7", "tsv"],
+                    capture_output=True, text=True, timeout=12, check=True,
+                ).stdout
+                words, confidences = [], []
+                for line in output.splitlines()[1:]:
+                    columns = line.split("\t", 11)
+                    if len(columns) == 12 and columns[11].strip() and float(columns[10]) >= 0:
+                        words.append(columns[11].strip())
+                        confidences.append(float(columns[10]))
+                text = re.sub(
+                    r"^(?:student\s*name|name|roll(?:\s*(?:number|no\.?))?)\s*[:#]\s*", "",
+                    " ".join(words), flags=re.I,
+                )
+                if kind == "roll_number":
+                    text = text.replace(" ", "")
+                confidence = sum(confidences) / len(confidences) if confidences else 0
+                reason = "Check the detected text; OCR confidence is low." if text else result["reason"]
+                result.update(text=text[:160], confidence=round(confidence, 2),
+                              uncertain=not text or confidence < 85,
+                              reason="" if text and confidence >= 85 else reason)
+            except (OSError, subprocess.SubprocessError):
+                result["reason"] = "Text recognition is unavailable. Enter this field manually."
+        readings.append(result)
+    return readings
+
+
 def read_sheet(root: Path, image_path: Path, payload: dict) -> dict:
     # Never create template/config files next to an operator's original source.
     with tempfile.TemporaryDirectory(prefix="omrchecker-adapter-") as directory:
@@ -189,6 +248,7 @@ def _read_sheet(root: Path, image_path: Path, payload: dict) -> dict:
     if processed is None:
         raise InputError("OMRChecker could not find the page or markers. Check the template and source image.")
     responses, marked, multi, _ = template.image_instance_ops.read_omr_response(template, processed, "sheet.png")
+    identity = read_identity(cv2.resize(processed, tuple(template.page_dimensions)), payload.get("identity_regions") or [], image_path.parent)
     fields = []
     for block in template.field_blocks:
         for bubbles in block.traverse_bubbles:
@@ -204,7 +264,7 @@ def _read_sheet(root: Path, image_path: Path, payload: dict) -> dict:
     if not ok or len(encoded) > 2_500_000:
         raise InputError("Could not produce a bounded detection overlay.")
     revision = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=3, check=True).stdout.strip()
-    return {"engine": "OMRChecker", "revision": revision, "responses": get_concatenated_response(responses, template), "fields": fields, "multiple_marked": bool(multi), "overlay": base64.b64encode(encoded).decode("ascii")}
+    return {"engine": "OMRChecker", "revision": revision, "responses": get_concatenated_response(responses, template), "fields": fields, "multiple_marked": bool(multi), "overlay": base64.b64encode(encoded).decode("ascii"),"identity":identity}
 
 
 def main() -> None:

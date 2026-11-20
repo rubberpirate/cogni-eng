@@ -2,8 +2,11 @@ import json
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import patch
+import subprocess
+import tempfile
 
-from bridge import InputError, bounded_template, decode_values, read_sheet
+from bridge import InputError, bounded_template, decode_values, read_sheet, read_identity
 
 
 def minimal():
@@ -11,6 +14,26 @@ def minimal():
 
 
 class TemplateBoundaryTests(unittest.TestCase):
+    def test_identity_boxes_are_bounded_and_ocr_failure_keeps_manual_review(self):
+        import numpy as np
+        image = np.full((100, 100), 255, dtype=np.uint8)
+        region = {"kind": "student_name", "rect": {"x": .1, "y": .1, "width": .5, "height": .2}}
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            for invalid in [[region, region], [{**region, "rect": {**region["rect"], "width": 2}}], [None]]:
+                with self.assertRaises(InputError): read_identity(image, invalid, work)
+            with patch("bridge.subprocess.run", side_effect=FileNotFoundError):
+                result = read_identity(image, [region], work)[0]
+            self.assertTrue(result["uncertain"])
+            self.assertEqual(result["text"], "")
+            self.assertIn("unavailable", result["reason"])
+            tsv = "header\n" + "\t".join(["5", "1", "1", "1", "1", "1", "0", "0", "40", "10", "42", "Name: Learner"])
+            with patch("bridge.subprocess.run", return_value=subprocess.CompletedProcess([], 0, stdout=tsv)):
+                result = read_identity(image, [region], work)[0]
+            self.assertEqual(result["text"], "Learner")
+            self.assertTrue(result["uncertain"])
+            self.assertIn("low", result["reason"])
+
     def test_resource_paths_are_replaced_with_uploaded_resources(self):
         template=minimal()
         template["preProcessors"]=[{"name":"CropOnMarkers","options":{"relativePath":"../../private-file"}},{"name":"FeatureBasedAlignment","options":{"reference":"/private-file"}}]

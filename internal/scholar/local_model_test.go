@@ -65,6 +65,43 @@ func TestLocalModelGenerationAndDocumentContract(t *testing.T) {
 	}
 }
 
+func TestLocalModelTutor(t *testing.T) {
+	promptEvaluated := int64(128)
+	evaluated := int64(64)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/chat" {
+			t.Error("wrong path")
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"done":              true,
+			"done_reason":       "stop",
+			"prompt_eval_count": promptEvaluated,
+			"eval_count":        evaluated,
+			"message": map[string]string{
+				"content": "Here is an explanation of the problem...",
+			},
+		})
+	}))
+	defer server.Close()
+
+	m := LocalModel{Endpoint: server.URL, Model: "qwen3.5:9b-q4_K_M", Client: server.Client()}
+	q := questionExample("topic")
+	ans := academic.Answer{Selection: []string{"A"}}
+	out, err := m.Tutor(context.Background(), q, ans, []TutorMessage{{Role: "user", Text: "Can you help?"}})
+	if err != nil {
+		t.Fatalf("unexpected tutor error: %v", err)
+	}
+	if out.Provider != "local_ollama" || out.Model != "qwen3.5:9b-q4_K_M" {
+		t.Fatalf("unexpected provider or model: %+v", out)
+	}
+	if out.Text != "Here is an explanation of the problem..." {
+		t.Fatalf("unexpected tutor text: %q", out.Text)
+	}
+	if out.InputTokens == nil || *out.InputTokens != 128 || out.OutputTokens == nil || *out.OutputTokens != 64 {
+		t.Fatalf("unexpected token counts: %+v", out)
+	}
+}
+
 func TestLocalExtractionRejectsMissingSourceQuestion(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		content, _ := json.Marshal(map[string]any{"rows": []academic.ImportRow{{SourceNumber: 1, Question: questionExample("topic")}}})

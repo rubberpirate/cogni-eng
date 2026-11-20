@@ -209,8 +209,8 @@ func (s *Service) PublishDraft(ctx context.Context, tx pgx.Tx, actor, org, id st
 	if d.Version != version {
 		return d, Problem(409, "draft_changed", "Reload the latest draft before publishing.")
 	}
-	if len(d.Spec.Questions) == 0 || len(d.Spec.Learners) == 0 {
-		return d, Problem(400, "draft_incomplete", "Add questions and choose students before publishing.")
+	if len(d.Spec.Questions) == 0 {
+		return d, Problem(400, "draft_incomplete", "Add and review questions before publishing.")
 	}
 	ids := []string{}
 	seen := map[string]bool{}
@@ -265,8 +265,10 @@ func (s *Service) PublishDraft(ctx context.Context, tx pgx.Tx, actor, org, id st
 	if err = s.Publish(ctx, tx, actor, org, p.ID, p.Version); err != nil {
 		return d, err
 	}
-	if _, err = s.Assign(ctx, tx, actor, org, p.ID, d.Spec.Learners, d.Spec.StartsAt, d.Spec.StartsAt.Add(time.Duration(d.Spec.DurationMinutes)*time.Minute), 0); err != nil {
-		return d, err
+	if len(d.Spec.Learners) > 0 {
+		if _, err = s.Assign(ctx, tx, actor, org, p.ID, d.Spec.Learners, d.Spec.StartsAt, d.Spec.StartsAt.Add(time.Duration(d.Spec.DurationMinutes)*time.Minute), 0); err != nil {
+			return d, err
+		}
 	}
 	_, err = tx.Exec(ctx, "UPDATE assessment_draft SET state='published',paper_id=$3,version=version+1,updated_at=now() WHERE institution_id=$1 AND id=$2", org, id, p.ID)
 	if err != nil {

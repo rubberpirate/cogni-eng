@@ -73,7 +73,7 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	// Binary uploads have a bounded body and never expose an object-store URL.
-	if r.Method == "POST" && (kind == "imports" && (action == "upload" || action == "key-upload") || kind == "batches" && action == "upload" || kind == "assets" || kind == "grid-preview" || kind == "grid-model" || kind == "omrchecker-preview") {
+	if r.Method == "POST" && (kind == "imports" && (action == "upload" || action == "key-upload") || kind == "batches" && action == "upload" || kind == "assets" || kind == "grid-preview" || kind == "grid-model" || kind == "omrchecker-preview" || kind == "omr-templates" || kind == "omr-checks") {
 		if err = s.transaction(r, func(ctx context.Context, tx pgx.Tx) error { _, err := s.actor(ctx, tx, r, true); return err }); err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		if kind == "imports" {
 			limit = 50 << 20
 		}
-		if kind == "omrchecker-preview" {
+		if kind == "omrchecker-preview" || kind == "omr-templates" {
 			limit = 8 << 20
 		}
 		data, e := io.ReadAll(io.LimitReader(file, limit+1))
@@ -107,6 +107,15 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		}
 		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
 			switch kind {
+			case "omr-templates":
+				var definition scholar.OMRTemplateWrite
+				raw := r.FormValue("definition")
+				if len(raw) > 512<<10 || json.Unmarshal([]byte(raw), &definition) != nil {
+					return nil, fail(400, "invalid_omr_template", "Provide the generated visual template.")
+				}
+				return svc.SaveOMRTemplate(ctx, tx, a.ID, org, r.FormValue("paper_id"), definition, data)
+			case "omr-checks":
+				return svc.StageOMRCheck(ctx, tx, a.ID, org, r.FormValue("paper_id"), r.FormValue("template_id"), header.Filename, data)
 			case "omrchecker-preview":
 				additional := func(name string) ([]byte, error) {
 					f, _, e := r.FormFile(name)
@@ -164,6 +173,15 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "GET" {
 		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
 			switch kind {
+			case "omr-templates":
+				return svc.OMRTemplates(ctx, tx, a.ID, org, query.Get("paper"))
+			case "omr-checks":
+				if id != "" {
+					return svc.OMRCheck(ctx, tx, a.ID, org, id)
+				}
+				return svc.OMRChecks(ctx, tx, a.ID, org, query.Get("paper"), query.Get("before"))
+			case "omr-sheets":
+				return svc.OMRSheet(ctx, tx, a.ID, org, id)
 			case "drafts":
 				if id != "" {
 					return svc.Draft(ctx, tx, a.ID, org, id)
@@ -220,6 +238,17 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 	}
 	// Each operation uses a narrow request type and strict JSON decoding.
 	switch kind {
+	case "omr-sheets":
+		if action != "review" {
+			return fail(404, "academic_route_unavailable", "Choose a supported sheet action.")
+		}
+		var in scholar.OMRReview
+		if err = decode(w, r, &in); err != nil {
+			return err
+		}
+		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
+			return svc.ReviewOMRSheet(ctx, tx, a.ID, org, id, in)
+		})
 	case "drafts":
 		if action == "publish" {
 			var in struct {

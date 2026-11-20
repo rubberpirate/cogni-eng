@@ -22,7 +22,6 @@ import { type LearningView } from "./learning-navigation";
 import { QuestionEditor } from "./question-editor";
 import { AssessmentWorkspace, FacultyStudents } from "./assessment-workspace";
 import { TaskProgress } from "./task-progress";
-import { GridInspection } from "./grid-inspection";
 import { OMRCheckerReader } from "./omrchecker-reader";
 import { ImportChoiceRow, KeyImportPanel, MarkingRules } from "./import-review";
 import { FormField as Field } from "./form-field";
@@ -1413,45 +1412,16 @@ export function AcademicStudio({
             </>
           )}
           {tab === "scan" && (
-            <>
-              <OMRCheckerReader api={api} courses={courses} />
-              <details className="card">
-                <summary>Advanced pixel-reader tools</summary>
-                <GridInspection api={api} courses={courses} />
-              </details>
-              <Field name="Published assessment">
-                <select
-                  value={paper?.id ?? ""}
-                  onChange={(e) =>
-                    setPaper(
-                      papers.find((p) => p.id === e.target.value) ?? null,
-                    )
-                  }
-                >
-                  <option value="">Select paper</option>
-                  {(paper && !papers.some((p) => p.id === paper.id)
-                    ? [paper, ...papers]
-                    : papers
-                  )
-                    .filter((p) => p.state === "published")
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.reference} / {p.spec.title}
-                      </option>
-                    ))}
-                </select>
-              </Field>
-              {paper?.state === "published" && (
-                <ScanDesk
-                  key={paper.id}
-                  paper={paper}
-                  api={api}
-                  run={run}
-                  busy={busy}
-                  onSitting={setSitting}
-                />
-              )}
-            </>
+            <OMRCheckerReader
+              api={api}
+              papers={
+                paper && !papers.some((p) => p.id === paper.id)
+                  ? [paper, ...papers]
+                  : papers
+              }
+              paper={paper}
+              onPaper={setPaper}
+            />
           )}
           {tab === "jobs" && (
             <section className="card">

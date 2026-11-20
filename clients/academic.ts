@@ -1,6 +1,8 @@
 import type { components } from "./schema";
 export type A<N extends keyof components["schemas"]> = components["schemas"][N];
 type Lists = {
+  "omr-templates": A<"AcademicOMRSavedTemplate">;
+  "omr-checks": A<"AcademicOMRCheck">;
   drafts: A<"AcademicAssessmentDraft">;
   courses: A<"AcademicCourse">;
   topics: A<"AcademicTopic">;
@@ -14,6 +16,8 @@ type Lists = {
   jobs: A<"AcademicJob">;
 };
 type Details = {
+  "omr-sheets": A<"AcademicOMRCheckedSheet">;
+  "omr-checks": A<"AcademicOMRCheck">;
   drafts: A<"AcademicAssessmentDraft">;
   imports: A<"AcademicImport">;
   papers: A<"AcademicPaperRecord">;
@@ -50,6 +54,12 @@ export function educationClient(org: string, csrf: string) {
   }
   return {
     url: (path: string) => base + path,
+    saveOMRTemplate: (data: FormData) =>
+      request<A<"AcademicOMRSavedTemplate">>("omr-templates", data),
+    uploadOMRCheck: (data: FormData) =>
+      request<A<"AcademicOMRCheck">>("omr-checks", data),
+    reviewOMRSheet: (id: string, data: A<"AcademicOMRReview">) =>
+      request<A<"AcademicOMRCheckedSheet">>(`omr-sheets/${id}/review`, data),
     saveDraft: (body: A<"AcademicDraftWrite">, id?: string) =>
       request<A<"AcademicAssessmentDraft">>(
         "drafts" + (id ? "/" + id : ""),

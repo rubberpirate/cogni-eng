@@ -1,124 +1,121 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { execFileSync } from "node:child_process";
 import { signInStaff } from "./staff-sign-in";
 import { navigate } from "./navigation";
+import { originalOMRAssessment, savedOMRTemplate } from "./omr-fixtures";
 test.skip(
   process.env.RUN_OMRCHECKER_TESTS !== "1",
-  "Opt-in: actual installed OMRChecker checkout/runtime, no HTTP recognition fixture.",
+  "Actual installed native engine and local OCR required; no recognition fixture.",
 );
-const fixture = JSON.parse(
-  readFileSync(".local/academic-browser-access.json", "utf8"),
-);
-const samples = resolve("apps/web/public/samples/omrchecker");
-test("native OMRChecker template, real upload, overlay and answer download agree with the filled sample", async ({
+test("premade templates handle one image, a multipage PDF and a partially rejected batch", async ({
   page,
 }) => {
-  test.setTimeout(100000);
+  test.setTimeout(120000);
   await signInStaff(page);
+  const { paper, base } = await originalOMRAssessment(page);
+  const template = await savedOMRTemplate(page, paper, base);
+  await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Draft assessment", exact: true }),
-  ).toBeVisible();
+    page.getByRole("group", { name: "Workspace tools", exact: true }),
+  ).toBeEnabled();
   await navigate(page, "Upload OMR answer sheets");
   await page
-    .getByRole("button", { name: "Use existing files", exact: true })
-    .click();
+    .getByLabel("1. Assessment", { exact: true })
+    .selectOption(paper.id);
   await page
-    .getByLabel("OMRChecker student batch", { exact: true })
-    .selectOption(fixture.course);
-  await page
-    .getByLabel("OMRChecker sheet image", { exact: true })
-    .setInputFiles(resolve(samples, "filled-sheet.png"));
-  await page
-    .getByLabel("OMRChecker template JSON", { exact: true })
-    .setInputFiles(resolve(samples, "template.json"));
-  const response = page.waitForResponse(
-    (r) =>
-      r.url().endsWith("/omrchecker-preview") &&
-      r.request().method() === "POST",
-  );
-  await page
-    .getByRole("button", { name: "Read OMRChecker sheet", exact: true })
-    .click();
-  const result = await response;
-  expect(result.status()).toBe(200);
-  const native = await result.json();
-  expect(native.engine).toBe("OMRChecker");
-  expect(native.revision).toMatch(/^[a-f0-9]{40}$/);
-  expect(native.responses).toEqual(
-    JSON.parse(readFileSync(resolve(samples, "expected-answers.json"), "utf8"))
-      .responses,
-  );
+    .getByLabel("2. OMR template", { exact: true })
+    .selectOption(template.id);
   await expect(
-    page.getByRole("heading", { name: /26 fields read · 2 need review/ }),
+    page.getByLabel("Template sheet image", { exact: true }),
+  ).not.toBeVisible();
+  const image = readFileSync(
+    "apps/web/public/samples/omrchecker/filled-sheet.png",
+  );
+  await page.getByLabel("3. Answer sheets", { exact: true }).setInputFiles([
+    { name: "one-student.png", mimeType: "image/png", buffer: image },
+    {
+      name: "unreadable.png",
+      mimeType: "image/png",
+      buffer: Buffer.from("This is not an image."),
+    },
+  ]);
+  await page
+    .getByRole("button", { name: "Check answer sheets", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Retry failed uploads", exact: true }),
   ).toBeVisible();
-  const table = page.getByRole("table", { name: "Detected template fields" });
   await expect(
-    table.getByRole("row").filter({
-      has: page.getByRole("rowheader", { name: "q7", exact: true }),
-    }),
-  ).toContainText("Blank");
-  await expect(
-    table.getByRole("row").filter({
-      has: page.getByRole("rowheader", { name: "q12", exact: true }),
-    }),
-  ).toContainText("A + C");
-  const overlay = page.getByRole("img", {
-    name: "OMRChecker aligned sheet with detected bubbles marked",
-  });
+    page.getByRole("alert").filter({ hasText: "unreadable.png" }),
+  ).toContainText("Use PDF, PNG or JPEG");
+  let checks: any[] = [];
   await expect
-    .poll(() =>
-      overlay.evaluate(
-        (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
-      ),
+    .poll(
+      async () => {
+        checks = await (
+          await page.request.get(base + "omr-checks?paper=" + paper.id)
+        ).json();
+        return checks.length === 1 && checks[0].state === "completed";
+      },
+      { timeout: 45000 },
     )
     .toBe(true);
-  const download = page.waitForEvent("download");
-  await page
-    .getByRole("button", { name: "Download detected answers", exact: true })
-    .click();
-  const file = await download;
-  const report = JSON.parse(readFileSync((await file.path())!, "utf8"));
-  expect(report.responses).toEqual(native.responses);
-  expect(report).not.toHaveProperty("overlay");
-  const me = await (await page.request.get("/api/v1/me")).json();
-  const missingMarker = await page.request.post(
-    `/api/v1/institutions/${fixture.org}/education/omrchecker-preview`,
-    {
-      headers: { "X-CSRF-Token": me.csrf, Origin: "http://localhost:3000" },
-      multipart: {
-        course_id: fixture.course,
-        file: {
-          name: "sheet.png",
-          mimeType: "image/png",
-          buffer: readFileSync(resolve(samples, "filled-sheet.png")),
-        },
-        template: JSON.stringify({
-          ...JSON.parse(
-            readFileSync(resolve(samples, "template.json"), "utf8"),
-          ),
-          preProcessors: [
-            {
-              name: "CropOnMarkers",
-              options: { relativePath: "../../not-an-upload" },
-            },
-          ],
-        }),
-      },
-    },
+  expect(checks[0].sheets[0]).toMatchObject({
+    registration_number: "123456",
+    score: "76",
+    maximum: "80",
+    state: "needs_review",
+  });
+  const pdf = execFileSync(
+    "omr/.venv/bin/python",
+    [
+      "-c",
+      "from PIL import Image;import sys,io;im=Image.open(io.BytesIO(sys.stdin.buffer.read())).convert('RGB');b=io.BytesIO();im.save(b,format='PDF',resolution=144,save_all=True,append_images=[im]);sys.stdout.buffer.write(b.getvalue())",
+    ],
+    { input: image, maxBuffer: 8 << 20 },
   );
-  expect(missingMarker.status()).toBe(400);
-  expect((await missingMarker.json()).message).toContain("marker image");
   await page
-    .locator(".omrchecker-reader")
-    .screenshot({ path: ".local/screenshots/omrchecker-reader-desktop.png" });
-  await page.setViewportSize({ width: 390, height: 844 });
+    .getByLabel("3. Answer sheets", { exact: true })
+    .setInputFiles({
+      name: "two-students.pdf",
+      mimeType: "application/pdf",
+      buffer: pdf,
+    });
+  await page
+    .getByRole("button", { name: "Check answer sheets", exact: true })
+    .click();
+  await expect
+    .poll(
+      async () => {
+        checks = await (
+          await page.request.get(base + "omr-checks?paper=" + paper.id)
+        ).json();
+        return (
+          checks.length === 2 && checks.every((c) => c.state === "completed")
+        );
+      },
+      { timeout: 45000 },
+    )
+    .toBe(true);
+  const sheets = checks.flatMap((c) => c.sheets);
+  expect(sheets).toHaveLength(3);
   expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth > innerWidth,
-    ),
-  ).toBe(false);
+    sheets.every((s) => s.score === "76" && s.state === "needs_review"),
+  ).toBe(true);
+  await page.reload();
+  await expect(page.getByLabel("1. Assessment", { exact: true })).toHaveValue(
+    paper.id,
+  );
+  await expect(
+    page
+      .getByRole("region", {
+        name: "OMR grades by registration number",
+        exact: true,
+      })
+      .getByRole("row"),
+  ).toHaveCount(4);
   await page
-    .locator(".omrchecker-reader")
-    .screenshot({ path: ".local/screenshots/omrchecker-reader-mobile.png" });
+    .locator(".omr-saved-results")
+    .screenshot({ path: ".local/screenshots/omr-pdf-batch-results.png" });
 });

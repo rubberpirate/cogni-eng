@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { navigate } from "./navigation";
+import { registeredScanAPI } from "./registered-scan-api";
 const creds = readFileSync(
   process.env.E2E_ACCESS_FILE ?? ".local/browser-access.txt",
   "utf8",
@@ -17,7 +18,7 @@ async function signIn(page: import("@playwright/test").Page) {
   ).toBeVisible();
   await navigate(page, "Home");
 }
-test("sample kit downloads real matching PDF sheets and produces the documented score through the simplified scan flow", async ({
+test("sample kit downloads matching PDFs and its registered evidence remains compatible through the API", async ({
   page,
 }) => {
   test.setTimeout(80000);
@@ -58,61 +59,38 @@ test("sample kit downloads real matching PDF sheets and produces the documented 
   await page
     .getByRole("button", { name: "Go to Scan & check", exact: true })
     .click();
-  await expect(
-    page.getByRole("heading", {
-      name: "1. Get a matching answer sheet",
-      exact: true,
-    }),
-  ).toBeVisible();
   const selected = await page
-    .getByLabel("Published assessment", { exact: true })
+    .getByLabel("1. Assessment", { exact: true })
     .inputValue();
-  await page.reload();
-  await expect(
-    page.getByLabel("Published assessment", { exact: true }),
-  ).toHaveValue(selected);
-  await page.setViewportSize({ width: 390, height: 844 });
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-  await page
-    .getByLabel("Scanned PDF or page image", { exact: true })
-    .setInputFiles({
-      name: "omr-mixed.pdf",
-      mimeType: "application/pdf",
-      buffer: pdf,
-    });
-  await page
-    .getByRole("button", { name: "Upload and read sheet", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: "Page 1 · review", exact: true }),
-  ).toBeVisible({ timeout: 20000 });
-  await page
-    .getByLabel("I checked the sheet identity against the assigned learner", {
-      exact: true,
-    })
-    .check();
-  await page
-    .getByLabel("Review reason / correction explanation", { exact: true })
-    .fill(
-      "Compared original mixed sample against the documented answer sheet.",
-    );
-  await page
-    .getByRole("button", { name: "Commit reviewed evidence", exact: true })
-    .click();
-  await expect(page.getByText("5 / 12", { exact: true })).toBeVisible();
-  await page.screenshot({
-    path: ".local/screenshots/sample-result-mobile.png",
-    fullPage: true,
-  });
+  const base = `/api/v1/institutions/${fixture.org}/education/`;
+  const layouts = await (
+    await page.request.get(base + "layouts?paper=" + selected)
+  ).json();
+  const assignments = await (
+    await page.request.get(base + "assignments?paper=" + selected)
+  ).json();
+  const legacy = await registeredScanAPI(page, selected, layouts[0].id);
+  await legacy.upload("omr-mixed.pdf", "application/pdf", pdf);
+  const [sheet] = await legacy.sheets();
+  const corrections = Object.fromEntries(
+    Object.entries(sheet.machine.rows).map(([id, value]: [string, any]) => [
+      id,
+      value.answer,
+    ]),
+  );
+  const committed = await legacy.review(sheet, assignments[0].id, corrections);
+  const sitting = await (
+    await page.request.get(base + "sittings/" + committed.sitting_id)
+  ).json();
+  expect(sitting.result.score).toBe("5");
   await navigate(page, "Results & review");
   await page
     .getByLabel("Assessment to review", { exact: true })
     .selectOption(selected);
-  const resultRow = page.locator(".results-table tbody tr").first();
+  await page.getByText("Account-linked results", { exact: true }).click();
+  const resultRow = page
+    .locator(".account-linked-results .results-table tbody tr")
+    .first();
   await expect(resultRow).toContainText("5 / 12");
   await expect(resultRow.locator(".correct-question-list")).toHaveText(
     "1, 3, 5",
@@ -256,9 +234,10 @@ test("a teacher writes a numerical question through ordinary fields without edit
   await page
     .getByLabel("Question type", { exact: true })
     .selectOption("numerical");
-  await page
-    .getByLabel("Question wording", { exact: true })
-    .fill("Compute one tenth plus two tenths.");
+  const wording =
+    "Compute one tenth plus two tenths. Original test " +
+    crypto.randomUUID().slice(0, 8);
+  await page.getByLabel("Question wording", { exact: true }).fill(wording);
   await page.getByLabel("Accepted answer(s)", { exact: true }).fill("0.3");
   await page
     .getByLabel("Worked solution / marking guidance", { exact: true })
@@ -274,15 +253,14 @@ test("a teacher writes a numerical question through ordinary fields without edit
   const response = await saved;
   expect(response.status()).toBe(200);
   const result = await response.json();
+  expect(result.question.type).toBe("numerical");
   expect(result.question.numeric.values).toEqual(["0.3"]);
   await expect(
-    page
-      .locator("summary")
-      .filter({ hasText: "Compute one tenth plus two tenths." }),
+    page.locator("summary").filter({ hasText: wording }),
   ).toBeVisible();
 });
 
-test("an ambiguous sample cannot commit until the uncertain response is explicitly corrected", async ({
+test("registered evidence API refuses an ambiguous sample until its uncertain response is corrected", async ({
   page,
 }) => {
   test.setTimeout(60000);
@@ -316,127 +294,37 @@ test("an ambiguous sample cannot commit until the uncertain response is explicit
   await page
     .getByRole("button", { name: "Go to Scan & check", exact: true })
     .click();
-  await page
-    .getByLabel("Scanned PDF or page image", { exact: true })
-    .setInputFiles({
-      name: "omr-needs-review.png",
-      mimeType: "image/png",
-      buffer: image,
-    });
-  await page
-    .getByRole("button", { name: "Upload and read sheet", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: "Page 1 · review", exact: true }),
-  ).toBeVisible({ timeout: 20000 });
-  await page
-    .getByLabel("I checked the sheet identity against the assigned learner", {
-      exact: true,
-    })
-    .check();
-  await page
-    .getByLabel("Review reason / correction explanation", { exact: true })
-    .fill("Reviewing the intentionally ambiguous first response.");
-  await page
-    .getByRole("button", { name: "Commit reviewed evidence", exact: true })
-    .click();
-  await expect(
-    page
-      .getByRole("alert")
-      .filter({ hasText: "Explicitly review every uncertain" }),
-  ).toBeVisible();
-  await page.getByLabel("B. 12", { exact: true }).check();
-  await page
-    .getByRole("button", { name: "Commit reviewed evidence", exact: true })
-    .click();
-  await expect(page.getByText("12 / 12", { exact: true })).toBeVisible();
-});
-
-test("a failed model comparison keeps measured OMR responses available with explicit retry", async ({
-  page,
-  browser,
-}) => {
-  const source = await browser.newPage({
-    viewport: { width: 638, height: 1208 },
-  });
-  await source.setContent(
-    '<html><body style="margin:0;background:white"></body></html>',
+  const selected = await page
+    .getByLabel("1. Assessment", { exact: true })
+    .inputValue();
+  const base = `/api/v1/institutions/${fixture.org}/education/`;
+  const layouts = await (
+    await page.request.get(base + "layouts?paper=" + selected)
+  ).json();
+  const assignments = await (
+    await page.request.get(base + "assignments?paper=" + selected)
+  ).json();
+  const legacy = await registeredScanAPI(page, selected, layouts[0].id);
+  await legacy.upload("omr-needs-review.png", "image/png", image);
+  const [sheet] = await legacy.sheets();
+  await legacy.review(sheet, assignments[0].id, {}, 409);
+  const paper = await (
+    await page.request.get(base + "papers/" + selected)
+  ).json();
+  const corrections = Object.fromEntries(
+    Object.entries(sheet.machine.rows).map(([id, value]: [string, any]) => [
+      id,
+      value.answer,
+    ]),
   );
-  const blank = await source.screenshot();
-  await source.close();
-  await signIn(page);
-  await navigate(page, "Scan & check");
-  await page.getByText("Advanced pixel-reader tools", { exact: true }).click();
-  await page
-    .getByText("Pixel-reader diagnostics", {
-      exact: true,
-    })
-    .click();
-  await page
-    .getByLabel("OMR preview course", { exact: true })
-    .selectOption(fixture.course);
-  await page.getByLabel("Existing OMR image", { exact: true }).setInputFiles({
-    name: "original-blank-grid.png",
-    mimeType: "image/png",
-    buffer: blank,
-  });
-  const job = {
-    id: "omr-model-ui-fixture",
-    resource_id: "fixture",
-    campus_id: "fixture",
-    course_id: fixture.course,
-    actor_id: "fixture",
-    kind: "recognize_scan",
-    state: "queued",
-    input: { mode: "grid_model" },
-    output: {},
-    progress: 0,
-    error: "",
-    attempts: 0,
-    provider: "",
-    model: "",
-    created_at: new Date().toISOString(),
+  corrections[paper.spec.sections[0].questions[0].id] = {
+    ...sheet.machine.rows[paper.spec.sections[0].questions[0].id].answer,
+    selection: ["B"],
+    invalid: false,
   };
-  await page.route("**/education/grid-model", async (route) => {
-    expect(route.request().headers()["content-type"]).toContain(
-      "multipart/form-data",
-    );
-    await route.fulfill({ json: job });
-  });
-  await page.route("**/education/jobs/omr-model-ui-fixture", (route) =>
-    route.fulfill({
-      json: {
-        ...job,
-        state: "configuration_required",
-        error:
-          "The private vision runtime needs configuration. Saved source retained.",
-      },
-    }),
-  );
-  await page
-    .getByLabel("Also compare with a local mark model", {
-      exact: true,
-    })
-    .check();
-  await page
-    .getByRole("button", { name: "Read calibrated answers", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", {
-      name: "Vision comparison: The vision service needs setup",
-      exact: true,
-    }),
-  ).toBeVisible({ timeout: 10000 });
-  await expect(
-    page.getByRole("heading", {
-      name: "180 responses read · 180 need confirmation",
-      exact: true,
-    }),
-  ).toBeVisible();
-  await expect(
-    page.getByLabel("Detected answer 94", { exact: true }),
-  ).toHaveValue("blank");
-  await expect(
-    page.getByRole("button", { name: "Retry model comparison", exact: true }),
-  ).toBeVisible();
+  const committed = await legacy.review(sheet, assignments[0].id, corrections);
+  const sitting = await (
+    await page.request.get(base + "sittings/" + committed.sitting_id)
+  ).json();
+  expect(sitting.result.score).toBe("12");
 });

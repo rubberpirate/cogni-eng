@@ -4763,3 +4763,73 @@ button.dashboard-text-link {
     max-height: none;
   }
 }
+
+.omr-flow-notice {
+  padding: 14px 18px;
+  background: var(--soft);
+  border-radius: 14px;
+}
+.omr-template-creation > summary {
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.omr-result-source {
+  display: block;
+  font-weight: 400;
+  margin-top: 5px;
+  font-size: 12px;
+}
+.omr-saved-results > .field {
+  max-width: 440px;
+  margin: 16px 0;
+}
+.omr-upload-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  margin-top: 12px;
+  background: var(--glass);
+  border-radius: 14px;
+}
+.omr-upload-status p {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+.omr-sheet-review {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 24px;
+}
+.omr-sheet-review form {
+  display: grid;
+  gap: 14px;
+}
+.omr-sheet-review .field,
+.omr-sheet-review details {
+  margin: 12px 0;
+}
+.omr-sheet-review img {
+  display: block;
+  max-width: 100%;
+  border-radius: 16px;
+}
+.omr-sheet-review details {
+  max-height: 460px;
+  overflow: auto;
+}
+.omr-answer-review {
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.omr-answer-review.flagged {
+  background: var(--yellow);
+}
+.account-linked-results {
+  margin-top: 24px;
+}

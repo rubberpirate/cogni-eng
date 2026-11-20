@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivertype"
 	"learning.local/workspace/internal/access"
 )
 
@@ -55,6 +56,16 @@ func (s *Service) Job(ctx context.Context, tx pgx.Tx, actor, org, id string) (Jo
 	}
 	if err = Scope(ctx, tx, actor, org, j.Campus, j.Course, ""); err != nil {
 		return Job{}, err
+	}
+	if j.Kind == "recognize_scan" {
+		var input map[string]string
+		if err = json.Unmarshal(j.Input, &input); err != nil {
+			return Job{}, err
+		}
+		if input["mode"] == "saved_omr" {
+			_, err = s.Paper(ctx, tx, actor, org, input["paper_id"])
+			return j, err
+		}
 	}
 	if j.Kind == "recognize_scan" && j.Actor != actor {
 		var input map[string]string
@@ -160,7 +171,11 @@ func (s *Service) ControlJob(ctx context.Context, tx pgx.Tx, actor, org, id, act
 		_, err = tx.Exec(ctx, "UPDATE academic_job SET state='queued',error='',updated_at=now() WHERE id=$1", id)
 		if err == nil {
 			if j.RiverID != 0 {
-				_, err = s.Queue.JobRetryTx(ctx, tx, j.RiverID)
+				var retried *rivertype.JobRow
+				retried, err = s.Queue.JobRetryTx(ctx, tx, j.RiverID)
+				if err == nil && retried.State == rivertype.JobStateRunning {
+					return Problem(409, "job_still_stopping", "The previous attempt is still stopping. Retry again in a moment.")
+				}
 			} else {
 				err = s.enqueue(ctx, tx, id)
 			}
@@ -242,7 +257,7 @@ func (w *taskWorker) Work(ctx context.Context, job *river.Job[TaskArgs]) error {
 	if err != nil {
 		state := "failed"
 		var known *Error
-		if errors.As(err, &known) && known.Code == "provider_configuration_required" {
+		if errors.As(err, &known) && (known.Code == "provider_configuration_required" || known.Code == "omrchecker_configuration_required") {
 			state = "configuration_required"
 		}
 		saveCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)

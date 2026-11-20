@@ -416,9 +416,11 @@ function Sheet({
 export function OMRTemplateBuilder({
   file,
   onProfile,
+  onSave,
 }: {
   file: File | null;
   onProfile: (profile: OMRProfile | null) => void;
+  onSave?: (profile: OMRProfile) => Promise<void>;
 }) {
   const [source, setSource] = useState<File | null>(null),
     [url, setUrl] = useState("");
@@ -496,6 +498,7 @@ export function OMRTemplateBuilder({
     setError("");
   }
   function box(r: Rect) {
+    if (busy) return;
     if (pending) {
       setError("Save or discard the selected frame before drawing another.");
       return;
@@ -525,6 +528,7 @@ export function OMRTemplateBuilder({
     else setDraft(null);
   }
   function addPoint(p: Point) {
+    if (busy) return;
     if (!draft || draft.points.length >= draft.options * 2) return;
     const next = { ...draft, points: [...draft.points, p] };
     if (next.points.length === next.options * 2)
@@ -632,6 +636,7 @@ export function OMRTemplateBuilder({
         reference: { name, type: blob.type, data: await encoded(blob) },
       };
       // Keep generated native files tied to the same geometry and reference.
+      if (onSave) await onSave(next);
       applied.current = true;
       setProfile(next);
       onProfile(next);
@@ -927,7 +932,11 @@ export function OMRTemplateBuilder({
               disabled={busy || !layout.blocks.length || !layout.name.trim()}
               onClick={() => void create()}
             >
-              {busy ? "Creating layout…" : "Use this layout"}
+              {busy
+                ? "Saving template…"
+                : onSave
+                  ? "Save template"
+                  : "Use this layout"}
             </button>
           </>
         )}
@@ -940,167 +949,177 @@ export function OMRTemplateBuilder({
     </div>
   );
   return (
-    <section className="omr-designer" aria-label="Guided OMR layout setup">
-      <div className="section-heading">
-        <div>
-          <h3>{profile ? "Your layout is ready" : "Visual OMR template"}</h3>
-          <p className="muted">
-            Draw a frame. Label it. Repeat for each field.
-          </p>
-        </div>
-        <div className="actions">
-          {source && !profile && (
-            <button
-              ref={expandButton}
-              type="button"
-              onClick={() => setExpanded(true)}
-            >
-              Expand editor
-            </button>
-          )}
-          <label className="omr-load-calibration">
-            Load saved layout
-            <input
-              type="file"
-              accept="application/json,.json"
-              aria-label="Load saved OMR layout"
-              disabled={busy}
-              onChange={async (e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                try {
-                  if (f.size > 12_000_000)
-                    throw Error("Saved layout is too large.");
-                  const next = loadProfile(await f.text());
-                  setLayout(next.layout);
-                  setSource(referenceFile(next));
-                  resetFrame();
-                  applied.current = true;
-                  setProfile(next);
-                  onProfile(next);
-                  setError("");
-                } catch (err) {
-                  setError(
-                    err instanceof Error
-                      ? err.message
-                      : "Could not load this layout.",
-                  );
-                }
-                e.target.value = "";
-              }}
-            />
-          </label>
-        </div>
-      </div>
-      {profile ? (
-        <div className="omr-layout-ready">
-          <strong>
-            {layout.name} · {total} questions · {layout.blocks.length} answer
-            blocks
-          </strong>
-          <p>
-            Template, reference and tuning are ready. No marker upload is
-            needed.
-          </p>
-          <div className="actions">
-            <button
-              ref={expandButton}
-              type="button"
-              onClick={() =>
-                download(
-                  `${layout.name.replace(/[^a-z0-9]+/gi, "-")}.omr.json`,
-                  JSON.stringify(profile),
-                )
-              }
-            >
-              Save reusable layout
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                invalidate();
-                resetFrame();
-              }}
-            >
-              Edit layout
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                invalidate();
-                setSource(file);
-                setLayout(empty());
-                resetFrame();
-              }}
-            >
-              Start a new layout
-            </button>
+    <section
+      className="omr-designer"
+      aria-label="Guided OMR layout setup"
+      aria-busy={busy}
+    >
+      <fieldset disabled={busy} className="omrchecker-inputs">
+        <div className="section-heading">
+          <div>
+            <h3>{profile ? "Your layout is ready" : "Visual OMR template"}</h3>
+            <p className="muted">
+              Draw a frame. Label it. Repeat for each field.
+            </p>
           </div>
-          <details>
-            <summary>Generated OMRChecker files</summary>
+          <div className="actions">
+            {source && !profile && (
+              <button
+                ref={expandButton}
+                type="button"
+                onClick={() => setExpanded(true)}
+              >
+                Expand editor
+              </button>
+            )}
+            <label className="omr-load-calibration">
+              Load saved layout
+              <input
+                type="file"
+                accept="application/json,.json"
+                aria-label="Load saved OMR layout"
+                disabled={busy}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  setBusy(true);
+                  try {
+                    if (f.size > 12_000_000)
+                      throw Error("Saved layout is too large.");
+                    const next = loadProfile(await f.text());
+                    if (onSave) await onSave(next);
+                    setLayout(next.layout);
+                    setSource(referenceFile(next));
+                    resetFrame();
+                    applied.current = true;
+                    setProfile(next);
+                    onProfile(next);
+                    setError("");
+                  } catch (err) {
+                    setError(
+                      err instanceof Error
+                        ? err.message
+                        : "Could not load this layout.",
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+        </div>
+        {profile ? (
+          <div className="omr-layout-ready">
+            <strong>
+              {layout.name} · {total} questions · {layout.blocks.length} answer
+              blocks
+            </strong>
+            <p>
+              Template, reference and tuning are ready. No marker upload is
+              needed.
+            </p>
             <div className="actions">
               <button
+                ref={expandButton}
                 type="button"
                 onClick={() =>
                   download(
-                    "template.json",
-                    JSON.stringify(profile.template, null, 2),
+                    `${layout.name.replace(/[^a-z0-9]+/gi, "-")}.omr.json`,
+                    JSON.stringify(profile),
                   )
                 }
               >
-                Download template
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  download(
-                    "config.json",
-                    JSON.stringify(profile.config, null, 2),
-                  )
-                }
-              >
-                Download tuning
+                Save reusable layout
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  const f = referenceFile(profile);
-                  download(f.name, f, f.type);
+                  invalidate();
+                  resetFrame();
                 }}
               >
-                Download reference image
+                Edit layout
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  invalidate();
+                  setSource(file);
+                  setLayout(empty());
+                  resetFrame();
+                }}
+              >
+                Start a new layout
               </button>
             </div>
-          </details>
-        </div>
-      ) : !source ? (
-        <p>Upload a sheet image above, or load a saved layout.</p>
-      ) : !expanded ? (
-        editor
-      ) : null}
-      <dialog
-        ref={dialog}
-        className="omr-editor-dialog"
-        onCancel={() => setExpanded(false)}
-        onClose={() => setExpanded(false)}
-      >
-        {expanded && !profile && (
-          <>
-            <div className="omr-dialog-heading">
-              <h3>Visual OMR template</h3>
-              <button type="button" onClick={() => setExpanded(false)}>
-                Close expanded editor
-              </button>
-            </div>
-            {editor}
-          </>
+            <details>
+              <summary>Generated OMRChecker files</summary>
+              <div className="actions">
+                <button
+                  type="button"
+                  onClick={() =>
+                    download(
+                      "template.json",
+                      JSON.stringify(profile.template, null, 2),
+                    )
+                  }
+                >
+                  Download template
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    download(
+                      "config.json",
+                      JSON.stringify(profile.config, null, 2),
+                    )
+                  }
+                >
+                  Download tuning
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const f = referenceFile(profile);
+                    download(f.name, f, f.type);
+                  }}
+                >
+                  Download reference image
+                </button>
+              </div>
+            </details>
+          </div>
+        ) : !source ? (
+          <p>Upload a sheet image above, or load a saved layout.</p>
+        ) : !expanded ? (
+          editor
+        ) : null}
+        <dialog
+          ref={dialog}
+          className="omr-editor-dialog"
+          onCancel={() => setExpanded(false)}
+          onClose={() => setExpanded(false)}
+        >
+          {expanded && !profile && (
+            <>
+              <div className="omr-dialog-heading">
+                <h3>Visual OMR template</h3>
+                <button type="button" onClick={() => setExpanded(false)}>
+                  Close expanded editor
+                </button>
+              </div>
+              {editor}
+            </>
+          )}
+        </dialog>
+        {profile && error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
         )}
-      </dialog>
-      {profile && error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
+      </fieldset>
     </section>
   );
 }

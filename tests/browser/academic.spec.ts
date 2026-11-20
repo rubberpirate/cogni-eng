@@ -1,5 +1,6 @@
 import { signInStaff } from "./staff-sign-in";
 import { navigate } from "./navigation";
+import { registeredScanAPI } from "./registered-scan-api";
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 const creds = readFileSync(
@@ -115,27 +116,22 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
   const scanTitle = "Scanned arithmetic " + Date.now();
   await compose(scanTitle);
   await navigate(page, "Scan & check");
-  await page
-    .getByRole("button", { name: "Create sheet layout", exact: true })
-    .click();
-  await expect(
-    page.getByLabel("Assigned learner", { exact: true }),
-  ).not.toHaveValue("");
-  const link = page.getByRole("link", {
-    name: "Open printable answer sheet",
-    exact: true,
-  });
-  await expect(link).toBeVisible();
-  const sheetURL = await link.getAttribute("href");
-  const layoutID = sheetURL!.match(/sheet-image\/([^?]+)/)![1];
   const base = `/api/v1/institutions/${fixture.org}/education/`;
   const paperID = await page
-    .getByLabel("Published assessment", { exact: true })
+    .getByLabel("1. Assessment", { exact: true })
     .inputValue();
-  const layouts = await (
-    await page.request.get(base + "layouts?paper=" + paperID)
+  const me = await (await page.request.get("/api/v1/me")).json();
+  const layoutResponse = await page.request.post(base + "layouts", {
+    headers: { "X-CSRF-Token": me.csrf, Origin: "http://localhost:3000" },
+    data: { paper_id: paperID, columns: 1 },
+  });
+  expect(layoutResponse.status()).toBe(200);
+  const layout = await layoutResponse.json();
+  const assignments = await (
+    await page.request.get(base + "assignments?paper=" + paperID)
   ).json();
-  const layout = layouts.find((l: { id: string }) => l.id === layoutID);
+  const sheetURL =
+    base + `sheet-image/${layout.id}?assignment=${assignments[0].id}`;
   const filled = await page.evaluate(
     async ({ url, center }) => {
       const response = await fetch(url);
@@ -153,41 +149,24 @@ test("teacher imports and approves a key, publishes and assigns papers; scans an
     },
     { url: sheetURL!, center: layout.spec.rows[0].centers[0] },
   );
-  await page
-    .getByLabel("Scanned PDF or page image", { exact: true })
-    .setInputFiles({
-      name: "filled-sheet.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(filled, "base64"),
-    });
-  await page
-    .getByRole("button", { name: "Upload and read sheet", exact: true })
-    .click();
-  await expect(async () => {
-    await page
-      .getByRole("button", { name: "Refresh scan review", exact: true })
-      .click();
-    await expect(
-      page.getByRole("heading", { name: "Page 1 · review", exact: true }),
-    ).toBeVisible();
-  }).toPass({ timeout: 20000 });
-  await page.screenshot({
-    path: ".local/screenshots/academic-scan-review.png",
-    fullPage: true,
-  });
-  await page
-    .getByLabel("I checked the sheet identity against the assigned learner", {
-      exact: true,
-    })
-    .check();
-  await page
-    .getByLabel("Review reason / correction explanation", { exact: true })
-    .fill("Verified original scan and learner identity.");
-  await page
-    .getByRole("button", { name: "Commit reviewed evidence", exact: true })
-    .click();
-  await expect(page.getByText("2 / 2", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Back to work", exact: true }).click();
+  const legacy = await registeredScanAPI(page, paperID, layout.id);
+  await legacy.upload(
+    "filled-sheet.png",
+    "image/png",
+    Buffer.from(filled, "base64"),
+  );
+  const [scan] = await legacy.sheets();
+  const corrections = Object.fromEntries(
+    Object.entries(scan.machine.rows).map(([id, row]: [string, any]) => [
+      id,
+      row.answer,
+    ]),
+  );
+  const committed = await legacy.review(scan, assignments[0].id, corrections);
+  const result = await (
+    await page.request.get(base + "sittings/" + committed.sitting_id)
+  ).json();
+  expect(result.result.score).toBe("2");
   await navigate(page, "Assessments");
   const onlineTitle = "Online arithmetic " + Date.now();
   await compose(onlineTitle);

@@ -4,6 +4,7 @@ import { type A, type EducationClient } from "../../../clients/academic";
 import { TaskProgress } from "./task-progress";
 import { FormField as Field } from "./form-field";
 import { WorkIcon } from "./workspace-art";
+import { OMRResults } from "./omrchecker-reader";
 import { type LearningView } from "./learning-navigation";
 type Paper = A<"AcademicPaperRecord">;
 type Job = A<"AcademicJob">;
@@ -986,6 +987,17 @@ export function ResultsFlow({
               ))}
           </select>
         </Field>
+      </div>
+      {papers.find((p) => p.id === paper) && (
+        <OMRResults
+          key={paper}
+          api={api}
+          paper={papers.find((p) => p.id === paper)!}
+          revision={refresh}
+        />
+      )}
+      <details className="account-linked-results">
+        <summary>Account-linked results</summary>
         <Field name="Search students">
           <input
             type="search"
@@ -994,144 +1006,152 @@ export function ResultsFlow({
             placeholder="Student name"
           />
         </Field>
-      </div>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      {!paper ? (
-        <p className="empty-message">
-          Choose an assessment to see who has submitted and what needs review.
-        </p>
-      ) : (
-        <>
-          <div className="results-summary" role="status">
-            <span>
-              <strong>{rows.length}</strong> students
-            </span>
-            <span>
-              <strong>{graded}</strong> graded
-            </span>
-            <span>
-              <strong>{rows.filter((r) => !r.sitting_id).length}</strong> not
-              started
-            </span>
-            {loading && <span>Loading results…</span>}
-          </div>
-          {!loading && rows.length === 0 && !error ? (
-            <p className="empty-message">
-              No learners assigned to this assessment yet. Assign it from
-              Assessments.
-            </p>
-          ) : (
-            <div
-              className="results-table-wrap"
-              role="region"
-              aria-label="Student marks and question breakdown"
-              tabIndex={0}
-            >
-              <table className="results-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Student</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" className="numeric">
-                      Marks
-                    </th>
-                    <th scope="col" className="numeric">
-                      Correct / wrong
-                    </th>
-                    <th scope="col">Correct questions</th>
-                    <th scope="col">Review</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((r) => {
-                    const sitting = sittings[r.sitting_id];
-                    const result = sitting?.result;
-                    const order =
-                      sitting?.paper.spec.sections
-                        .flatMap((s) => s.questions)
-                        .map((q) => q.id) ?? [];
-                    const correct =
-                      result?.items
-                        .filter((i) => i.status === "correct")
-                        .map((i) => order.indexOf(i.question_id) + 1)
-                        .filter((n) => n > 0)
-                        .sort((a, b) => a - b) ?? [];
-                    return (
-                      <tr key={r.id}>
-                        <th scope="row">
-                          <span className="student-avatar" aria-hidden="true">
-                            {r.learner.trim().slice(0, 1)}
-                          </span>
-                          {r.learner}
-                        </th>
-                        <td>
-                          <span className="state-pill">
-                            {r.state.replaceAll("_", " ")}
-                          </span>
-                        </td>
-                        <td className="numeric">
-                          {result ? (
-                            <>
-                              <strong>{result.score}</strong>
-                              <span className="muted"> / {result.maximum}</span>
-                              {result.pending > 0 && (
-                                <small>
-                                  Provisional · {result.pending} awaiting review
-                                </small>
-                              )}
-                            </>
-                          ) : unavailable.includes(r.sitting_id) ? (
-                            "Unavailable"
-                          ) : r.sitting_id && loading ? (
-                            "Loading…"
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td className="numeric">
-                          {result ? `${result.correct} / ${result.wrong}` : "—"}
-                        </td>
-                        <td className="correct-question-list">
-                          {result
-                            ? correct.length
-                              ? correct.join(", ")
-                              : "None"
-                            : "—"}
-                        </td>
-                        <td>
-                          {sitting ? (
-                            <button onClick={() => onSitting(sitting)}>
-                              {r.state === "awaiting_review"
-                                ? "Mark written answers"
-                                : "Open result & answers"}
-                            </button>
-                          ) : r.sitting_id ? (
-                            <button
-                              onClick={() => setRefresh((n) => n + 1)}
-                              disabled={loading}
-                            >
-                              Retry result
-                            </button>
-                          ) : (
-                            <span className="muted">Not started</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {!loading && filtered.length === 0 && rows.length > 0 && (
-                <p className="empty-message">No students match your search.</p>
-              )}
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        {!paper ? (
+          <p className="empty-message">
+            Choose an assessment to see who has submitted and what needs review.
+          </p>
+        ) : (
+          <>
+            <div className="results-summary" role="status">
+              <span>
+                <strong>{rows.length}</strong> students
+              </span>
+              <span>
+                <strong>{graded}</strong> graded
+              </span>
+              <span>
+                <strong>{rows.filter((r) => !r.sitting_id).length}</strong> not
+                started
+              </span>
+              {loading && <span>Loading results…</span>}
             </div>
-          )}
-        </>
-      )}
+            {!loading && rows.length === 0 && !error ? (
+              <p className="empty-message">
+                No learners assigned to this assessment yet. Assign it from
+                Assessments.
+              </p>
+            ) : (
+              <div
+                className="results-table-wrap"
+                role="region"
+                aria-label="Student marks and question breakdown"
+                tabIndex={0}
+              >
+                <table className="results-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Student</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" className="numeric">
+                        Marks
+                      </th>
+                      <th scope="col" className="numeric">
+                        Correct / wrong
+                      </th>
+                      <th scope="col">Correct questions</th>
+                      <th scope="col">Review</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((r) => {
+                      const sitting = sittings[r.sitting_id];
+                      const result = sitting?.result;
+                      const order =
+                        sitting?.paper.spec.sections
+                          .flatMap((s) => s.questions)
+                          .map((q) => q.id) ?? [];
+                      const correct =
+                        result?.items
+                          .filter((i) => i.status === "correct")
+                          .map((i) => order.indexOf(i.question_id) + 1)
+                          .filter((n) => n > 0)
+                          .sort((a, b) => a - b) ?? [];
+                      return (
+                        <tr key={r.id}>
+                          <th scope="row">
+                            <span className="student-avatar" aria-hidden="true">
+                              {r.learner.trim().slice(0, 1)}
+                            </span>
+                            {r.learner}
+                          </th>
+                          <td>
+                            <span className="state-pill">
+                              {r.state.replaceAll("_", " ")}
+                            </span>
+                          </td>
+                          <td className="numeric">
+                            {result ? (
+                              <>
+                                <strong>{result.score}</strong>
+                                <span className="muted">
+                                  {" "}
+                                  / {result.maximum}
+                                </span>
+                                {result.pending > 0 && (
+                                  <small>
+                                    Provisional · {result.pending} awaiting
+                                    review
+                                  </small>
+                                )}
+                              </>
+                            ) : unavailable.includes(r.sitting_id) ? (
+                              "Unavailable"
+                            ) : r.sitting_id && loading ? (
+                              "Loading…"
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td className="numeric">
+                            {result
+                              ? `${result.correct} / ${result.wrong}`
+                              : "—"}
+                          </td>
+                          <td className="correct-question-list">
+                            {result
+                              ? correct.length
+                                ? correct.join(", ")
+                                : "None"
+                              : "—"}
+                          </td>
+                          <td>
+                            {sitting ? (
+                              <button onClick={() => onSitting(sitting)}>
+                                {r.state === "awaiting_review"
+                                  ? "Mark written answers"
+                                  : "Open result & answers"}
+                              </button>
+                            ) : r.sitting_id ? (
+                              <button
+                                onClick={() => setRefresh((n) => n + 1)}
+                                disabled={loading}
+                              >
+                                Retry result
+                              </button>
+                            ) : (
+                              <span className="muted">Not started</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {!loading && filtered.length === 0 && rows.length > 0 && (
+                  <p className="empty-message">
+                    No students match your search.
+                  </p>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </details>
     </section>
   );
 }

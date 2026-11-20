@@ -2,6 +2,7 @@ import { signInStaff } from "./staff-sign-in";
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { navigate } from "./navigation";
+import { originalOMRAssessment } from "./omr-fixtures";
 const creds = readFileSync(
   process.env.E2E_ACCESS_FILE ?? ".local/browser-access.txt",
   "utf8",
@@ -185,86 +186,39 @@ test("empty extraction gives recovery rather than a ready success state", async 
   });
 });
 
-test("batch OMR accepts separate files and retains matched identities for review", async ({
+test("the scanner has one ordered upload flow and a template editor at the bottom", async ({
   page,
 }) => {
-  test.setTimeout(60000);
-  await signIn(page);
-  await navigate(page, "Try sample files");
-  await page
-    .getByLabel("Sample course", { exact: true })
-    .selectOption(fixture.course);
-  await page
-    .getByLabel("Test learner", { exact: true })
-    .selectOption(fixture.learner);
-  await page
-    .getByRole("button", { name: "Create a sample practice test", exact: true })
-    .click();
-  const link = page.getByRole("link", {
-    name: "Download complete test kit (.zip)",
-    exact: true,
-  });
-  await expect(link).toBeVisible();
-  const response = await page.request.get((await link.getAttribute("href"))!);
-  expect(response.ok()).toBe(true);
-  const { execFileSync } = await import("node:child_process");
-  const archive = await response.body();
-  const image = (name: string) =>
-    execFileSync(
-      "python3",
-      [
-        "-c",
-        "import sys,zipfile,io;sys.stdout.buffer.write(zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())).read(sys.argv[1]))",
-        name,
-      ],
-      { input: archive, maxBuffer: 8 << 20 },
-    );
-  await page
-    .getByRole("button", { name: "Go to Scan & check", exact: true })
-    .click();
-  await page.getByLabel("Batch upload", { exact: true }).check();
+  await signInStaff(page);
+  const { paper } = await originalOMRAssessment(page);
+  await page.reload();
   await expect(
-    page.getByLabel("Scanned PDF or page image", { exact: true }),
-  ).toHaveAttribute("multiple", "");
+    page.getByRole("group", { name: "Workspace tools", exact: true }),
+  ).toBeEnabled();
+  await navigate(page, "Upload OMR answer sheets");
   await page
-    .getByLabel("Scanned PDF or page image", { exact: true })
-    .setInputFiles([
-      {
-        name: "correct.png",
-        mimeType: "image/png",
-        buffer: image("omr-correct.png"),
-      },
-      {
-        name: "review.png",
-        mimeType: "image/png",
-        buffer: image("omr-needs-review.png"),
-      },
-      {
-        name: "correct-again.png",
-        mimeType: "image/png",
-        buffer: image("omr-correct.png"),
-      },
-    ]);
-  await page
-    .getByRole("button", { name: "Upload and read batch", exact: true })
-    .click();
-  await expect(page.locator(".batch-status > div")).toHaveCount(2);
-  await expect(page.locator(".scan-review")).toHaveCount(2, { timeout: 25000 });
-  const learner = await page
-    .getByLabel("Assigned learner", { exact: true })
-    .inputValue();
-  expect(learner).not.toBe("");
-  for (const select of await page
-    .getByLabel("Confirmed assigned learner", { exact: true })
-    .all())
-    await expect(select).toHaveValue(learner);
+    .getByLabel("1. Assessment", { exact: true })
+    .selectOption(paper.id);
   await expect(
-    page.getByText("Multiple circles in a single-selection question.", {
-      exact: false,
-    }),
+    page.getByLabel("2. OMR template", { exact: true }),
   ).toBeVisible();
-  await page.screenshot({
-    path: ".local/screenshots/desk-batch-review.png",
-    fullPage: true,
-  });
+  await expect(
+    page.getByLabel("3. Answer sheets", { exact: true }),
+  ).toHaveAttribute("multiple", "");
+  await expect(
+    page.getByRole("button", { name: "Use existing files", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Advanced pixel-reader tools", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Template sheet image", { exact: true }),
+  ).not.toBeVisible();
+  await page.getByText("Create an OMR template", { exact: true }).click();
+  await expect(
+    page.getByLabel("Template sheet image", { exact: true }),
+  ).toBeVisible();
+  const scanner = (await page.locator(".omrchecker-reader").boundingBox())!,
+    create = (await page.locator(".omr-template-creation").boundingBox())!;
+  expect(create.y).toBeGreaterThan(scanner.y + scanner.height);
 });

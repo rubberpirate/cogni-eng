@@ -115,6 +115,22 @@ func (s *Service) Asset(ctx context.Context, tx pgx.Tx, actor, org, id string) (
 				}
 			}
 		} else {
+			native, e := rows[struct{ ID string }](ctx, tx, `SELECT c.paper_id FROM omr_check c WHERE c.institution_id=$1 AND c.source_asset_id=$2 UNION SELECT sh.paper_id FROM omr_checked_sheet sh WHERE sh.institution_id=$1 AND sh.asset_id=$2`, org, id)
+			if e != nil {
+				return Asset{}, e
+			}
+			for _, v := range native {
+				if _, e = s.Paper(ctx, tx, actor, org, v.ID); e == nil {
+					return a, nil
+				}
+			}
+			var templateReference bool
+			if e = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM omr_template WHERE institution_id=$1 AND reference_asset_id=$2 AND course_id=$3)", org, id, a.CourseID).Scan(&templateReference); e != nil {
+				return Asset{}, e
+			}
+			if templateReference {
+				return a, nil
+			}
 			papers, e := rows[subject](ctx, tx, `SELECT b.paper_id FROM scan_batch b JOIN scan_source src ON src.batch_id=b.id AND src.institution_id=b.institution_id WHERE b.institution_id=$1 AND src.asset_id=$2 UNION SELECT b.paper_id FROM scan_batch b JOIN scan_sheet sh ON sh.batch_id=b.id AND sh.institution_id=b.institution_id WHERE b.institution_id=$1 AND sh.asset_id=$2`, org, id)
 			if e != nil {
 				return Asset{}, e
@@ -509,6 +525,9 @@ func (s *Service) ReviewScan(ctx context.Context, tx pgx.Tx, actor, org, id, ass
 	return sitting.ID, err
 }
 func rasterPages(ctx context.Context, mime string, data []byte) ([][]byte, error) {
+	return rasterPagesLimit(ctx, mime, data, 50)
+}
+func rasterPagesLimit(ctx context.Context, mime string, data []byte, maximum int) ([][]byte, error) {
 	if mime != "application/pdf" {
 		return [][]byte{data}, nil
 	}
@@ -524,6 +543,9 @@ func rasterPages(ctx context.Context, mime string, data []byte) ([][]byte, error
 	pages, err := pdfPageCount(ctx, input)
 	if err != nil {
 		return nil, err
+	}
+	if pages > maximum {
+		return nil, fmt.Errorf("PDF must contain at most %d pages; split larger batches", maximum)
 	}
 	out := [][]byte{}
 	for page := 1; page <= pages; page++ {
@@ -546,6 +568,9 @@ func (s *Service) recognize(ctx context.Context, j Job) error {
 	}
 	if in["mode"] == "grid_model" {
 		return s.gridModel(ctx, j, in)
+	}
+	if in["mode"] == "saved_omr" {
+		return s.savedOMRJob(ctx, j, in)
 	}
 	var a Asset
 	var b Batch

@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import { signInStaff } from "./staff-sign-in";
 import { navigate } from "./navigation";
+import { originalOMRAssessment } from "./omr-fixtures";
 const fixture = JSON.parse(
   readFileSync(".local/academic-browser-access.json", "utf8"),
 );
@@ -25,7 +26,7 @@ async function draw(
   });
   await page.mouse.up();
 }
-test("draw then label frames on the whole CTET sheet without premature circles", async ({
+test("CTET frames stay fitted and a mismatched assessment cannot silently use the template", async ({
   page,
 }) => {
   test.skip(
@@ -39,15 +40,18 @@ test("draw then label frames on the whole CTET sheet without premature circles",
   await expect(
     page.getByRole("heading", { name: "Draft assessment", exact: true }),
   ).toBeVisible();
-  await navigate(page, "Upload OMR answer sheets");
+  const { paper } = await originalOMRAssessment(page);
+  await page.reload();
   await expect(
-    page.getByRole("group", { name: "OMR calibration canvas", exact: true }),
-  ).toHaveCount(0);
+    page.getByRole("group", { name: "Workspace tools", exact: true }),
+  ).toBeEnabled();
+  await navigate(page, "Upload OMR answer sheets");
   await page
-    .getByLabel("OMRChecker student batch", { exact: true })
-    .selectOption(fixture.course);
+    .getByLabel("1. Assessment", { exact: true })
+    .selectOption(paper.id);
+  await page.getByText("Create an OMR template", { exact: true }).click();
   await page
-    .getByLabel("OMRChecker sheet image", { exact: true })
+    .getByLabel("Template sheet image", { exact: true })
     .setInputFiles(sample);
   await page
     .getByRole("button", { name: "Expand editor", exact: true })
@@ -156,50 +160,27 @@ test("draw then label frames on the whole CTET sheet without premature circles",
     .locator(".omr-designer")
     .screenshot({ path: ".local/screenshots/omr-ctet-frame-mobile.png" });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page
-    .getByRole("button", { name: "Use this layout", exact: true })
-    .click();
-  await expect(
-    page.getByText(
-      "CTET 150-question layout · 150 questions · 5 answer blocks",
-      { exact: true },
-    ),
-  ).toBeVisible({ timeout: 30000 });
-  const download = page.waitForEvent("download");
-  await page
-    .getByRole("button", { name: "Save reusable layout", exact: true })
-    .click();
-  const saved = JSON.parse(
-    readFileSync((await (await download).path())!, "utf8"),
+  const save = page.waitForResponse(
+    (r) =>
+      r.url().endsWith("/omr-templates") && r.request().method() === "POST",
   );
-  expect(Object.keys(saved.template.fieldBlocks)).toHaveLength(150);
-  expect(saved.template.fieldBlocks.answer_1.bubbleValues).toEqual([
-    "1",
-    "2",
-    "3",
-    "4",
-  ]);
-  if (process.env.RUN_OMRCHECKER_TESTS === "1") {
-    const response = page.waitForResponse(
-      (r) =>
-        r.url().endsWith("/omrchecker-preview") &&
-        r.request().method() === "POST",
-    );
-    await page
-      .getByRole("button", { name: "Read OMRChecker sheet", exact: true })
-      .click();
-    const r = await response,
-      result = await r.json();
-    expect(r.status(), JSON.stringify(result.message ?? "")).toBe(200);
-    const expected = Object.fromEntries(
-      known.expected.map((v: number, i: number) => [
-        `q${i + 1}`,
-        v ? String(v) : "",
-      ]),
-    );
-    expect(result.responses).toEqual(expected);
-    await page
-      .locator(".omrchecker-reader")
-      .screenshot({ path: ".local/screenshots/omr-ctet-native-result.png" });
-  }
+  await page
+    .getByRole("button", { name: "Save template", exact: true })
+    .click();
+  const response = await save;
+  expect(response.status()).toBe(400);
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({
+        hasText: "template question count must match this assessment",
+      }),
+  ).toBeVisible();
+  await expect(page.getByLabel("OMR layout name", { exact: true })).toHaveValue(
+    "CTET 150-question layout",
+  );
+  await expect(surface(page).locator(".omr-block-frame")).toHaveCount(5);
+  await expect(
+    page.getByLabel("3. Answer sheets", { exact: true }),
+  ).toBeDisabled();
 });

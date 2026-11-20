@@ -1,7 +1,7 @@
 """Academic API schemas and operations, loaded by contract.py. Go tagged structs are the DTO source."""
 import re
 names={}
-for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/academic/grid.go','internal/academic/key.go','internal/scholar/draft.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go','internal/scholar/grid_model.go','internal/scholar/vision.go','internal/scholar/omrchecker.go']:
+for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/academic/grid.go','internal/academic/key.go','internal/scholar/draft.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go','internal/scholar/grid_model.go','internal/scholar/vision.go','internal/scholar/omrchecker.go','internal/scholar/omr_checks.go']:
  for name,body in re.findall(r'type (\w+) struct \{\n(.*?)\n\}',Path(source).read_text(),re.S):
   names[name]=body
 
@@ -101,3 +101,14 @@ route(base+'drafts','post','AcademicAssessmentDraft','AcademicDraftWrite')
 route(base+'drafts/{id}','post','AcademicAssessmentDraft','AcademicDraftWrite')
 schemas['AcademicDraftPublish']=obj({'version':I,'reviewed':B})
 route(base+'drafts/{id}/publish','post','AcademicAssessmentDraft','AcademicDraftPublish')
+
+for path,entity in [('omr-templates','OMRSavedTemplate'),('omr-checks','OMRCheck')]:
+ route(base+path,'get','Academic'+entity,listed=True)
+ paths['/api/v1'+base+path]['get']['parameters'].append({'name':'paper','in':'query','required':True,'schema':S})
+for path,entity in [('omr-checks','OMRCheck'),('omr-sheets','OMRCheckedSheet')]:route(base+path+'/{id}','get','Academic'+entity)
+route(base+'omr-sheets/{id}/review','post','AcademicOMRCheckedSheet','AcademicOMRReview')
+for path,entity,fields in [('omr-templates','OMRSavedTemplate',{'file':{'type':'string','format':'binary'},'paper_id':S,'definition':S}),('omr-checks','OMRCheck',{'file':{'type':'string','format':'binary'},'paper_id':S,'template_id':S})]:
+ route(base+path,'post','Academic'+entity)
+ paths['/api/v1'+base+path]['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj(fields)}}}
+
+paths['/api/v1'+base+'omr-checks']['get']['parameters'].append({'name':'before','in':'query','schema':S})

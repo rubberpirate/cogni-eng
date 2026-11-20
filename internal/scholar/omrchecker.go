@@ -7,7 +7,6 @@ import (
 	"errors"
 	"image"
 	"io"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -65,24 +64,8 @@ func runOMRChecker(ctx context.Context, data, marker, reference []byte, template
 	if err := ctx.Err(); err != nil {
 		return out, err
 	}
-	if len(identity) > 2 {
-		return out, Problem(400, "invalid_identity_regions", "Select at most one name and one roll-number field.")
-	}
-	seen := map[string]bool{}
-	for _, region := range identity {
-		r := region.Rect
-		if (region.Kind != "student_name" && region.Kind != "roll_number") || seen[region.Kind] {
-			return out, Problem(400, "invalid_identity_regions", "Use unique name and roll-number fields.")
-		}
-		for _, n := range []float64{r.X, r.Y, r.Width, r.Height} {
-			if math.IsNaN(n) || math.IsInf(n, 0) {
-				return out, Problem(400, "invalid_identity_regions", "Identity fields must be inside the sheet.")
-			}
-		}
-		if r.X < 0 || r.Y < 0 || r.Width <= 0 || r.Height <= 0 || r.X+r.Width > 1+1e-8 || r.Y+r.Height > 1+1e-8 {
-			return out, Problem(400, "invalid_identity_regions", "Identity fields must be inside the sheet.")
-		}
-		seen[region.Kind] = true
+	if err := validateOMRIdentity(identity); err != nil {
+		return out, err
 	}
 	if len(template) == 0 || len(template) > 256<<10 || !json.Valid(template) || len(config) > 64<<10 || len(config) > 0 && !json.Valid(config) {
 		return out, Problem(400, "invalid_omr_template", "Provide a template JSON of at most 256 KiB and optional tuning JSON of at most 64 KiB.")

@@ -505,6 +505,11 @@ export function AssessmentWorkspace({
                   <summary>
                     Students in this batch ({spec.learners.length} selected)
                   </summary>
+                  <p className="muted">
+                    Optional for online assignments. Paper answer sheets can be
+                    checked by registration number or name without student
+                    accounts.
+                  </p>
                   {roster.map((r) => (
                     <label className="check" key={r.id}>
                       <input
@@ -1499,11 +1504,17 @@ function DraftEditor({
                       saved.version,
                     );
                     setDraft(published);
-                    setNotice("Assessment published and assigned.");
+                    setNotice(
+                      spec.learners.length
+                        ? "Assessment published and assigned."
+                        : "Assessment published. Ready to check answer sheets.",
+                    );
                   })
                 }
               >
-                Publish & assign assessment
+                {spec.learners.length
+                  ? "Publish & assign assessment"
+                  : "Publish assessment"}
               </button>
             </div>
           )}

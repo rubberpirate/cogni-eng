@@ -1957,6 +1957,195 @@ details p {
 .calibration-point {
   padding: 12px 0;
 }
+.omr-calibrator {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.5);
+  min-width: 0;
+}
+.omr-calibrator h3 {
+  margin: 0;
+}
+.omr-grid-setup,
+.omr-canvas-controls,
+.omr-frame-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 16px 0;
+}
+.omr-grid-setup .field {
+  flex: 1 1 120px;
+}
+.omr-canvas-controls .field {
+  flex: 1 1 160px;
+}
+.omr-frame-fields .field {
+  flex: 1 1 110px;
+}
+.omr-frame-fields strong {
+  flex-basis: 100%;
+}
+.omr-draw-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.omr-draw-toolbar button,
+.omr-load-calibration {
+  font-size: 13px;
+  padding: 9px 12px;
+}
+.omr-load-calibration {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.omr-load-calibration input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.omr-load-calibration:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.omr-canvas-status {
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--soft);
+  font-size: 14px;
+}
+.omr-canvas-viewport {
+  max-height: 72vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #e8eef0;
+  overscroll-behavior: contain;
+}
+.omr-canvas-image {
+  position: relative;
+  min-width: 0;
+  margin: 0 auto;
+}
+.omr-canvas-image img {
+  width: 100%;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+.omr-canvas-image svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.omr-canvas-image svg:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+.omr-draw-tool {
+  cursor: crosshair;
+}
+.omr-select-tool {
+  cursor: default;
+}
+.omr-canvas-image rect,
+.omr-canvas-image ellipse {
+  vector-effect: non-scaling-stroke;
+}
+.omr-outside-area {
+  fill: rgba(31, 42, 55, 0.32);
+  pointer-events: none;
+}
+.omr-area-frame {
+  fill: transparent;
+  stroke: #3f6f83;
+  stroke-width: 2;
+  stroke-dasharray: 8 4;
+}
+.omr-block-frame {
+  fill: transparent;
+  stroke: #5b8894;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.omr-row-frame {
+  fill: rgba(211, 208, 238, 0.06);
+  stroke: rgba(87, 91, 130, 0.35);
+  stroke-width: 1;
+}
+.omr-custom-frame {
+  fill: rgba(191, 217, 214, 0.15);
+  stroke: #3f6f83;
+  stroke-width: 1.5;
+}
+.omr-select-tool [data-frame-kind]:hover {
+  stroke: #3f6f83;
+  stroke-width: 2;
+  cursor: move;
+}
+.omr-bubble {
+  fill: none;
+  stroke: #3f6f83;
+  stroke-width: 1;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.omr-bubble.omr-filled {
+  fill: rgba(100, 160, 125, 0.3);
+  stroke: var(--success);
+  opacity: 1;
+}
+.omr-bubble.omr-uncertain {
+  stroke: var(--warning);
+  stroke-dasharray: 2 2;
+  opacity: 1;
+}
+.omr-selected-frame > rect:first-child {
+  fill: rgba(191, 217, 214, 0.12);
+  stroke: #3f6f83;
+  stroke-width: 2;
+  pointer-events: none;
+}
+.omr-resize-handle {
+  fill: #f5f9fa;
+  stroke: #3f6f83;
+  stroke-width: 2;
+}
+.omr-handle-nw,
+.omr-handle-se {
+  cursor: nwse-resize;
+}
+.omr-handle-ne,
+.omr-handle-sw {
+  cursor: nesw-resize;
+}
+.omr-advanced {
+  margin: 16px 0;
+}
+@media (max-width: 600px) {
+  .omr-calibrator {
+    padding: 12px;
+  }
+  .omr-draw-toolbar button {
+    flex: 1 1 135px;
+  }
+  .omr-canvas-viewport {
+    max-height: 60vh;
+  }
+}
 .calibration-point .academic-columns {
   margin-top: 8px;
 }

@@ -696,10 +696,15 @@ func TestCalibratedGridPreviewRequiresActiveCourseStaffAndCreatesNoMarks(t *test
 		t.Fatal(err)
 	}
 	c := academic.GridCalibration{Options: 4, Radius: .008, Blocks: []academic.GridBlock{{First: 1, Count: 2, TopLeft: academic.Point{X: .2, Y: .2}, TopRight: academic.Point{X: .8, Y: .2}, BottomLeft: academic.Point{X: .2, Y: .8}, BottomRight: academic.Point{X: .8, Y: .8}}}}
+	c.Area = &academic.GridRect{X: .05, Y: .05, Width: .9, Height: .9}
+	c.Frames = []academic.GridFrame{{Number: 1, Rect: academic.GridRect{X: .192, Y: .24, Width: .616, Height: .02}}}
 	academicTx(t, h, func(tx pgx.Tx) error {
 		out, e := svc.GridPreview(ctx, tx, h.owner, h.org, course, data.Bytes(), c)
 		if e == nil && (len(out.Rows) != 2 || !out.Rows[0].Uncertain || len(out.Rows[0].Selection) != 0) {
 			t.Fatal("blank preview fabricated a response")
+		}
+		if e == nil && out.Rows[0].Centers[0].Y != .25 {
+			t.Fatal("question frame geometry was ignored")
 		}
 		return e
 	})

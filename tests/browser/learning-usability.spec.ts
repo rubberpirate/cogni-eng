@@ -367,7 +367,7 @@ test("a failed model comparison keeps measured OMR responses available with expl
   await signIn(page);
   await navigate(page, "Scan & check");
   await page
-    .getByText("Read an existing OMR format (calibrated preview)", {
+    .getByText("Visual OMR calibrator", {
       exact: true,
     })
     .click();

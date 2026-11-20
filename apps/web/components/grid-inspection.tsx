@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { A, EducationClient } from "../../../clients/academic";
+import { OMRCalibrator } from "./omr-calibrator";
 import { TaskProgress } from "./task-progress";
 import { FormField as Field } from "./form-field";
 type Calibration = A<"AcademicGridCalibration">;
@@ -42,7 +43,6 @@ export function GridInspection({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState("");
-  const [aspect, setAspect] = useState(1208 / 638);
   const [calibration, setCalibration] = useState(initialCalibration);
   const [target, setTarget] = useState<{
     block: number;
@@ -55,7 +55,10 @@ export function GridInspection({
   const [modelJob, setModelJob] = useState<A<"AcademicJob"> | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
-    if (!file) return;
+    if (!file) {
+      setUrl("");
+      return;
+    }
     const next = URL.createObjectURL(file);
     setUrl(next);
     return () => URL.revokeObjectURL(next);
@@ -100,13 +103,12 @@ export function GridInspection({
   }
   return (
     <details className="card grid-inspection">
-      <summary>Read an existing OMR format (calibrated preview)</summary>
+      <summary>Visual OMR calibrator</summary>
       <p>
         For sheets without our registration squares, align the bubble centers
         before reading. This preview reads answers only: it cannot identify a
-        learner or award marks. The starting calibration matches the
-        four-column, 180-response example supplied for testing. Other sheets
-        need their own calibration.
+        learner or award marks. Draw the answer area, align each column, and
+        adjust individual question frames before reading.
       </p>
       <form
         onSubmit={async (e) => {
@@ -189,212 +191,167 @@ export function GridInspection({
             />
           </Field>
         </div>
-        <div className="grid-calibration-columns">
-          <div>
-            {calibration.blocks.map((b, index) => (
-              <details key={index}>
-                <summary>
-                  Block {index + 1}: questions {b.first}–{b.first + b.count - 1}
-                </summary>
-                <div className="academic-columns">
-                  <Field name={`Block ${index + 1} first question`}>
-                    <input
-                      type="number"
-                      min={1}
-                      max={500}
-                      value={b.first}
-                      onChange={(e) =>
-                        change({
-                          ...calibration,
-                          blocks: calibration.blocks.map((old, i) =>
-                            i === index
-                              ? { ...old, first: Number(e.target.value) }
-                              : old,
-                          ),
-                        })
-                      }
-                    />
-                  </Field>
-                  <Field name={`Block ${index + 1} rows`}>
-                    <input
-                      type="number"
-                      min={2}
-                      max={200}
-                      value={b.count}
-                      onChange={(e) =>
-                        change({
-                          ...calibration,
-                          blocks: calibration.blocks.map((old, i) =>
-                            i === index
-                              ? { ...old, count: Number(e.target.value) }
-                              : old,
-                          ),
-                        })
-                      }
-                    />
-                  </Field>
-                </div>
-                {corners.map((corner, ci) => (
-                  <div className="calibration-point" key={corner}>
-                    <button
-                      type="button"
-                      aria-pressed={
-                        target?.block === index && target.corner === ci
-                      }
-                      onClick={() => setTarget({ block: index, corner: ci })}
-                    >
-                      Mark {cornerNames[ci]}
-                    </button>
-                    <div className="academic-columns">
-                      {(["x", "y"] as const).map((axis) => (
-                        <Field
-                          key={axis}
-                          name={`Block ${index + 1} ${corner} ${axis} percent`}
-                        >
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            step={0.001}
-                            value={Number((b[corner][axis] * 100).toFixed(3))}
-                            onChange={(e) =>
-                              change({
-                                ...calibration,
-                                blocks: calibration.blocks.map((old, i) =>
-                                  i === index
-                                    ? {
-                                        ...old,
-                                        [corner]: {
-                                          ...old[corner],
-                                          [axis]: Number(e.target.value) / 100,
-                                        },
-                                      }
-                                    : old,
-                                ),
-                              })
-                            }
-                          />
-                        </Field>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  disabled={calibration.blocks.length === 1}
-                  onClick={() =>
-                    change({
-                      ...calibration,
-                      blocks: calibration.blocks.filter((_, i) => i !== index),
-                    })
-                  }
-                >
-                  Remove block {index + 1}
-                </button>
-              </details>
-            ))}
-            <button
-              type="button"
-              disabled={calibration.blocks.length >= 8}
-              onClick={() =>
-                change({
-                  ...calibration,
-                  blocks: [
-                    ...calibration.blocks,
-                    {
-                      ...initialCalibration().blocks[0],
-                      first: Math.max(
-                        ...calibration.blocks.map((b) => b.first + b.count),
-                      ),
-                      count: 45,
-                    },
-                  ],
-                })
-              }
-            >
-              Add response block
-            </button>
-          </div>
-          {url && (
+        {url && (
+          <OMRCalibrator
+            key={url}
+            url={url}
+            calibration={calibration}
+            onChange={change}
+            reading={reading}
+            cornerTarget={
+              target
+                ? `Click the center of the ${cornerNames[target.corner]} in block ${target.block + 1}.`
+                : null
+            }
+            onCancelCorner={() => setTarget(null)}
+            onCorner={(p) => {
+              if (!target) return;
+              change({
+                ...calibration,
+                blocks: calibration.blocks.map((b, i) =>
+                  i === target.block
+                    ? { ...b, [corners[target.corner]]: p }
+                    : b,
+                ),
+              });
+              setTarget(null);
+            }}
+          />
+        )}
+        <details className="omr-advanced">
+          <summary>Advanced grid coordinates</summary>
+          <div className="grid-calibration-columns">
             <div>
-              <p role="status">
-                {target
-                  ? `Click the center of the ${cornerNames[target.corner]} in block ${target.block + 1}. Coordinates can also be entered in the fields.`
-                  : "Open a block to adjust its four corners. Review the overlay after reading."}
-              </p>
-              <div
-                className="grid-source"
-                onClick={(e) => {
-                  if (!target) return;
-                  const box = e.currentTarget.getBoundingClientRect();
-                  const p = {
-                    x: (e.clientX - box.left) / box.width,
-                    y: (e.clientY - box.top) / box.height,
-                  };
+              {calibration.blocks.map((b, index) => (
+                <details key={index}>
+                  <summary>
+                    Block {index + 1}: questions {b.first}–
+                    {b.first + b.count - 1}
+                  </summary>
+                  <div className="academic-columns">
+                    <Field name={`Block ${index + 1} first question`}>
+                      <input
+                        type="number"
+                        min={1}
+                        max={500}
+                        value={b.first}
+                        onChange={(e) =>
+                          change({
+                            ...calibration,
+                            blocks: calibration.blocks.map((old, i) =>
+                              i === index
+                                ? { ...old, first: Number(e.target.value) }
+                                : old,
+                            ),
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field name={`Block ${index + 1} rows`}>
+                      <input
+                        type="number"
+                        min={1}
+                        max={200}
+                        value={b.count}
+                        onChange={(e) =>
+                          change({
+                            ...calibration,
+                            blocks: calibration.blocks.map((old, i) =>
+                              i === index
+                                ? { ...old, count: Number(e.target.value) }
+                                : old,
+                            ),
+                          })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  {corners.map((corner, ci) => (
+                    <div className="calibration-point" key={corner}>
+                      <button
+                        type="button"
+                        aria-pressed={
+                          target?.block === index && target.corner === ci
+                        }
+                        onClick={() => setTarget({ block: index, corner: ci })}
+                      >
+                        Mark {cornerNames[ci]}
+                      </button>
+                      <div className="academic-columns">
+                        {(["x", "y"] as const).map((axis) => (
+                          <Field
+                            key={axis}
+                            name={`Block ${index + 1} ${corner} ${axis} percent`}
+                          >
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={0.001}
+                              value={Number((b[corner][axis] * 100).toFixed(3))}
+                              onChange={(e) =>
+                                change({
+                                  ...calibration,
+                                  blocks: calibration.blocks.map((old, i) =>
+                                    i === index
+                                      ? {
+                                          ...old,
+                                          [corner]: {
+                                            ...old[corner],
+                                            [axis]:
+                                              Number(e.target.value) / 100,
+                                          },
+                                        }
+                                      : old,
+                                  ),
+                                })
+                              }
+                            />
+                          </Field>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    disabled={calibration.blocks.length === 1}
+                    onClick={() =>
+                      change({
+                        ...calibration,
+                        blocks: calibration.blocks.filter(
+                          (_, i) => i !== index,
+                        ),
+                      })
+                    }
+                  >
+                    Remove block {index + 1}
+                  </button>
+                </details>
+              ))}
+              <button
+                type="button"
+                disabled={calibration.blocks.length >= 8}
+                onClick={() =>
                   change({
                     ...calibration,
-                    blocks: calibration.blocks.map((b, i) =>
-                      i === target.block
-                        ? { ...b, [corners[target.corner]]: p }
-                        : b,
-                    ),
-                  });
-                  setTarget(null);
-                }}
+                    blocks: [
+                      ...calibration.blocks,
+                      {
+                        ...initialCalibration().blocks[0],
+                        first: Math.max(
+                          ...calibration.blocks.map((b) => b.first + b.count),
+                        ),
+                        count: 45,
+                      },
+                    ],
+                  })
+                }
               >
-                {/* Private local preview; no upload or public URL is created until the authorized read request. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt="Uploaded OMR source for calibration and response verification"
-                  onLoad={(e) =>
-                    setAspect(
-                      e.currentTarget.naturalHeight /
-                        e.currentTarget.naturalWidth,
-                    )
-                  }
-                />
-                <svg
-                  viewBox="0 0 1 1"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  {reading
-                    ? reading.rows.flatMap((r) =>
-                        r.centers.map((p, i) => (
-                          <ellipse
-                            key={`${r.number}-${i}`}
-                            cx={p.x}
-                            cy={p.y}
-                            rx={calibration.radius}
-                            ry={calibration.radius / aspect}
-                            className={
-                              r.selection.includes(i + 1)
-                                ? "detected-fill"
-                                : r.uncertain
-                                  ? "uncertain-fill"
-                                  : "empty-fill"
-                            }
-                          />
-                        )),
-                      )
-                    : calibration.blocks.flatMap((b, i) =>
-                        corners.map((corner) => (
-                          <ellipse
-                            key={`${i}-${corner}`}
-                            cx={b[corner].x}
-                            cy={b[corner].y}
-                            rx={calibration.radius}
-                            ry={calibration.radius / aspect}
-                            className="uncertain-fill"
-                          />
-                        )),
-                      )}
-                </svg>
-              </div>
+                Add response block
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        </details>
         <label className="check">
           <input
             type="checkbox"

@@ -2046,6 +2046,18 @@ export interface components {
             options: number;
             radius: number;
             blocks: components["schemas"]["AcademicGridBlock"][];
+            area?: components["schemas"]["AcademicGridRect"];
+            frames?: components["schemas"]["AcademicGridFrame"][];
+        };
+        AcademicGridRect: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        };
+        AcademicGridFrame: {
+            number: number;
+            rect: components["schemas"]["AcademicGridRect"];
         };
         AcademicGridRow: {
             model_selection?: number[];

@@ -15024,12 +15024,61 @@
             "items": {
               "$ref": "#/components/schemas/AcademicGridBlock"
             }
+          },
+          "area": {
+            "$ref": "#/components/schemas/AcademicGridRect"
+          },
+          "frames": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicGridFrame"
+            }
           }
         },
         "required": [
           "options",
           "radius",
           "blocks"
+        ]
+      },
+      "AcademicGridRect": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ]
+      },
+      "AcademicGridFrame": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "rect": {
+            "$ref": "#/components/schemas/AcademicGridRect"
+          }
+        },
+        "required": [
+          "number",
+          "rect"
         ]
       },
       "AcademicGridRow": {

@@ -1,5 +1,40 @@
 # Verification report
 
+## Bundled OMRChecker runtime — 2026-11-20
+
+The project now includes the runtime engine in `omr/engine`, including upstream
+MIT and contributor notices. All 31 imported upstream files were compared byte
+for byte with Git objects at revision
+`5cf44a5a9c7a49e2e541c6e19aefd09a41a4d494`; no upstream tests, sample scans or
+nested repository metadata were included. Engine revision reporting uses the
+bundled `REVISION` file. The adapter supplies display metrics during upstream
+import so a display server is unnecessary; the upstream source is unchanged.
+
+Passed:
+
+- Frozen Python dependency check and six Python tests, including actual bundled
+  recognition, malformed/missing revision rejection and no Git invocation.
+- `RUN_OMRCHECKER_TESTS=1 go test ./internal/scholar -run
+  'TestBundledOMRChecker|TestOMRChecker|TestOMRIdentity' -count=1`: bundled default
+  paths work with an empty home/PATH and no engine/runtime path overrides.
+- `go test ./...` and `go vet ./...`; the tests requiring HTTP listeners ran with
+  local networking enabled outside the filesystem/network sandbox.
+- The real PostgreSQL/private-object-store native preview and saved-template
+  grading integration tests passed in 10.284 seconds with the bundled engine.
+  They cover identity OCR, authoritative marks, staff/tenant isolation,
+  review/versioning, deduplication and retry behavior.
+- Nine Bun server-script, template and calibration tests.
+- Backend Docker build with Python 3.13 and the frozen OMR runtime. A disposable
+  container using UID 65532, no network and a read-only root filesystem matched
+  all 26 original synthetic response fields and both identity strings
+  (`Synthetic Test Learner`, `123456`). Only the original sample directory was
+  mounted read-only; engine, Python and adapter came from the image.
+
+CI now installs the frozen runtime and runs bundled recognition checks; the
+hosted workflow has not been run here. No frontend code changed. These checks
+establish packaging and recognition regression evidence, not general field-scan
+accuracy, production release qualification or a live CachyOS/Cloudflare rollout.
+
 ## Personal server deployment helpers — 2026-11-20
 
 `bun test scripts/server.test.cjs` passes four isolated checks with synthetic

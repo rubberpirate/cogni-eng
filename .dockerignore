@@ -4,8 +4,12 @@
 node_modules
 **/node_modules
 **/.next
+**/.venv
+**/__pycache__
 agent
 .agents
+.aws
+.codex
 .claude
 skills-lock.json
 test-results

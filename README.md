@@ -19,6 +19,10 @@ Do not use real children or financial records in this development installation. 
 
 ## Optional local OCR and OMR models
 
+The native OMRChecker engine is included in `omr/engine`. Run
+`bun run omr:setup` once to install its frozen Python dependencies; no separate
+repository clone is needed. See [native OMR setup](omr/README.md).
+
 Run `bun run vision --warm lightonai/LightOnOCR-2-1B` to install the pinned image-inference runtime. Select LightOnOCR in paper/key uploads; faculty receives ordered editable questions and explicitly chooses or applies a reviewed key. Existing OMR formats support calibrated pixel inspection and an optional original CPU bubble classifier. See [runtime configuration](inference/README.md), [manual workflows](docs/CORE-EDUCATION.md) and [actual sample evaluation](docs/TEST-REPORT.md). These models were exercised locally; wider scan and deployment qualification remain open.
 
 ## Current operations

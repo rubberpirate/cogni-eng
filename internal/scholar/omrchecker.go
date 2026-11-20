@@ -82,23 +82,11 @@ func runOMRChecker(ctx context.Context, data, marker, reference []byte, template
 	if len(data) == 0 {
 		return out, Problem(400, "file_required", "Choose a filled sheet image.")
 	}
-	root := os.Getenv("OMRCHECKER_ROOT")
-	if root == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return out, err
-		}
-		root = filepath.Join(home, "OMRChecker")
-	}
 	python := os.Getenv("OMRCHECKER_PYTHON")
 	if python == "" {
 		python = "omr/.venv/bin/python"
 	}
-	root, err := filepath.Abs(root)
-	if err != nil {
-		return out, err
-	}
-	python, err = filepath.Abs(python)
+	python, err := filepath.Abs(python)
 	if err != nil {
 		return out, err
 	}
@@ -110,9 +98,17 @@ func runOMRChecker(ctx context.Context, data, marker, reference []byte, template
 	if err != nil {
 		return out, err
 	}
+	root := os.Getenv("OMRCHECKER_ROOT")
+	if root == "" {
+		root = filepath.Join(filepath.Dir(adapter), "engine")
+	}
+	root, err = filepath.Abs(root)
+	if err != nil {
+		return out, err
+	}
 	for _, path := range []string{filepath.Join(root, "src", "core.py"), python, adapter} {
 		if _, err := os.Stat(path); err != nil {
-			return out, Problem(503, "omrchecker_configuration_required", "OMRChecker is not configured. Set OMRCHECKER_ROOT to its checkout and run bun run omr:setup.")
+			return out, Problem(503, "omrchecker_configuration_required", "OMRChecker is not configured. Restore the bundled omr/engine files and run bun run omr:setup.")
 		}
 	}
 	directory, err := os.MkdirTemp("", "academic-omrchecker-")

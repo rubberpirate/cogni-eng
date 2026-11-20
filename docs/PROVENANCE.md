@@ -1,5 +1,18 @@
 # Demonstration provenance
 
+## Bundled OMRChecker dependency
+
+`omr/engine/src` contains unchanged runtime source from
+[OMRChecker](https://github.com/Udayraj123/OMRChecker), revision
+`5cf44a5a9c7a49e2e541c6e19aefd09a41a4d494`. Its MIT license and contributor
+notices are preserved in `omr/engine/LICENSE` and `Contributors.md`; this code is
+not covered by the original-demo CC0 grant below. Upstream tests, sample scans,
+Git metadata and development files are excluded. The headless display adapter is
+application code in `omr/bridge.py`; upstream runtime files remain unchanged.
+See [the upstream notice](../omr/engine/UPSTREAM.md) for the import boundary.
+
+## Original application fixtures
+
 All synthetic people, institution/campus/course names and UI copy in this repository were newly authored for this implementation. Addresses ending in `.invalid` cannot be live institutional addresses. No private records or external application assets were imported. Fixtures create no charges or production communications.
 
 Original demonstration content and copy may be reused under CC0-1.0. No source-code license is assigned on the owner's behalf. Dependency licenses remain their own: IBM Plex Sans is SIL OFL 1.1, Next.js/React/pgx/otp use their published licenses. Font files are installed from the pinned @fontsource package and bundled locally. Keep original notices when distributing dependencies.

@@ -24,6 +24,13 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Native document processors
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr tesseract-ocr-hin
+      - name: Bundled OMR runtime
+        run: |
+          python3 -m venv .local/uv
+          .local/uv/bin/pip install uv==0.13.9
+          .local/uv/bin/uv sync --project omr --frozen
+          omr/.venv/bin/python -B -m unittest discover -s omr -p 'test_*.py'
+          RUN_OMRCHECKER_TESTS=1 go test ./internal/scholar -run TestBundledOMRChecker -count=1
       - name: Contract and source checks
         run: |
           python3 scripts/contract.py

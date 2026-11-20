@@ -128,20 +128,19 @@ the runtime role the table/sequence access required by the API and River worker
 after migrations. Do not put bootstrap credentials in this file. AI keys stay on
 the server; missing model configuration leaves AI jobs unavailable.
 
-For **saved-template OMR scanning**, install `uv`, clone the tested OMRChecker
-revision and install the frozen CPU environment:
+For **saved-template OMR scanning**, the pinned engine source is already bundled
+in `omr/engine`. Install its frozen CPU environment from the project root:
 
 ```sh
-git clone https://github.com/Udayraj123/OMRChecker.git "$HOME/OMRChecker"
-git -C "$HOME/OMRChecker" checkout 5cf44a5a9c7a49e2e541c6e19aefd09a41a4d494
 uv sync --project omr --frozen
+omr/.venv/bin/python -B -m unittest discover -s omr -p 'test_*.py'
 ```
 
-Set `OMRCHECKER_ROOT`, `OMRCHECKER_PYTHON` and `OMRCHECKER_ADAPTER` in
-`.env.production` to the absolute paths of that checkout,
-`/home/ladmin/cogni-fresh/omr/.venv/bin/python` and
-`/home/ladmin/cogni-fresh/omr/bridge.py`. The checkout path is
-`/home/ladmin/OMRChecker`. See [OMR setup](../omr/README.md).
+Leave `OMRCHECKER_ROOT`, `OMRCHECKER_PYTHON` and `OMRCHECKER_ADAPTER` empty in
+`.env.production`. PM2 runs from the project root and finds `omr/engine`,
+`omr/.venv/bin/python` and `omr/bridge.py` there. Remove any old overrides pointing
+to a separate OMRChecker checkout. No second repository, submodule or Git command
+is needed at runtime. See [OMR setup](../omr/README.md).
 Optional GPU OCR/Ollama services have their own [runtime setup](../inference/README.md);
 PM2 here manages the API, worker and tunnel, so separately supervise any model
 service you enable. Use loopback model endpoints.

@@ -1,4 +1,4 @@
-"""Headless adapter to the operator's OMRChecker checkout; no grading or roster access."""
+"""Headless adapter to the bundled OMRChecker engine; no grading or roster access."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 
 sys.dont_write_bytecode = True
 
@@ -201,7 +202,13 @@ def read_sheet(root: Path, image_path: Path, payload: dict) -> dict:
 
 def _read_sheet(root: Path, image_path: Path, payload: dict) -> dict:
     if not (root / "src/core.py").is_file():
-        raise InputError("OMRCHECKER_ROOT must point to the installed OMRChecker checkout.")
+        raise InputError("OMRChecker engine files are missing. Restore omr/engine or check OMRCHECKER_ROOT.")
+    try:
+        revision = (root / "REVISION").read_text(encoding="utf8").strip()
+    except OSError as exc:
+        raise InputError("The bundled OMRChecker revision is missing. Restore omr/engine/REVISION.") from exc
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise InputError("The bundled OMRChecker revision is invalid. Restore omr/engine/REVISION.")
     template_data = bounded_template(payload.get("template"), image_path.with_name("marker.png").is_file(), image_path.with_name("reference.png").is_file())
     config_data = payload.get("config", {})
     if not isinstance(config_data, dict):
@@ -216,8 +223,16 @@ def _read_sheet(root: Path, image_path: Path, payload: dict) -> dict:
         raise InputError("Alignment must use at most 200 steps.")
     sys.path.insert(0, str(root))
     import cv2
-    from src.template import Template
-    from src.utils.parsing import get_concatenated_response, open_config_with_defaults
+    import screeninfo
+
+    # Upstream initializes display metrics even when all window output is disabled.
+    monitors = screeninfo.get_monitors
+    try:
+        screeninfo.get_monitors = lambda: [SimpleNamespace(width=1920, height=1080)]
+        from src.template import Template
+        from src.utils.parsing import get_concatenated_response, open_config_with_defaults
+    finally:
+        screeninfo.get_monitors = monitors
 
     cv2.setNumThreads(1)
     template_path, config_path = image_path.with_name("template.json"), image_path.with_name("config.json")
@@ -263,7 +278,6 @@ def _read_sheet(root: Path, image_path: Path, payload: dict) -> dict:
     ok, encoded = cv2.imencode(".jpg", preview, [cv2.IMWRITE_JPEG_QUALITY, 82])
     if not ok or len(encoded) > 2_500_000:
         raise InputError("Could not produce a bounded detection overlay.")
-    revision = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=3, check=True).stdout.strip()
     return {"engine": "OMRChecker", "revision": revision, "responses": get_concatenated_response(responses, template), "fields": fields, "multiple_marked": bool(multi), "overlay": base64.b64encode(encoded).decode("ascii"),"identity":identity}
 
 

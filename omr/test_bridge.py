@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -14,6 +13,19 @@ def minimal():
 
 
 class TemplateBoundaryTests(unittest.TestCase):
+    def test_missing_or_invalid_engine_revision_fails_before_import(self):
+        sample = Path(__file__).resolve().parents[1] / "apps/web/public/samples/omrchecker/filled-sheet.png"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "src").mkdir()
+            (root / "src/core.py").write_text("raise AssertionError('must not import')")
+            for revision in (None, "not-an-upstream-revision"):
+                with self.subTest(revision=revision):
+                    if revision is not None:
+                        (root / "REVISION").write_text(revision)
+                    with self.assertRaisesRegex(InputError, "revision"):
+                        read_sheet(root, sample, {"template": minimal()})
+
     def test_identity_boxes_are_bounded_and_ocr_failure_keeps_manual_review(self):
         import numpy as np
         image = np.full((100, 100), 255, dtype=np.uint8)
@@ -63,15 +75,17 @@ class TemplateBoundaryTests(unittest.TestCase):
         self.assertIsNone(decode_values("AB",["A","AB","B"]))
         self.assertIsNone(decode_values("Z",list("ABCD")))
 
-    @unittest.skipUnless(os.environ.get("RUN_OMRCHECKER_TESTS")=="1","Opt-in: installed upstream engine")
-    def test_installed_engine_reads_all_original_sample_fields(self):
-        root=Path(os.environ.get("OMRCHECKER_ROOT",str(Path.home()/"OMRChecker")))
+    def test_bundled_engine_reads_all_original_sample_fields_without_git(self):
+        root = Path(__file__).resolve().parent / "engine"
         sample=Path(__file__).resolve().parents[1]/"apps/web/public/samples/omrchecker"
         source=(sample/"template.json").read_bytes()
-        result=read_sheet(root,sample/"filled-sheet.png",{"template":json.loads(source)})
+        with patch("bridge.subprocess.run", wraps=subprocess.run) as commands:
+            result=read_sheet(root,sample/"filled-sheet.png",{"template":json.loads(source)})
+        self.assertFalse(any(call.args[0][0] == "git" for call in commands.call_args_list))
         expected=json.loads((sample/"expected-answers.json").read_text())["responses"]
         self.assertEqual(result["responses"],expected)
         self.assertEqual(result["engine"],"OMRChecker")
+        self.assertEqual(result["revision"], "5cf44a5a9c7a49e2e541c6e19aefd09a41a4d494")
         self.assertEqual(len(result["fields"]),26)
         self.assertEqual([f["label"] for f in result["fields"] if f["uncertain"]],["q7","q12"])
         self.assertTrue(result["multiple_marked"])

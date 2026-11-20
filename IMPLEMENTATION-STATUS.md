@@ -2178,6 +2178,16 @@ The three supplied full PDFs now pass functional upload checks for 48/51/51 ques
 
 ## Native OMRChecker integration — 2026-11-20
 
+The subsequent bundled-runtime change includes this tested engine revision in
+`omr/engine` with its MIT/contributor notices. Default paths now resolve within
+the project; no separate clone, submodule or runtime Git metadata is needed.
+The backend image includes Python and frozen dependencies, and the adapter
+handles upstream display initialization without requiring a display server.
+Python/Go recognition, real PostgreSQL/private-storage preview and saved grading,
+and offline non-root container evidence are recorded in `docs/TEST-REPORT.md`.
+The CachyOS guide now uses only this checkout plus dependency installation. No
+broad requirement is promoted to verified.
+
 Added a scoped native-template reading endpoint, generated contracts, isolated headless CPU adapter and an upload/result panel under Upload OMR answer sheets. It calls the installed OMRChecker checkout directly for configured preprocessing, page/marker alignment and adaptive bubble reading, returning detected fields, combined template values, an annotated image and downloadable JSON. Recognition does not invoke upstream grading or create academic results. An original filled synthetic sheet and its template/expected responses are provided for repeatable testing.
 
 The initial engine-first delivery deferred visual configuration. The following increment adds it. Native PDF/batch intake through this new endpoint, reliable handwriting recognition, arbitrary-template discovery, full field-scan accuracy and full product acceptance remain outstanding. See `omr/README.md` and `docs/TEST-REPORT.md`; no requirement is promoted to fully verified.

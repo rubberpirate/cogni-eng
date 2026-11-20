@@ -1,27 +1,48 @@
 # Native OMRChecker adapter
 
-This adapter imports the operator's real [OMRChecker](https://github.com/Udayraj123/OMRChecker) checkout and calls its `Template`, configured preprocessors and `ImageInstanceOps.read_omr_response`. It does not reimplement the detector or run the upstream grading/evaluation module. Go retains authentication, staff/course scope, validation and academic grading authority.
+This adapter imports the bundled [OMRChecker](engine/UPSTREAM.md) engine in
+`omr/engine` and calls its `Template`, configured preprocessors and
+`ImageInstanceOps.read_omr_response`. It does not reimplement the detector or run
+the upstream grading/evaluation module. Go retains authentication, staff/course
+scope, validation and academic grading authority. No separate checkout, Git
+submodule or OMR service is required.
 
-Tested upstream revision: `5cf44a5a9c7a49e2e541c6e19aefd09a41a4d494`. Responses include the actual checkout revision. Upstream is MIT licensed, copyright 2024–present Udayraj Deshmukh and other contributors; its source and license remain in the separately installed checkout. No upstream source or supplied private examination data is vendored here.
+Bundled upstream revision: `5cf44a5a9c7a49e2e541c6e19aefd09a41a4d494`.
+Responses report that revision from `engine/REVISION`; runtime does not need Git.
+Upstream runtime source, the MIT license and contributor notices are included in
+`engine/`. Upstream tests/sample documents and supplied private examination data
+are excluded. See [the preserved license](engine/LICENSE).
 
 ## Setup and use
 
-The current machine already has `~/OMRChecker`. From the application root:
+From a fresh project checkout, install `uv` and run from the application root:
 
 ```sh
 bun run omr:setup
 bun run dev
 ```
 
-`omr/uv.lock` freezes the CPU runtime, including headless OpenCV. No Ollama/GPU or hosted API is used for this reader. If your checkout or runtime is elsewhere, set these before starting Go:
+For backend-only hosting, `uv sync --project omr --frozen` installs the same
+dependencies without requiring Bun. Install Tesseract and its English language
+data for identity OCR, and Poppler for PDF scan intake. The engine source is
+already included; setup downloads Python dependencies, not another repository.
+
+`omr/uv.lock` freezes the CPU runtime, including headless OpenCV. No Ollama/GPU or
+hosted API is used for this reader. Normally leave these optional overrides
+empty. If your project/runtime is elsewhere, paths refer to this project:
 
 ```dotenv
-OMRCHECKER_ROOT=/path/to/OMRChecker
+OMRCHECKER_ROOT=/path/to/cogni-fresh/omr/engine
 OMRCHECKER_PYTHON=/path/to/cogni-fresh/omr/.venv/bin/python
 OMRCHECKER_ADAPTER=/path/to/cogni-fresh/omr/bridge.py
 ```
 
-Defaults are `~/OMRChecker`, `omr/.venv/bin/python` and `omr/bridge.py` relative to the application working directory. Containers need the checkout/runtime mounted or installed explicitly; this increment does not change the container image.
+Defaults are `omr/engine`, `omr/.venv/bin/python` and `omr/bridge.py` relative to
+the application working directory. If the adapter path is overridden, the
+default engine lives in its adjacent `engine/` directory. The backend Docker
+image includes Python, the frozen dependencies, adapter and bundled engine; no
+external checkout mount is needed. For personal-server PM2 hosting see
+[SELF-HOSTING.md](../docs/SELF-HOSTING.md).
 
 Open **Upload OMR answer sheets**. There is one scanning flow:
 
@@ -70,10 +91,15 @@ Run unit and real-engine checks:
 
 ```sh
 omr/.venv/bin/python -m unittest discover -s omr -p 'test_*.py'
-RUN_OMRCHECKER_TESTS=1 omr/.venv/bin/python -m unittest discover -s omr -p 'test_*.py'
+RUN_OMRCHECKER_TESTS=1 go test ./internal/scholar -run TestBundledOMRChecker
 RUN_OMRCHECKER_TESTS=1 bunx playwright test tests/browser/omrchecker.spec.ts
 RUN_OMRCHECKER_TESTS=1 bunx playwright test tests/browser/omr-visual-setup.spec.ts
 bun test tests/omr-template.test.ts
 ```
 
-The opt-in browser test uses the installed engine and actual Go upload route. No HTTP recognition response is mocked. Field-scan accuracy, erasures, lighting/layout diversity and handwritten identity recognition remain unqualified.
+The Python suite always exercises the bundled engine on the original filled
+sample, including its upstream revision and absence of a Git subprocess. The
+Go check runs with an empty home and PATH and no engine path overrides. The
+opt-in browser test uses the bundled engine and actual Go upload route. No HTTP
+recognition response is mocked. Field-scan accuracy, erasures, lighting/layout
+diversity and handwritten identity recognition remain unqualified.

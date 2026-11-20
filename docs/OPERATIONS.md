@@ -46,6 +46,13 @@ docker compose -f compose.yaml -f compose.application.yaml up -d --build
 
 API/worker share one Go runtime image. Web uses a standalone Next.js build on Bun. All run without root. This configuration remains a local development deployment with local SMTP; it is not a production activation. The current image builds and a separate browser/API/database/S3 container-network smoke journey passed locally. Full production and release journeys remain unqualified. `API_INTERNAL_URL` is compiled into Next rewrites; rebuild web when changing that destination.
 
+The backend image now also installs the frozen Python OMR dependencies and
+includes `omr/bridge.py` and the licensed `omr/engine` runtime. Its Python
+environment is created inside the image, and host `.venv` directories are
+excluded from the build context. Native OMR no longer needs an external checkout
+or runtime volume. Personal-server PM2 deployments install the same dependencies
+once with `uv sync --project omr --frozen` from the project root.
+
 ## Enrollment and account changes
 
 Enrollment intake issues expiring bounded codes and queues learner registrations. Email must be verified before placement. Failed/expired verification can be resent; pending requests can be placed or rejected with a reason. Self-registration never accepts a role field. Existing accounts request an institution invitation rather than gaining a second membership from a public code.

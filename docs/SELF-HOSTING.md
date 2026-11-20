@@ -81,8 +81,12 @@ root disk. The mounted NTFS dataset drive is unnecessary for this deployment.
 Clone this repository on the server, then `cd ~/cogni-fresh`. Do not run
 `bun run dev` or copy your development `.env` here.
 
-Before continuing, provision these backing services, on your server or with a
-provider:
+For Docker-hosted PostgreSQL and private storage on this same PC, follow
+[SERVER-DATABASE.md](SERVER-DATABASE.md) first. It generates `.env.production`,
+passwords and local TLS certificates and starts the server containers. Continue
+with the OMR setup and migrations below once the environment is ready.
+
+Alternatively, provision these backing services with a provider:
 
 | Service                       | Required configuration                                                                                                                                                                                                                   |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -91,13 +95,20 @@ provider:
 | SMTP                          | Sender address and server supporting STARTTLS with a trusted certificate, normally port 587. Mailpit is only for development.                                                                                                            |
 
 The repository's `compose.yaml` is a **development** stack. It has no production
-TLS setup, backup automation or reboot policy. Provisioning a PostgreSQL/S3/SMTP
-server is separate from this backend installer. A managed database/private object
-store is also compatible with a personal PC running the API and worker. Keep
+TLS setup, backup automation or reboot policy. The dedicated `compose.server.yaml`
+provides local PostgreSQL/S3 with TLS and reboot policies; SMTP credentials still
+come from your provider. A managed database/private object store is also
+compatible with a personal PC running the API and worker. Keep
 database, storage, SMTP and optional model ports private; only the API goes into
 the tunnel.
 
 ## 2. Configure the backend
+
+If you used `server-infra.sh init`, `.env.production` is already populated.
+Keep its generated database/storage/TLS/MFA values and edit SMTP/model settings
+as described in [SERVER-DATABASE.md](SERVER-DATABASE.md). Skip copying the
+template and generating another MFA key below. The following manual setup is
+for externally provisioned services.
 
 ```sh
 umask 077

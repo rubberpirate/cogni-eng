@@ -31,6 +31,7 @@ function fixture(t) {
   tool(
     "go",
     [
+      'if [[ "$*" == "version" ]]; then echo "go version go1.27.4 linux/amd64"; exit 0; fi',
       '[[ "${FAIL_BUILD:-}" != "${@: -1}" ]] || exit 23',
       'while [[ "$1" != -o ]]; do shift; done',
       "cat > \"$2\" <<'MOCK'",
@@ -48,6 +49,8 @@ function fixture(t) {
   `,
   );
   tool("cloudflared", `printf '%s\\n' "$*" >> "$TEST_CALLS"`);
+  tool("docker", `printf 'docker %s\\n' "$*" >> "$TEST_CALLS"`);
+  tool("curl", `printf 'curl %s\\n' "$*" >> "$TEST_CALLS"`);
   const production =
     [
       "APP_ENV=production",
@@ -144,4 +147,25 @@ test("the tunnel starts separately and PM2 gives Go time to shut down", (t) => {
     assert.equal(app.interpreter, "/bin/bash");
     assert.ok(app.kill_timeout > 15000);
   }
+});
+
+test("check command audits environment and restart-scratch runs full initialization sequence", (t) => {
+  const { root, run } = fixture(t);
+  const check = run(["check"]);
+  assert.equal(check.status, 0, check.stderr);
+  assert.match(check.stdout, /Preflight & Environment Diagnostic Check/);
+  assert.match(check.stdout, /PUBLIC_ORIGIN: https:\/\/learn\.example\.com/);
+
+  // create a dummy tls directory so restart-scratch proceeds
+  fs.mkdirSync(`${root}/.local/server/tls`, { recursive: true });
+  fs.writeFileSync(`${root}/.local/server/tls/ca.crt`, "ca");
+  fs.writeFileSync(`${root}/.local/server/tls/server.crt`, "crt");
+
+  const restart = run(["restart-scratch"]);
+  assert.equal(restart.status, 0, restart.stderr);
+  assert.match(restart.stdout, /Starting Cogni Backend Scratch \/ Restart Sequence/);
+  const calls = fs.readFileSync(`${root}/calls`, "utf8");
+  assert.match(calls, /docker compose --env-file .* -f compose\.server\.yaml up -d --wait/);
+  assert.match(calls, /startOrRestart .* --only learning-api,learning-worker/);
+  assert.match(calls, /curl .* http:\/\/127\.0\.0\.1:8080\/health\/ready/);
 });

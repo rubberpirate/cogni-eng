@@ -1,0 +1,45 @@
+name: learning-server
+
+services:
+  database:
+    image: postgres:18.7
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: workspace_owner
+      POSTGRES_DB: workspace
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?run server-infra.sh init}
+      APP_DATABASE_PASSWORD: ${APP_DATABASE_PASSWORD:?required}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    entrypoint: [bash, /server/postgres-start.sh]
+    ports: ["127.0.0.1:${SERVER_DATABASE_PORT:-55432}:5432"]
+    volumes:
+      - server-records:/var/lib/postgresql
+      - ${SERVER_TLS_DIR:?required}:/tls:ro
+      - ./deploy/postgres-start.sh:/server/postgres-start.sh:ro
+      - ./deploy/postgres-init.sh:/docker-entrypoint-initdb.d/10-runtime-role.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U workspace_owner -d workspace"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  objects:
+    image: chrislusf/seaweedfs:4.54
+    restart: unless-stopped
+    command:
+      - mini
+      - -dir=/data
+      - -s3.port.https=8443
+      - -s3.cert.file=/tls/server.crt
+      - -s3.key.file=/tls/server.key
+    environment:
+      AWS_ACCESS_KEY_ID: ${OBJECT_USER:?required}
+      AWS_SECRET_ACCESS_KEY: ${OBJECT_PASSWORD:?required}
+      S3_BUCKET: ${OBJECT_BUCKET:?required}
+    ports: ["127.0.0.1:${SERVER_OBJECT_PORT:-59443}:8443"]
+    volumes:
+      - server-objects:/data
+      - ${SERVER_TLS_DIR:?required}:/tls:ro
+
+volumes:
+  server-records:
+  server-objects:

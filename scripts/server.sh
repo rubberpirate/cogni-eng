@@ -218,7 +218,16 @@ cmd_check() {
 }
 
 restart_scratch() {
-  local origin="${2:-}"
+  local origin=""
+  local reset_data=0
+  for arg in "${@:2}"; do
+    if [[ "$arg" == "--reset-data" || "$arg" == "--clean" ]]; then
+      reset_data=1
+    elif [[ "$arg" =~ ^https?:// ]]; then
+      origin="$arg"
+    fi
+  done
+
   echo "=========================================================="
   echo "   Starting Cogni Backend Scratch / Restart Sequence      "
   echo "=========================================================="
@@ -227,7 +236,7 @@ restart_scratch() {
   if command -v docker >/dev/null 2>&1; then
     if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^cogni-fresh-database-1$'; then
       echo "--> [1/9] Stopping conflicting dev containers on port 55432..."
-      docker compose -f compose.yaml stop database objects mail >/dev/null 2>&1 || true
+      docker compose -f compose.yaml down >/dev/null 2>&1 || docker compose -f compose.yaml stop >/dev/null 2>&1 || true
     fi
   fi
 
@@ -261,6 +270,10 @@ restart_scratch() {
   (load_env)
 
   # 5. Start Docker backing services
+  if (( reset_data == 1 )); then
+    echo "--> [4/9] Resetting production data volumes (--reset-data requested)..."
+    docker compose --env-file .env.production -f compose.server.yaml down -v >/dev/null 2>&1 || true
+  fi
   echo "--> [4/9] Starting backing services (PostgreSQL & SeaweedFS) via compose.server.yaml..."
   if command -v docker >/dev/null 2>&1; then
     docker compose --env-file .env.production -f compose.server.yaml up -d --wait

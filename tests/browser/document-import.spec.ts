@@ -13,6 +13,10 @@ const fixture = JSON.parse(
 ) as { org: string; course: string };
 
 // Explicit HTTP model contract fixture; OCR, storage and faculty edits remain real.
+test.skip(
+  process.env.RUN_MODEL_CONTRACT_TESTS !== "1",
+  "Explicit HTTP fixture: use a dedicated worker targeting MODEL_CONTRACT_PORT; never replace an installed Ollama service.",
+);
 let localModel: Server;
 test.beforeAll(async () => {
   localModel = createServer((req, res) => {
@@ -67,7 +71,11 @@ test.beforeAll(async () => {
   });
   await new Promise<void>((resolve, reject) => {
     localModel.once("error", reject);
-    localModel.listen(11434, "127.0.0.1", resolve);
+    localModel.listen(
+      Number(process.env.MODEL_CONTRACT_PORT ?? 11436),
+      "127.0.0.1",
+      resolve,
+    );
   });
 });
 test.afterAll(async () => {

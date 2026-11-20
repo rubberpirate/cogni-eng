@@ -45,8 +45,8 @@ func New(db *pgxpool.Pool, objects *blob.Store) (*Service, error) {
 		return nil, errors.New("OCR_PROVIDER must be tesseract or lightonocr")
 	}
 	provider := os.Getenv("ACADEMIC_MODEL_PROVIDER")
-	if provider != "" && provider != "anthropic" && provider != "gemini" && provider != "development_fixture" {
-		return nil, errors.New("ACADEMIC_MODEL_PROVIDER must be gemini, anthropic or development_fixture")
+	if provider != "" && provider != "local" && provider != "anthropic" && provider != "gemini" && provider != "development_fixture" {
+		return nil, errors.New("ACADEMIC_MODEL_PROVIDER must be local, gemini, anthropic or development_fixture")
 	}
 	if provider == "development_fixture" && os.Getenv("APP_ENV") != "development" && os.Getenv("APP_ENV") != "test" {
 		return nil, errors.New("development model fixtures are forbidden outside development/test")

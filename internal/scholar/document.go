@@ -71,10 +71,12 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 		return err
 	}
 	var cached struct {
-		OCR string `json:"ocr_text"`
-		Raw string `json:"raw_ocr_text"`
+		OCR    string `json:"ocr_text"`
+		Raw    string `json:"raw_ocr_text"`
+		Method string `json:"text_method"`
 	}
-	if in["mode"] != "answer_key" && json.Unmarshal(j.Output, &cached) == nil && cached.OCR != "" {
+	if in["mode"] != "answer_key" && json.Unmarshal(j.Output, &cached) == nil && cached.OCR != "" && cached.Method == "embedded_pdf" {
+		in["text_method"] = cached.Method
 		return s.finishDocument(ctx, j, in, cached.Raw, cached.OCR)
 	}
 	if in["mode"] == "answer_key" && in["text"] != "" {
@@ -92,6 +94,20 @@ func (s *Service) extract(ctx context.Context, j Job) error {
 	data, err := s.Objects.GetAcademic(ctx, asset.Key)
 	if err != nil {
 		return err
+	}
+	if asset.Mime == "application/pdf" && in["mode"] != "answer_key" {
+		text, usable, e := embeddedPDFText(ctx, data)
+		if e != nil {
+			return e
+		}
+		if usable {
+			in["text_method"] = "embedded_pdf"
+			return s.finishDocument(ctx, j, in, text, text)
+		}
+	}
+	if in["mode"] != "answer_key" && cached.OCR != "" {
+		in["text_method"] = cached.Method
+		return s.finishDocument(ctx, j, in, cached.Raw, cached.OCR)
 	}
 	pages, err := rasterPages(ctx, asset.Mime, data)
 	if err != nil {
@@ -157,7 +173,7 @@ func (s *Service) finishDocument(ctx context.Context, j Job, in map[string]strin
 			if _, e := tx.Exec(ctx, "UPDATE question_import SET raw_text=$2 WHERE id=$1 AND state='extracting'", j.Resource, raw); e != nil {
 				return e
 			}
-			_, e := tx.Exec(ctx, "UPDATE academic_job SET output=output || $2::jsonb WHERE id=$1", j.ID, Encode(map[string]string{"ocr_text": text, "raw_ocr_text": raw}))
+			_, e := tx.Exec(ctx, "UPDATE academic_job SET output=output || $2::jsonb WHERE id=$1", j.ID, Encode(map[string]string{"ocr_text": text, "raw_ocr_text": raw, "text_method": in["text_method"]}))
 			return e
 		}); err != nil {
 			return err

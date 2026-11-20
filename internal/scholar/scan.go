@@ -521,19 +521,9 @@ func rasterPages(ctx context.Context, mime string, data []byte) ([][]byte, error
 	if err = os.WriteFile(input, data, 0600); err != nil {
 		return nil, err
 	}
-	info, err := exec.CommandContext(ctx, "pdfinfo", input).Output()
+	pages, err := pdfPageCount(ctx, input)
 	if err != nil {
-		return nil, errors.New("PDF cannot be inspected; remove encryption or upload page images")
-	}
-	pages := 0
-	for _, line := range bytes.Split(info, []byte{'\n'}) {
-		var n int
-		if _, e := fmt.Sscanf(string(line), "Pages: %d", &n); e == nil {
-			pages = n
-		}
-	}
-	if pages < 1 || pages > 50 {
-		return nil, errors.New("PDF must contain 1–50 pages; split larger batches")
+		return nil, err
 	}
 	out := [][]byte{}
 	for page := 1; page <= pages; page++ {

@@ -21,11 +21,12 @@ type Generation struct {
 	Exam       string `json:"exam,omitempty"`
 }
 type Generated struct {
-	Questions    []academic.Question `json:"questions"`
-	Provider     string              `json:"provider"`
-	Model        string              `json:"model"`
-	InputTokens  *int64              `json:"input_tokens"`
-	OutputTokens *int64              `json:"output_tokens"`
+	Questions        []academic.Question `json:"questions"`
+	InitialQuestions []academic.Question `json:"initial_questions,omitempty"`
+	Provider         string              `json:"provider"`
+	Model            string              `json:"model"`
+	InputTokens      *int64              `json:"input_tokens"`
+	OutputTokens     *int64              `json:"output_tokens"`
 }
 type ModelProvider interface {
 	Generate(context.Context, Generation) (Generated, error)

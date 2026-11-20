@@ -13,7 +13,8 @@
     "check": "bun run --cwd apps/web typecheck && go vet ./... && go test ./...",
     "build": "bun run --cwd apps/web build",
     "test:e2e": "bun run scripts/browser.ts",
-    "qualify:containers": "bun run scripts/qualify-containers.ts"
+    "qualify:containers": "bun run scripts/qualify-containers.ts",
+    "model:local": "bun run scripts/local-model.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",

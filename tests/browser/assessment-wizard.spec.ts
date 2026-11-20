@@ -9,6 +9,10 @@ const creds = readFileSync(
 const fixture = JSON.parse(
   readFileSync(".local/academic-browser-access.json", "utf8"),
 );
+test.skip(
+  process.env.RUN_MODEL_CONTRACT_TESTS !== "1",
+  "Explicit HTTP fixture: use a dedicated worker targeting MODEL_CONTRACT_PORT; never replace an installed Ollama service.",
+);
 let model: Server;
 const question = (stem: string) => ({
   topic_id: "",
@@ -39,7 +43,11 @@ test.beforeAll(async () => {
       const body = JSON.parse(data);
       const prompt = body.messages[1].content as string;
       let payload;
-      if (prompt.includes("OCR text:")) {
+      if (prompt.startsWith("Review these original")) {
+        payload = {
+          questions: JSON.parse(prompt.split("\nDraft questions: ")[1]),
+        };
+      } else if (prompt.includes("OCR text:")) {
         payload = {
           rows: [
             {
@@ -87,7 +95,11 @@ test.beforeAll(async () => {
   });
   await new Promise<void>((resolve, reject) => {
     model.once("error", reject);
-    model.listen(11434, "127.0.0.1", resolve);
+    model.listen(
+      Number(process.env.MODEL_CONTRACT_PORT ?? 11436),
+      "127.0.0.1",
+      resolve,
+    );
   });
 });
 test.afterAll(async () => {

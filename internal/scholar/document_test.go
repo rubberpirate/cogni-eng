@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image"
 	"image/png"
 	"learning.local/workspace/internal/academic"
 	"os"
@@ -128,5 +129,28 @@ func TestGeneratedSampleSheetPDFRoundTrip(t *testing.T) {
 				t.Fatalf("PDF pixels changed sample answer %+v", row)
 			}
 		}
+	}
+}
+
+func TestEmbeddedPDFTextPreservesPrintedKeyAndScanFallsBack(t *testing.T) {
+	for _, binary := range []string{"pdfinfo", "pdftotext"} {
+		if _, err := exec.LookPath(binary); err != nil {
+			t.Skip("Poppler unavailable")
+		}
+	}
+	text, usable, err := embeddedPDFText(context.Background(), originalPDF())
+	if err != nil || !usable || !strings.Contains(text, "Answer: A") || !strings.Contains(text, "Add seven and five") {
+		t.Fatalf("usable PDF text/key lost: %v %v", usable, err)
+	}
+	img := image.NewRGBA(image.Rect(0, 0, 200, 200))
+	scanned, err := academic.ImagesPDF(img)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, usable, err = embeddedPDFText(context.Background(), scanned); err != nil || usable {
+		t.Fatalf("image-only PDF incorrectly treated as text: %v %v", usable, err)
+	}
+	if _, _, err = embeddedPDFText(context.Background(), []byte("%PDF-1.4\nmalformed")); err == nil {
+		t.Fatal("malformed PDF accepted")
 	}
 }

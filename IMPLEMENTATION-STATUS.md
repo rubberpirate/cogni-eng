@@ -232,7 +232,7 @@ All scope is required. `planned` means unimplemented; `building` means partial s
 | [RUN-06](#run-06) — Privacy/consent | 1 | planned | None | Not executed | Implementation outstanding |
 | [RUN-07](#run-07) — Resilience/health | 1 | building | Liveness/readiness and structured request logging | Local startup | Metrics, traces, alerting and operator dashboard outstanding |
 | [RUN-08](#run-08) — Backup and recovery | 1 | planned | None | Not executed | Implementation outstanding |
-| [RUN-09](#run-09) — Environment/deployment | 1 | building | Local Compose, API/worker/web container builds, migrations, environment validation and CI source | Bun startup; Docker API and web builds; unit/integration/browser checks | Hosted CI execution, production deployment, maintenance and rollback qualification outstanding |
+| [RUN-09](#run-09) — Environment/deployment | 1 | building | Local Compose, API/worker/web container builds, migrations, environment validation, CI source and personal-server PM2/Cloudflare/Vercel guide | Bun startup; Docker API and web builds; unit/integration/browser checks; isolated server-script checks | Hosted CI execution, live personal-server/tunnel deployment, maintenance and rollback qualification outstanding |
 | [RUN-10](#run-10) — Performance/concurrency | 1 | planned | None | Not executed | Implementation outstanding |
 | [RUN-11](#run-11) — Support recovery | 1 | planned | None | Not executed | Implementation outstanding |
 | [RUN-12](#run-12) — Data portability | 1 | planned | None | Not executed | Implementation outstanding |

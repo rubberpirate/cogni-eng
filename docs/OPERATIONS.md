@@ -24,6 +24,12 @@ Run `go run ./cmd/worker` separately from HTTP. Jobs are inserted with security-
 
 ## Deployment and rollback
 
+For a personal Linux server running the API/worker under PM2, with Cloudflare
+Tunnel and a Vercel frontend, see [SELF-HOSTING.md](SELF-HOSTING.md). It includes
+production environment and tunnel templates, explicit migration/bootstrap steps,
+PM2 reboot persistence and the frontend proxy settings. This path still requires
+separately provisioned backing services and production qualification.
+
 Do not expose development ports to the public internet. The Go gateway binds loopback by default. Next proxies versioned API traffic; it contains no business rules. Use a trusted TLS reverse proxy and separate least-privileged PostgreSQL roles before release. The local PostgreSQL user owns migrations; production role separation is not configured. Migrations must be reviewed and backed up before applying. Roll back app releases only while schema compatibility is maintained. Destructive `goose down` is not a production rollback strategy.
 
 ## Backup and restore qualification

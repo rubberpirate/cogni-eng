@@ -1,0 +1,8 @@
+# Copy to ~/.cloudflared/config.yml; replace the UUID, username and hostname.
+tunnel: REPLACE_WITH_TUNNEL_UUID
+credentials-file: /home/REPLACE_WITH_SERVER_USER/.cloudflared/REPLACE_WITH_TUNNEL_UUID.json
+
+ingress:
+  - hostname: api.example.com
+    service: http://127.0.0.1:8080
+  - service: http_status:404

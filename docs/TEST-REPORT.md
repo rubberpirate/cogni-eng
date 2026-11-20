@@ -1,5 +1,24 @@
 # Verification report
 
+## Personal server deployment helpers — 2026-11-20
+
+`bun test scripts/server.test.cjs` passes four isolated checks with synthetic
+environment values and stub Go/PM2/cloudflared commands: failed builds preserve
+the previous release, successful builds switch binaries, migrations use the
+optional owner URL while runtime processes omit it, environment edits reload,
+PM2 receives no file-loaded application secrets, invalid origin/bind settings
+prevent startup, and the tunnel is supervised separately with graceful shutdown
+settings. `bash -n scripts/server.sh` and `git diff --check` also pass.
+
+The actual backend build command (`bash scripts/server.sh build`, with a
+temporary Go cache) successfully compiles gateway, worker and operator with
+Go 1.27.4. No database migrations, bootstrap, PM2 daemon, tunnel/DNS changes or
+Vercel deployment were run. Live proxy/cookie, server reboot, external services,
+backup/restore and production qualification remain unverified. Follow
+[SELF-HOSTING.md](SELF-HOSTING.md) for the deployment and live acceptance steps.
+
+## Original qualification environment
+
 2026-11-17 · partial milestone 1 · **not release qualification**.
 
 Test environment: Ryoku Linux x86-64 host; Go 1.27.4; Bun 1.4.4; PostgreSQL 18.7 and SeaweedFS 4.54 in Docker; Mailpit 1.28.0; Next.js 16.4.6; Playwright Chromium. Data consists of small original synthetic fixtures and isolated database schemas. No real institutional data or live deliveries/charges were used.

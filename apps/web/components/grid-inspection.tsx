@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { A, EducationClient } from "../../../clients/academic";
-import { OMRCalibrator } from "./omr-calibrator";
 import { TaskProgress } from "./task-progress";
 import { FormField as Field } from "./form-field";
 type Calibration = A<"AcademicGridCalibration">;
@@ -103,12 +102,13 @@ export function GridInspection({
   }
   return (
     <details className="card grid-inspection">
-      <summary>Visual OMR calibrator</summary>
+      <summary>Pixel-reader diagnostics</summary>
       <p>
         For sheets without our registration squares, align the bubble centers
         before reading. This preview reads answers only: it cannot identify a
-        learner or award marks. Draw the answer area, align each column, and
-        adjust individual question frames before reading.
+        learner or award marks. Use the visual template editor above to create
+        OMRChecker layouts. These older diagnostics accept explicit grid
+        coordinates.
       </p>
       <form
         onSubmit={async (e) => {
@@ -192,31 +192,39 @@ export function GridInspection({
           </Field>
         </div>
         {url && (
-          <OMRCalibrator
-            key={url}
-            url={url}
-            calibration={calibration}
-            onChange={change}
-            reading={reading}
-            cornerTarget={
-              target
-                ? `Click the center of the ${cornerNames[target.corner]} in block ${target.block + 1}.`
-                : null
-            }
-            onCancelCorner={() => setTarget(null)}
-            onCorner={(p) => {
-              if (!target) return;
-              change({
-                ...calibration,
-                blocks: calibration.blocks.map((b, i) =>
-                  i === target.block
-                    ? { ...b, [corners[target.corner]]: p }
-                    : b,
-                ),
-              });
-              setTarget(null);
-            }}
-          />
+          <div>
+            {target && (
+              <p role="status">
+                Click the center of the {cornerNames[target.corner]} in block{" "}
+                {target.block + 1}, or enter coordinates below.{" "}
+                <button type="button" onClick={() => setTarget(null)}>
+                  Cancel point
+                </button>
+              </p>
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={url}
+              alt="Source for legacy grid diagnostics"
+              onClick={(e) => {
+                const box = e.currentTarget.getBoundingClientRect();
+                const p = {
+                  x: (e.clientX - box.left) / box.width,
+                  y: (e.clientY - box.top) / box.height,
+                };
+                if (!target) return;
+                change({
+                  ...calibration,
+                  blocks: calibration.blocks.map((b, i) =>
+                    i === target.block
+                      ? { ...b, [corners[target.corner]]: p }
+                      : b,
+                  ),
+                });
+                setTarget(null);
+              }}
+            />
+          </div>
         )}
         <details className="omr-advanced">
           <summary>Advanced grid coordinates</summary>

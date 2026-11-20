@@ -368,7 +368,7 @@ test("a failed model comparison keeps measured OMR responses available with expl
   await navigate(page, "Scan & check");
   await page.getByText("Advanced pixel-reader tools", { exact: true }).click();
   await page
-    .getByText("Visual OMR calibrator", {
+    .getByText("Pixel-reader diagnostics", {
       exact: true,
     })
     .click();

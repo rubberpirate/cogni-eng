@@ -43,6 +43,25 @@ test("eight clicks interpolate every question and produce native files without r
     bubbleValues: ["A", "B", "C", "D"],
   });
 });
+test("numbered bubbles preserve their printed option values and older layouts retain letters", () => {
+  const l = layout();
+  l.blocks[0].labels = "numbers";
+  const files = nativeFiles(l);
+  expect(files.template.fieldBlocks.answer_1.bubbleValues).toEqual([
+    "1",
+    "2",
+    "3",
+    "4",
+  ]);
+  expect(files.template.fieldBlocks.answer_11.bubbleValues).toEqual([
+    "A",
+    "B",
+    "C",
+    "D",
+  ]);
+  (l.blocks[0] as unknown as { labels: string }).labels = "invalid";
+  expect(() => nativeFiles(l)).toThrow();
+});
 test("ambiguous clicks, duplicate numbering, out-of-box rows and unsafe imports are rejected", () => {
   expect(() => blockCircles({ ...block(), count: 1e9 }, 1200, 1600)).toThrow(
     "between 1 and 200",

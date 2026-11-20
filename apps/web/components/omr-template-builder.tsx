@@ -14,6 +14,7 @@ import {
   loadProfile,
   nativeFiles,
   referenceFile,
+  optionValue,
   type AnswerBlock,
   type DesignerLayout,
   type IdentityKind,
@@ -30,6 +31,8 @@ const empty = (): DesignerLayout => ({
   identity: {},
   blocks: [],
 });
+const fieldName = (kind: string) =>
+  kind === "student_name" ? "Student name" : "Registration number";
 function download(name: string, data: BlobPart, type = "application/json") {
   const url = URL.createObjectURL(new Blob([data], { type }));
   const a = document.createElement("a");
@@ -46,6 +49,370 @@ async function encoded(blob: Blob) {
     reader.readAsDataURL(blob);
   });
 }
+
+// Pointer moves only update this transient SVG rectangle, never the React field tree.
+function Sheet({
+  url,
+  layout,
+  draft,
+  pending,
+  clicking,
+  guides,
+  onBox,
+  onPoint,
+  onLoad,
+  onError,
+  imageRef,
+}: {
+  url: string;
+  layout: DesignerLayout;
+  draft: AnswerBlock | null;
+  pending: Rect | null;
+  clicking: boolean;
+  guides: boolean;
+  onBox: (r: Rect) => void;
+  onPoint: (p: Point) => void;
+  onLoad: (width: number, height: number) => void;
+  onError: () => void;
+  imageRef: React.RefObject<HTMLImageElement | null>;
+}) {
+  const stage = useRef<HTMLDivElement>(null),
+    surface = useRef<SVGSVGElement>(null),
+    preview = useRef<SVGRectElement>(null);
+  const [available, setAvailable] = useState({ width: 600, height: 650 });
+  const [zoom, setZoom] = useState("fit"),
+    [cursor, setCursor] = useState<Point | null>(null);
+  const help = useId(),
+    gesture = useRef<{
+      start: Point;
+      box: DOMRect;
+      rect: Rect;
+      pointer: number;
+    } | null>(null);
+  const keyboardStart = useRef<Point | null>(null),
+    animation = useRef<number | null>(null);
+  useEffect(() => {
+    const node = stage.current;
+    if (!node) return;
+    const observer = new ResizeObserver(() =>
+      setAvailable({ width: node.clientWidth, height: node.clientHeight }),
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(
+    () => () => {
+      if (animation.current !== null) cancelAnimationFrame(animation.current);
+    },
+    [],
+  );
+  const aspect =
+    layout.width && layout.height ? layout.width / layout.height : 0.75;
+  const fitWidth = Math.max(
+    1,
+    Math.min(available.width - 24, (available.height - 24) * aspect),
+  );
+  const factor =
+    zoom === "fit"
+      ? 1
+      : zoom === "block" && draft
+        ? Math.min(
+            8,
+            Math.max(
+              1,
+              (available.width - 24) / (fitWidth * (draft.bounds.width + 0.04)),
+            ),
+          )
+        : zoom === "block"
+          ? 1
+          : Number(zoom) / 100;
+  const width = fitWidth * factor,
+    height = width / aspect;
+  useEffect(() => {
+    if (clicking) setZoom("block");
+    else setZoom("fit");
+  }, [clicking]);
+  useEffect(() => {
+    const node = stage.current;
+    if (!node) return;
+    const frame = requestAnimationFrame(() =>
+      node.scrollTo({
+        left:
+          zoom === "block" && draft
+            ? Math.max(0, width * (draft.bounds.x - 0.02))
+            : 0,
+        top:
+          zoom === "block" && draft
+            ? Math.max(0, height * (draft.bounds.y - 0.025))
+            : 0,
+      }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [zoom, width, height, draft?.bounds]);
+  const circles = useMemo(() => {
+    try {
+      return [
+        ...(guides
+          ? layout.blocks.flatMap((b) =>
+              blockCircles(b, layout.width, layout.height),
+            )
+          : []),
+        ...(clicking && draft && draft.points.length === draft.options * 2
+          ? blockCircles(draft, layout.width, layout.height)
+          : []),
+      ];
+    } catch {
+      return [];
+    }
+  }, [guides, layout.blocks, layout.width, layout.height, draft, clicking]);
+  function draw(r: Rect | null) {
+    const node = preview.current;
+    if (!node) return;
+    node.style.visibility = r ? "visible" : "hidden";
+    if (r)
+      for (const key of ["x", "y", "width", "height"] as const)
+        node.setAttribute(key, String(r[key]));
+  }
+  function cancel() {
+    if (animation.current !== null) cancelAnimationFrame(animation.current);
+    animation.current = null;
+    const g = gesture.current;
+    gesture.current = null;
+    keyboardStart.current = null;
+    draw(null);
+    if (g && surface.current?.hasPointerCapture(g.pointer))
+      surface.current.releasePointerCapture(g.pointer);
+  }
+  function position(e: PointerEvent<SVGSVGElement>, box: DOMRect): Point {
+    return {
+      x: Math.max(0, Math.min(1, (e.clientX - box.left) / box.width)),
+      y: Math.max(0, Math.min(1, (e.clientY - box.top) / box.height)),
+    };
+  }
+  function rectangle(a: Point, b: Point): Rect {
+    return {
+      x: Math.min(a.x, b.x),
+      y: Math.min(a.y, b.y),
+      width: Math.abs(a.x - b.x),
+      height: Math.abs(a.y - b.y),
+    };
+  }
+  function down(e: PointerEvent<SVGSVGElement>) {
+    if (e.button !== 0 || !layout.width) return;
+    e.preventDefault();
+    e.currentTarget.focus({ preventScroll: true });
+    const box = e.currentTarget.getBoundingClientRect(),
+      p = position(e, box);
+    if (clicking) {
+      onPoint(p);
+      return;
+    }
+    const rect = rectangle(p, p);
+    gesture.current = { start: p, rect, box, pointer: e.pointerId };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    draw(rect);
+  }
+  function move(e: PointerEvent<SVGSVGElement>) {
+    const g = gesture.current;
+    if (!g) return;
+    g.rect = rectangle(g.start, position(e, g.box));
+    if (animation.current === null)
+      animation.current = requestAnimationFrame(() => {
+        animation.current = null;
+        if (gesture.current) draw(gesture.current.rect);
+      });
+  }
+  function up(e: PointerEvent<SVGSVGElement>) {
+    const g = gesture.current;
+    if (!g) return;
+    const rect = rectangle(g.start, position(e, g.box));
+    cancel();
+    onBox(rect);
+  }
+  function keyboard(e: KeyboardEvent<SVGSVGElement>) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      cancel();
+      return;
+    }
+    if (!layout.width) return;
+    const p = cursor ?? { x: 0.5, y: 0.5 };
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+      e.preventDefault();
+      const n = e.shiftKey ? 50 : e.altKey ? 1 : 5;
+      const next = {
+        x: Math.max(
+          0,
+          Math.min(
+            1,
+            p.x +
+              (e.key === "ArrowLeft" ? -n : e.key === "ArrowRight" ? n : 0) /
+                layout.width,
+          ),
+        ),
+        y: Math.max(
+          0,
+          Math.min(
+            1,
+            p.y +
+              (e.key === "ArrowUp" ? -n : e.key === "ArrowDown" ? n : 0) /
+                layout.height,
+          ),
+        ),
+      };
+      setCursor(next);
+      if (keyboardStart.current) draw(rectangle(keyboardStart.current, next));
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setCursor(p);
+      if (clicking) onPoint(p);
+      else if (keyboardStart.current) {
+        const rect = rectangle(keyboardStart.current, p);
+        cancel();
+        onBox(rect);
+      } else keyboardStart.current = p;
+    }
+  }
+  return (
+    <div className="omr-sheet-column">
+      <div className="omr-sheet-toolbar">
+        <Field name="Layout zoom">
+          <select value={zoom} onChange={(e) => setZoom(e.target.value)}>
+            <option value="fit">Fit whole sheet</option>
+            <option value="150">150%</option>
+            <option value="200">200%</option>
+            <option value="300">300%</option>
+            <option value="400">400%</option>
+            {clicking && <option value="block">Selected answer block</option>}
+          </select>
+        </Field>
+        <span className="muted">
+          {clicking
+            ? "Click the first two rows"
+            : "Draw a frame, then label it"}
+        </span>
+      </div>
+      <div ref={stage} className="omr-sheet-stage">
+        <div className="omr-sheet-page" style={{ width, height }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={imageRef}
+            src={url || undefined}
+            alt="Sheet for guided OMR layout setup"
+            draggable={false}
+            onLoad={(e) =>
+              onLoad(
+                e.currentTarget.naturalWidth,
+                e.currentTarget.naturalHeight,
+              )
+            }
+            onError={onError}
+          />
+          <svg
+            ref={surface}
+            viewBox="0 0 1 1"
+            preserveAspectRatio="none"
+            tabIndex={0}
+            role="group"
+            aria-label="Template calibration canvas"
+            aria-describedby={help}
+            onPointerDown={down}
+            onPointerMove={move}
+            onPointerUp={up}
+            onPointerCancel={cancel}
+            onKeyDown={keyboard}
+            onFocus={() => setCursor({ x: 0.5, y: 0.5 })}
+            onBlur={() => {
+              setCursor(null);
+              cancel();
+            }}
+          >
+            {Object.entries(layout.identity).map(([kind, r]) => (
+              <g key={kind}>
+                <rect {...r} className="omr-identity-frame">
+                  <title>{fieldName(kind)}</title>
+                </rect>
+                <text
+                  x={r.x}
+                  y={Math.max(0.012, r.y - 0.005)}
+                  fontSize=".018"
+                  fill="#3f6f83"
+                >
+                  {fieldName(kind)}
+                </text>
+              </g>
+            ))}
+            {layout.blocks.map((b, i) => (
+              <g key={i}>
+                <rect {...b.bounds} className="omr-block-frame">
+                  <title>
+                    Answers {b.first}–{b.first + b.count - 1}
+                  </title>
+                </rect>
+                <text
+                  x={b.bounds.x}
+                  y={Math.max(0.012, b.bounds.y - 0.005)}
+                  fontSize=".018"
+                  fill="#3f6f83"
+                >
+                  {b.first}–{b.first + b.count - 1}
+                </text>
+              </g>
+            ))}
+            {pending && <rect {...pending} className="omr-pending-frame" />}
+            {circles.flatMap((row) =>
+              row.points.map((p, i) => (
+                <ellipse
+                  key={`${row.number}-${i}`}
+                  cx={p.x}
+                  cy={p.y}
+                  rx={row.size / 2 / layout.width}
+                  ry={row.size / 2 / layout.height}
+                  className="omr-bubble"
+                />
+              )),
+            )}
+            {clicking &&
+              draft?.points.map((p, i) => (
+                <ellipse
+                  key={i}
+                  cx={p.x}
+                  cy={p.y}
+                  rx={0.006}
+                  ry={0.006 * aspect}
+                  className="omr-seed-circle"
+                />
+              ))}
+            <rect
+              ref={preview}
+              x="0"
+              y="0"
+              width="0"
+              height="0"
+              style={{ visibility: "hidden" }}
+              className="omr-drawing-frame"
+            />
+            {cursor && (
+              <g stroke="#3f6f83" strokeWidth=".002" pointerEvents="none">
+                <path
+                  d={`M${cursor.x - 0.012} ${cursor.y}h.024 M${cursor.x} ${cursor.y - 0.009}v.018`}
+                />
+              </g>
+            )}
+          </svg>
+        </div>
+      </div>
+      <details className="omr-keyboard-help">
+        <summary>Keyboard controls</summary>
+        <p id={help}>
+          Focus the sheet. Arrows move; Enter places a corner or circle. Shift
+          moves faster, Alt moves one pixel. Escape cancels a box.
+        </p>
+      </details>
+    </div>
+  );
+}
+
 export function OMRTemplateBuilder({
   file,
   onProfile,
@@ -56,33 +423,25 @@ export function OMRTemplateBuilder({
   const [source, setSource] = useState<File | null>(null),
     [url, setUrl] = useState("");
   const [layout, setLayout] = useState<DesignerLayout>(empty),
-    [step, setStep] = useState(1);
-  const [tool, setTool] = useState<IdentityKind | "block" | "points" | "none">(
-    "student_name",
-  );
+    [profile, setProfile] = useState<OMRProfile | null>(null);
+  const [pending, setPending] = useState<Rect | null>(null),
+    [kind, setKind] = useState("");
   const [draft, setDraft] = useState<AnswerBlock | null>(null),
-    [draw, setDraw] = useState<Rect | null>(null);
-  const [profile, setProfile] = useState<OMRProfile | null>(null),
-    [busy, setBusy] = useState(false),
+    [editing, setEditing] = useState<number | null>(null);
+  const [clicking, setClicking] = useState(false),
+    [guides, setGuides] = useState(false),
+    [expanded, setExpanded] = useState(false);
+  const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  const [zoom, setZoom] = useState(100),
-    [options, setOptions] = useState(4);
-  const [cursor, setCursor] = useState<Point | null>(null);
-  const keyboardStart = useRef<Point | null>(null);
-  const keyboardHelp = useId();
   const applied = useRef(false),
     image = useRef<HTMLImageElement | null>(null),
-    svg = useRef<SVGSVGElement | null>(null);
-  const drag = useRef<{ start: Point; rect?: Rect; pointer: number } | null>(
-    null,
-  );
+    dialog = useRef<HTMLDialogElement>(null),
+    expandButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (file && !applied.current) {
       setSource(file);
       setLayout(empty());
-      setStep(1);
-      setTool("student_name");
-      setDraft(null);
+      resetFrame();
       setError("");
     }
   }, [file]);
@@ -92,21 +451,13 @@ export function OMRTemplateBuilder({
     setUrl(next);
     return () => URL.revokeObjectURL(next);
   }, [source]);
-  const draftInfo = useMemo(() => {
-    if (!draft || draft.points.length !== draft.options * 2)
-      return { rows: [], error: "" };
-    try {
-      return {
-        rows: blockCircles(draft, layout.width, layout.height),
-        error: "",
-      };
-    } catch (e) {
-      return {
-        rows: [],
-        error: e instanceof Error ? e.message : "Check the clicked circles.",
-      };
+  useEffect(() => {
+    if (expanded) dialog.current?.showModal();
+    else if (dialog.current?.open) {
+      dialog.current.close();
+      expandButton.current?.focus({ preventScroll: true });
     }
-  }, [draft, layout.width, layout.height]);
+  }, [expanded]);
   const rows = useMemo(
     () =>
       layout.blocks.flatMap((b) =>
@@ -115,166 +466,101 @@ export function OMRTemplateBuilder({
     [layout.blocks, layout.width, layout.height],
   );
   const total = layout.blocks.reduce((sum, b) => sum + b.count, 0);
+  const draftError = useMemo(() => {
+    if (!draft || draft.points.length !== draft.options * 2) return "";
+    try {
+      nativeFiles({
+        ...layout,
+        blocks:
+          editing === null
+            ? [...layout.blocks, draft]
+            : layout.blocks.map((b, i) => (i === editing ? draft : b)),
+      });
+      return "";
+    } catch (e) {
+      return e instanceof Error ? e.message : "Check this answer block.";
+    }
+  }, [draft, layout, editing]);
+  function resetFrame() {
+    setPending(null);
+    setKind("");
+    setDraft(null);
+    setEditing(null);
+    setClicking(false);
+    setError("");
+  }
   function invalidate() {
     applied.current = false;
     setProfile(null);
     onProfile(null);
     setError("");
   }
-  function point(e: PointerEvent<SVGSVGElement>): Point {
-    const r = e.currentTarget.getBoundingClientRect();
-    return {
-      x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)),
-      y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)),
-    };
-  }
-  function down(e: PointerEvent<SVGSVGElement>) {
-    if (e.button !== 0 || tool === "none" || profile || !layout.width) return;
-    e.preventDefault();
-    e.currentTarget.focus();
-    const p = point(e);
-    if (tool === "points") {
-      addPoint(p);
+  function box(r: Rect) {
+    if (pending) {
+      setError("Save or discard the selected frame before drawing another.");
       return;
     }
-    drag.current = { start: p, pointer: e.pointerId };
-    setDraw({ x: p.x, y: p.y, width: 0, height: 0 });
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (r.width * layout.width < 5 || r.height * layout.height < 5) {
+      setError("Draw a larger frame around the field.");
+      return;
+    }
+    setPending(r);
+    setKind("");
+    setError("");
+  }
+  function choose(value: string) {
+    setKind(value);
+    setClicking(false);
+    setError("");
+    if (value === "answers" && pending)
+      setDraft({
+        bounds: pending,
+        points: [],
+        first: Math.max(1, ...layout.blocks.map((b) => b.first + b.count)),
+        count: 1,
+        options: 4,
+        size: 0.38,
+        labels: "letters",
+      });
+    else setDraft(null);
   }
   function addPoint(p: Point) {
     if (!draft || draft.points.length >= draft.options * 2) return;
     const next = { ...draft, points: [...draft.points, p] };
-    if (next.points.length === next.options * 2) {
+    if (next.points.length === next.options * 2)
       try {
         next.count = autoCount(next, layout.width, layout.height);
       } catch {
-        /* Keep clicks available for undo. */
+        /* Keep the clicked points available for undo. */
       }
-    }
     setDraft(next);
     setError("");
   }
-  function move(e: PointerEvent<SVGSVGElement>) {
-    const g = drag.current;
-    if (!g) return;
-    const p = point(e);
-    g.rect = {
-      x: Math.min(g.start.x, p.x),
-      y: Math.min(g.start.y, p.y),
-      width: Math.abs(p.x - g.start.x),
-      height: Math.abs(p.y - g.start.y),
-    };
-    setDraw(g.rect);
-  }
-  function up(e: PointerEvent<SVGSVGElement>) {
-    const g = drag.current;
-    if (!g) return;
-    drag.current = null;
-    setDraw(null);
-    if (e.currentTarget.hasPointerCapture(g.pointer))
-      e.currentTarget.releasePointerCapture(g.pointer);
-    finishBox(g.rect);
-  }
-  function finishBox(r?: Rect) {
-    if (!r || r.width * layout.width < 5 || r.height * layout.height < 5) {
-      setError("Draw a larger box around the field or answer block.");
+  function saveFrame() {
+    if (!pending) return;
+    if (kind === "student_name" || kind === "roll_number") {
+      setLayout({
+        ...layout,
+        identity: { ...layout.identity, [kind]: pending },
+      });
+      resetFrame();
       return;
     }
-    if (tool === "student_name" || tool === "roll_number") {
-      setLayout({ ...layout, identity: { ...layout.identity, [tool]: r } });
-      setTool(tool === "student_name" ? "roll_number" : "none");
-    } else if (tool === "block") {
-      const first = Math.max(1, ...layout.blocks.map((b) => b.first + b.count));
-      setDraft({ bounds: r, points: [], first, count: 1, options, size: 0.38 });
-      setTool("points");
-    }
-    setError("");
-  }
-  function cancel() {
-    keyboardStart.current = null;
-    const g = drag.current;
-    drag.current = null;
-    setDraw(null);
-    if (g && svg.current?.hasPointerCapture(g.pointer))
-      svg.current.releasePointerCapture(g.pointer);
-  }
-  function keyboard(e: KeyboardEvent<SVGSVGElement>) {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      cancel();
-      return;
-    }
-    if (tool === "none" || !layout.width || !layout.height) return;
-    const p = cursor ?? { x: 0.5, y: 0.5 };
-    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-      e.preventDefault();
-      const pixels = e.shiftKey ? 50 : e.altKey ? 1 : 5;
-      const next = {
-        x: Math.max(
-          0,
-          Math.min(
-            1,
-            p.x +
-              (e.key === "ArrowRight"
-                ? pixels
-                : e.key === "ArrowLeft"
-                  ? -pixels
-                  : 0) /
-                layout.width,
-          ),
-        ),
-        y: Math.max(
-          0,
-          Math.min(
-            1,
-            p.y +
-              (e.key === "ArrowDown"
-                ? pixels
-                : e.key === "ArrowUp"
-                  ? -pixels
-                  : 0) /
-                layout.height,
-          ),
-        ),
-      };
-      setCursor(next);
-      const a = keyboardStart.current;
-      if (a)
-        setDraw({
-          x: Math.min(a.x, next.x),
-          y: Math.min(a.y, next.y),
-          width: Math.abs(a.x - next.x),
-          height: Math.abs(a.y - next.y),
-        });
-    } else if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      setCursor(p);
-      if (tool === "points") addPoint(p);
-      else if (keyboardStart.current) {
-        const a = keyboardStart.current;
-        keyboardStart.current = null;
-        setDraw(null);
-        finishBox({
-          x: Math.min(a.x, p.x),
-          y: Math.min(a.y, p.y),
-          width: Math.abs(a.x - p.x),
-          height: Math.abs(a.y - p.y),
-        });
-      } else keyboardStart.current = p;
-    }
-  }
-  function addBlock() {
-    if (!draft) return;
-    try {
-      const next = { ...layout, blocks: [...layout.blocks, draft] };
-      nativeFiles(next);
-      setLayout(next);
-      setDraft(null);
-      setTool("block");
-      setError("");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Check this block.");
-    }
+    if (draft)
+      try {
+        const next = {
+          ...layout,
+          blocks:
+            editing === null
+              ? [...layout.blocks, draft]
+              : layout.blocks.map((b, i) => (i === editing ? draft : b)),
+        };
+        nativeFiles(next);
+        setLayout(next);
+        resetFrame();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Check the answer block.");
+      }
   }
   async function create() {
     setBusy(true);
@@ -331,7 +617,9 @@ export function OMRTemplateBuilder({
             0.96,
           ),
         );
-      let blob = await toBlob("image/png");
+      let blob = await toBlob(
+        source?.type === "image/jpeg" ? "image/jpeg" : "image/png",
+      );
       if (blob.size > 8 * 1024 * 1024) blob = await toBlob("image/jpeg");
       if (blob.size > 8 * 1024 * 1024)
         throw Error("Use a smaller image for this layout.");
@@ -347,67 +635,362 @@ export function OMRTemplateBuilder({
       applied.current = true;
       setProfile(next);
       onProfile(next);
+      setExpanded(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not create the layout.");
     } finally {
       setBusy(false);
     }
   }
-  const instructions =
-    tool === "student_name"
-      ? "Draw a box around the student name."
-      : tool === "roll_number"
-        ? "Draw a box around the roll number."
-        : tool === "points" && draft
-          ? draft.points.length < draft.options * 2
-            ? `Row ${Math.floor(draft.points.length / draft.options) + 1}: click the center of ${String.fromCharCode(65 + (draft.points.length % draft.options))}. ${draft.points.length} of ${draft.options * 2} circles selected.`
-            : "The remaining circles are filled in. Check the row count, then add this block."
-          : tool === "block"
-            ? "Draw a box around one column of answer bubbles."
-            : "Name and roll fields are set. Continue to the answers.";
+  const editor = (
+    <div className="omr-frame-workspace">
+      <Sheet
+        key={url}
+        url={url}
+        layout={layout}
+        draft={draft}
+        pending={pending}
+        clicking={clicking}
+        guides={guides}
+        onBox={box}
+        onPoint={addPoint}
+        imageRef={image}
+        onError={() => setError("Choose a readable PNG or JPEG sheet.")}
+        onLoad={(width, height) => {
+          if (
+            width < 100 ||
+            height < 100 ||
+            width > 5000 ||
+            height > 5000 ||
+            width * height > 8_000_000
+          ) {
+            setError(
+              "Use a sheet between 100 pixels and 8 megapixels, with each side no larger than 5000 pixels.",
+            );
+            return;
+          }
+          setLayout((old) =>
+            old.width === width && old.height === height
+              ? old
+              : { ...old, width, height },
+          );
+        }}
+      />
+      <aside className="omr-frame-inspector" aria-label="OMR frame settings">
+        {pending ? (
+          <>
+            <h4>Label this frame</h4>
+            <Field name="Field label">
+              <select
+                value={kind}
+                disabled={editing !== null}
+                onChange={(e) => choose(e.target.value)}
+              >
+                <option value="">Choose what is inside</option>
+                <option value="roll_number">Registration number</option>
+                <option value="student_name">Student name</option>
+                <option value="answers">Answers</option>
+              </select>
+            </Field>
+            {draft && (
+              <>
+                <p className="muted">
+                  One frame per answer column. Set its options, then mark the
+                  first two rows.
+                </p>
+                <div className="omr-frame-pair">
+                  <Field name="Options per question">
+                    <select
+                      value={draft.options}
+                      disabled={clicking}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          options: Number(e.target.value),
+                          points: [],
+                        })
+                      }
+                    >
+                      {[2, 3, 4, 5, 6, 7, 8].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field name="Option labels">
+                    <select
+                      value={draft.labels ?? "letters"}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          labels: e.target.value as "letters" | "numbers",
+                        })
+                      }
+                    >
+                      <option value="letters">A, B, C, D</option>
+                      <option value="numbers">1, 2, 3, 4</option>
+                    </select>
+                  </Field>
+                </div>
+                {!clicking ? (
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => setClicking(true)}
+                  >
+                    Mark first two rows
+                  </button>
+                ) : (
+                  <>
+                    <p role="status" className="omr-frame-instruction">
+                      {draft.points.length < draft.options * 2
+                        ? `Row ${Math.floor(draft.points.length / draft.options) + 1}: click ${optionValue(draft, draft.points.length % draft.options)}. ${draft.points.length} of ${draft.options * 2} selected.`
+                        : "Circles filled in. Check the last row and question count."}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={!draft.points.length}
+                      onClick={() =>
+                        setDraft({
+                          ...draft,
+                          points: draft.points.slice(0, -1),
+                        })
+                      }
+                    >
+                      Undo last circle
+                    </button>
+                  </>
+                )}
+                {draft.points.length === draft.options * 2 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setDraft({ ...draft, points: [] })}
+                    >
+                      Re-mark circles
+                    </button>
+                    <div className="omr-frame-pair">
+                      <Field name="Block first question">
+                        <input
+                          type="number"
+                          min={1}
+                          value={draft.first}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              first: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </Field>
+                      <Field name="Questions in this box">
+                        <input
+                          type="number"
+                          min={1}
+                          max={200}
+                          value={draft.count}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              count: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </Field>
+                    </div>
+                    <details>
+                      <summary>Adjust bubble size</summary>
+                      <input
+                        aria-label="Bubble sample size"
+                        type="range"
+                        min={0.15}
+                        max={0.8}
+                        step={0.01}
+                        value={draft.size}
+                        onChange={(e) =>
+                          setDraft({ ...draft, size: Number(e.target.value) })
+                        }
+                      />
+                    </details>
+                  </>
+                )}
+              </>
+            )}
+            <div className="actions">
+              <button
+                type="button"
+                className="primary"
+                disabled={
+                  !kind ||
+                  (kind === "answers" &&
+                    (!draft ||
+                      draft.points.length !== draft.options * 2 ||
+                      !!draftError))
+                }
+                onClick={saveFrame}
+              >
+                Save frame
+              </button>
+              <button type="button" onClick={resetFrame}>
+                Discard frame
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h4>Your frames</h4>
+            <p className="muted">
+              Draw around a field on the sheet, then label it here. Add each
+              answer column separately.
+            </p>
+            {!Object.keys(layout.identity).length && !layout.blocks.length && (
+              <p className="omr-empty-frames">No frames yet.</p>
+            )}
+            {Object.entries(layout.identity).map(([key]) => (
+              <div className="omr-frame-item" key={key}>
+                <strong>{fieldName(key)}</strong>
+                <div className="actions">
+                  <button
+                    type="button"
+                    aria-label={`Remove ${fieldName(key).toLowerCase()}`}
+                    title={`Remove ${fieldName(key).toLowerCase()}`}
+                    onClick={() => {
+                      const identity = { ...layout.identity };
+                      delete identity[key as IdentityKind];
+                      setLayout({ ...layout, identity });
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
+            {layout.blocks.map((b, i) => (
+              <div className="omr-frame-item" key={i}>
+                <strong>
+                  Answers {b.first}–{b.first + b.count - 1}
+                </strong>
+                <span className="muted">
+                  {b.count} questions · {b.options} options
+                </span>
+                <div className="actions">
+                  <button
+                    type="button"
+                    aria-label={`Edit block ${i + 1}`}
+                    onClick={() => {
+                      setEditing(i);
+                      setPending(b.bounds);
+                      setKind("answers");
+                      setDraft(b);
+                      setClicking(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Remove block ${i + 1}`}
+                    title={`Remove block ${i + 1}`}
+                    onClick={() =>
+                      setLayout({
+                        ...layout,
+                        blocks: layout.blocks.filter((_, j) => j !== i),
+                      })
+                    }
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
+            {!!layout.blocks.length && (
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={guides}
+                  onChange={(e) => setGuides(e.target.checked)}
+                />
+                Show bubble guides
+              </label>
+            )}
+            <Field name="OMR layout name">
+              <input
+                value={layout.name}
+                maxLength={80}
+                onChange={(e) => setLayout({ ...layout, name: e.target.value })}
+              />
+            </Field>
+            <button
+              type="button"
+              className="primary"
+              disabled={busy || !layout.blocks.length || !layout.name.trim()}
+              onClick={() => void create()}
+            >
+              {busy ? "Creating layout…" : "Use this layout"}
+            </button>
+          </>
+        )}
+        {(error || draftError) && (
+          <p role="alert" className="error">
+            {error || draftError}
+          </p>
+        )}
+      </aside>
+    </div>
+  );
   return (
     <section className="omr-designer" aria-label="Guided OMR layout setup">
       <div className="section-heading">
         <div>
-          <h3>{profile ? "Your layout is ready" : "Create your OMR layout"}</h3>
+          <h3>{profile ? "Your layout is ready" : "Visual OMR template"}</h3>
           <p className="muted">
-            Use a blank sheet when available. The template, reference image and
-            tuning are created together.
+            Draw a frame. Label it. Repeat for each field.
           </p>
         </div>
-        <label className="omr-load-calibration">
-          Load saved layout
-          <input
-            type="file"
-            accept="application/json,.json"
-            aria-label="Load saved OMR layout"
-            disabled={busy}
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              try {
-                if (f.size > 12_000_000)
-                  throw Error("Saved layout is too large.");
-                const next = loadProfile(await f.text());
-                setLayout(next.layout);
-                setSource(referenceFile(next));
-                setStep(3);
-                setDraft(null);
-                applied.current = true;
-                setProfile(next);
-                onProfile(next);
-                setError("");
-              } catch (err) {
-                setError(
-                  err instanceof Error
-                    ? err.message
-                    : "Could not load this layout.",
-                );
-              }
-              e.target.value = "";
-            }}
-          />
-        </label>
+        <div className="actions">
+          {source && !profile && (
+            <button
+              ref={expandButton}
+              type="button"
+              onClick={() => setExpanded(true)}
+            >
+              Expand editor
+            </button>
+          )}
+          <label className="omr-load-calibration">
+            Load saved layout
+            <input
+              type="file"
+              accept="application/json,.json"
+              aria-label="Load saved OMR layout"
+              disabled={busy}
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                try {
+                  if (f.size > 12_000_000)
+                    throw Error("Saved layout is too large.");
+                  const next = loadProfile(await f.text());
+                  setLayout(next.layout);
+                  setSource(referenceFile(next));
+                  resetFrame();
+                  applied.current = true;
+                  setProfile(next);
+                  onProfile(next);
+                  setError("");
+                } catch (err) {
+                  setError(
+                    err instanceof Error
+                      ? err.message
+                      : "Could not load this layout.",
+                  );
+                }
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
       </div>
       {profile ? (
         <div className="omr-layout-ready">
@@ -416,11 +999,12 @@ export function OMRTemplateBuilder({
             blocks
           </strong>
           <p>
-            Reference alignment is configured automatically. No marker upload is
+            Template, reference and tuning are ready. No marker upload is
             needed.
           </p>
           <div className="actions">
             <button
+              ref={expandButton}
               type="button"
               onClick={() =>
                 download(
@@ -435,8 +1019,7 @@ export function OMRTemplateBuilder({
               type="button"
               onClick={() => {
                 invalidate();
-                setStep(2);
-                setTool("block");
+                resetFrame();
               }}
             >
               Edit layout
@@ -447,9 +1030,7 @@ export function OMRTemplateBuilder({
                 invalidate();
                 setSource(file);
                 setLayout(empty());
-                setStep(1);
-                setTool("student_name");
-                setDraft(null);
+                resetFrame();
               }}
             >
               Start a new layout
@@ -492,387 +1073,32 @@ export function OMRTemplateBuilder({
             </div>
           </details>
         </div>
-      ) : (
-        <>
-          <ol className="omr-setup-steps">
-            {["Name & roll", "Answer blocks", "Finish"].map((name, i) => (
-              <li key={name} aria-current={step === i + 1 ? "step" : undefined}>
-                {i + 1}. {name}
-              </li>
-            ))}
-          </ol>
-          {!source ? (
-            <p>Choose a sheet image above, or load a saved layout.</p>
-          ) : (
-            <>
-              {step === 1 && (
-                <div className="actions">
-                  <button
-                    type="button"
-                    aria-pressed={tool === "student_name"}
-                    onClick={() => setTool("student_name")}
-                  >
-                    Snip student name{layout.identity.student_name ? " ✓" : ""}
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={tool === "roll_number"}
-                    onClick={() => setTool("roll_number")}
-                  >
-                    Snip roll number{layout.identity.roll_number ? " ✓" : ""}
-                  </button>
-                  <button
-                    type="button"
-                    className="primary"
-                    onClick={() => {
-                      setStep(2);
-                      setTool("block");
-                    }}
-                  >
-                    Continue to answer boxes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLayout({ ...layout, identity: {} })}
-                  >
-                    Clear identity boxes
-                  </button>
-                </div>
-              )}
-              {step === 2 && (
-                <>
-                  <div className="omr-canvas-controls">
-                    <Field name="Options per question">
-                      <select
-                        value={options}
-                        disabled={!!draft}
-                        onChange={(e) => setOptions(Number(e.target.value))}
-                      >
-                        {[2, 3, 4, 5, 6, 7, 8].map((n) => (
-                          <option key={n} value={n}>
-                            {n}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDraft(null);
-                        setTool("block");
-                        setError("");
-                      }}
-                    >
-                      Draw answer box
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!draft?.points.length}
-                      onClick={() =>
-                        setDraft(
-                          draft
-                            ? { ...draft, points: draft.points.slice(0, -1) }
-                            : null,
-                        )
-                      }
-                    >
-                      Undo last circle
-                    </button>
-                  </div>
-                  {draft && (
-                    <div className="omr-grid-setup">
-                      <Field name="Block first question">
-                        <input
-                          type="number"
-                          min={1}
-                          value={draft.first}
-                          onChange={(e) =>
-                            setDraft({
-                              ...draft,
-                              first: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </Field>
-                      <Field name="Questions in this box">
-                        <input
-                          type="number"
-                          min={1}
-                          max={200}
-                          value={draft.count}
-                          onChange={(e) =>
-                            setDraft({
-                              ...draft,
-                              count: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </Field>
-                      {draft.points.length === draft.options * 2 && (
-                        <button
-                          type="button"
-                          className="primary"
-                          disabled={!!draftInfo.error}
-                          onClick={addBlock}
-                        >
-                          Add answer block
-                        </button>
-                      )}
-                      <details>
-                        <summary>Bubble size</summary>
-                        <input
-                          aria-label="Bubble sample size"
-                          type="range"
-                          min={0.15}
-                          max={0.8}
-                          step={0.01}
-                          value={draft.size}
-                          onChange={(e) =>
-                            setDraft({ ...draft, size: Number(e.target.value) })
-                          }
-                        />
-                      </details>
-                    </div>
-                  )}
-                  {!!layout.blocks.length && (
-                    <div className="omr-saved-blocks">
-                      {layout.blocks.map((b, i) => (
-                        <div key={i}>
-                          <span>
-                            Block {i + 1} · questions {b.first}–
-                            {b.first + b.count - 1}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDraft(b);
-                              setLayout({
-                                ...layout,
-                                blocks: layout.blocks.filter((_, j) => j !== i),
-                              });
-                              setTool("points");
-                            }}
-                          >
-                            Edit block {i + 1}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setLayout({
-                                ...layout,
-                                blocks: layout.blocks.filter((_, j) => j !== i),
-                              })
-                            }
-                          >
-                            Remove block {i + 1}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="actions">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep(1);
-                        setTool("student_name");
-                      }}
-                    >
-                      Back to identity fields
-                    </button>
-                    <button
-                      type="button"
-                      className="primary"
-                      disabled={!layout.blocks.length || !!draft}
-                      onClick={() => {
-                        setStep(3);
-                        setTool("none");
-                      }}
-                    >
-                      Review layout
-                    </button>
-                  </div>
-                </>
-              )}
-              {step === 3 && (
-                <div className="omr-grid-setup">
-                  <Field name="OMR layout name">
-                    <input
-                      value={layout.name}
-                      maxLength={80}
-                      onChange={(e) =>
-                        setLayout({ ...layout, name: e.target.value })
-                      }
-                    />
-                  </Field>
-                  <p>
-                    {total} questions · {layout.blocks.length} blocks ·{" "}
-                    {Object.keys(layout.identity).length} identity fields
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep(2);
-                      setTool("block");
-                    }}
-                  >
-                    Back to answer boxes
-                  </button>
-                  <button
-                    type="button"
-                    className="primary"
-                    disabled={busy || !layout.name.trim()}
-                    onClick={() => void create()}
-                  >
-                    {busy ? "Creating layout…" : "Use this layout"}
-                  </button>
-                </div>
-              )}
-              <div className="omr-canvas-controls">
-                <Field name="Layout zoom">
-                  <select
-                    value={zoom}
-                    onChange={(e) => setZoom(Number(e.target.value))}
-                  >
-                    {[50, 75, 100, 125, 150, 200].map((n) => (
-                      <option key={n} value={n}>
-                        {n}%
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <p role="status">
-                  {step === 3
-                    ? "Check the generated circles before using this layout."
-                    : instructions}
-                </p>
-              </div>
-              <div className="omr-canvas-viewport">
-                <div className="omr-canvas-image" style={{ width: `${zoom}%` }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    ref={image}
-                    src={url || undefined}
-                    alt="Sheet for guided OMR layout setup"
-                    draggable={false}
-                    onError={() =>
-                      setError("Choose a readable PNG or JPEG sheet image.")
-                    }
-                    onLoad={(e) => {
-                      const img = e.currentTarget;
-                      if (img.naturalWidth * img.naturalHeight > 8_000_000) {
-                        setError("Use an image of at most 8 megapixels.");
-                        return;
-                      }
-                      const scale = Math.min(
-                        1,
-                        5000 / Math.max(img.naturalWidth, img.naturalHeight),
-                      );
-                      setLayout((old) => ({
-                        ...old,
-                        width: Math.round(img.naturalWidth * scale),
-                        height: Math.round(img.naturalHeight * scale),
-                      }));
-                    }}
-                  />
-                  <svg
-                    ref={svg}
-                    viewBox="0 0 1 1"
-                    preserveAspectRatio="none"
-                    tabIndex={0}
-                    role="group"
-                    aria-label="Template calibration canvas"
-                    aria-describedby={keyboardHelp}
-                    className={
-                      tool === "points" ? "omr-point-tool" : "omr-draw-tool"
-                    }
-                    onPointerDown={down}
-                    onPointerMove={move}
-                    onPointerUp={up}
-                    onPointerCancel={cancel}
-                    onKeyDown={keyboard}
-                    onFocus={() =>
-                      setCursor((old) => old ?? { x: 0.5, y: 0.5 })
-                    }
-                    onBlur={() => {
-                      setCursor(null);
-                      cancel();
-                    }}
-                  >
-                    {Object.entries(layout.identity).map(([kind, r]) => (
-                      <rect key={kind} {...r} className="omr-identity-frame">
-                        <title>
-                          {kind === "student_name"
-                            ? "Student name"
-                            : "Roll number"}
-                        </title>
-                      </rect>
-                    ))}
-                    {layout.blocks.map((b, i) => (
-                      <rect key={i} {...b.bounds} className="omr-block-frame" />
-                    ))}
-                    {draft && (
-                      <rect {...draft.bounds} className="omr-block-frame" />
-                    )}
-                    {[...rows, ...draftInfo.rows].flatMap((row) =>
-                      row.points.map((p, i) => (
-                        <ellipse
-                          key={`${row.number}-${i}`}
-                          cx={p.x}
-                          cy={p.y}
-                          rx={row.size / 2 / layout.width}
-                          ry={row.size / 2 / layout.height}
-                          className="omr-bubble"
-                        />
-                      )),
-                    )}
-                    {draft?.points.map((p, i) => (
-                      <g key={i}>
-                        <ellipse
-                          cx={p.x}
-                          cy={p.y}
-                          rx={0.006}
-                          ry={(0.006 * layout.width) / layout.height}
-                          className="omr-seed-circle"
-                        />
-                        <text
-                          x={p.x + 0.008}
-                          y={p.y}
-                          fontSize=".012"
-                          fill="#3f6f83"
-                        >
-                          {Math.floor(i / draft.options) + 1}
-                          {String.fromCharCode(65 + (i % draft.options))}
-                        </text>
-                      </g>
-                    ))}
-                    {draw && <rect {...draw} className="omr-drawing-frame" />}
-                    {cursor && (
-                      <g
-                        stroke="#3f6f83"
-                        strokeWidth=".002"
-                        pointerEvents="none"
-                      >
-                        <path
-                          d={`M${cursor.x - 0.012} ${cursor.y}h.024 M${cursor.x} ${cursor.y - 0.009}v.018`}
-                        />
-                      </g>
-                    )}
-                  </svg>
-                </div>
-              </div>
-              <p id={keyboardHelp} className="muted">
-                Keyboard: focus the sheet, use arrow keys to move, then Enter to
-                place each corner or circle. Shift moves faster; Alt moves one
-                pixel. Escape cancels a box.
-              </p>
-            </>
-          )}
-        </>
-      )}
-      {(error || draftInfo.error) && (
+      ) : !source ? (
+        <p>Upload a sheet image above, or load a saved layout.</p>
+      ) : !expanded ? (
+        editor
+      ) : null}
+      <dialog
+        ref={dialog}
+        className="omr-editor-dialog"
+        onCancel={() => setExpanded(false)}
+        onClose={() => setExpanded(false)}
+      >
+        {expanded && !profile && (
+          <>
+            <div className="omr-dialog-heading">
+              <h3>Visual OMR template</h3>
+              <button type="button" onClick={() => setExpanded(false)}>
+                Close expanded editor
+              </button>
+            </div>
+            {editor}
+          </>
+        )}
+      </dialog>
+      {profile && error && (
         <p role="alert" className="error">
-          {error || draftInfo.error}
+          {error}
         </p>
       )}
     </section>

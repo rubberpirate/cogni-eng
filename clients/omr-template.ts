@@ -9,6 +9,7 @@ export type AnswerBlock = {
   bounds: Rect;
   points: Point[];
   size: number;
+  labels?: "letters" | "numbers";
 };
 export type DesignerLayout = {
   width: number;
@@ -24,6 +25,11 @@ export type OMRProfile = {
   config: Record<string, unknown>;
   reference: { name: string; type: string; data: string };
 };
+export function optionValue(block: AnswerBlock, index: number) {
+  return block.labels === "numbers"
+    ? String(index + 1)
+    : String.fromCharCode(65 + index);
+}
 export function inside(p: Point, r: Rect) {
   return (
     p.x >= r.x - 1e-8 &&
@@ -169,6 +175,8 @@ export function nativeFiles(
       !Number.isSafeInteger(block.first + block.count) ||
       !validRect(block.bounds) ||
       !Number.isFinite(block.size) ||
+      (block.labels !== undefined &&
+        !["letters", "numbers"].includes(block.labels)) ||
       block.size < 0.15 ||
       block.size > 0.8
     )
@@ -212,7 +220,7 @@ export function nativeFiles(
         origin,
         fieldLabels: [`q${row.number}`],
         bubbleValues: Array.from({ length: block.options }, (_, i) =>
-          String.fromCharCode(65 + i),
+          optionValue(block, i),
         ),
         direction: "horizontal",
         bubbleDimensions: [row.size, row.size],

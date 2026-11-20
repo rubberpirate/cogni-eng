@@ -15,7 +15,7 @@ const sheet = resolve("apps/web/public/samples/omrchecker/filled-sheet.png");
 const surface = (page: Page) =>
   page.getByRole("group", { name: "Template calibration canvas", exact: true });
 async function draw(page: Page, a: number, b: number, c: number, d: number) {
-  await surface(page).scrollIntoViewIfNeeded();
+  await page.locator(".omr-sheet-stage").scrollIntoViewIfNeeded();
   const r = (await surface(page).boundingBox())!;
   await page.mouse.move(r.x + a * r.width, r.y + b * r.height);
   await page.mouse.down();
@@ -25,7 +25,7 @@ async function draw(page: Page, a: number, b: number, c: number, d: number) {
 async function seed(page: Page, x: number) {
   for (const y of [750, 820])
     for (const dx of [0, 70, 140, 210]) {
-      await surface(page).scrollIntoViewIfNeeded();
+      await page.locator(".omr-sheet-stage").scrollIntoViewIfNeeded();
       const r = (await surface(page).boundingBox())!;
       await page.mouse.click(
         r.x + ((x + dx) / 1200) * r.width,
@@ -35,9 +35,7 @@ async function seed(page: Page, x: number) {
   await expect(
     page.getByLabel("Questions in this box", { exact: true }),
   ).toHaveValue("10");
-  await page
-    .getByRole("button", { name: "Add answer block", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Save frame", exact: true }).click();
 }
 async function read(page: Page) {
   const response = page.waitForResponse(
@@ -72,27 +70,53 @@ test("name/roll snips and two clicked rows build a reusable native OMRChecker la
     .getByLabel("OMRChecker sheet image", { exact: true })
     .setInputFiles(sheet);
   await expect(surface(page)).toBeVisible();
-  await page.getByLabel("Layout zoom", { exact: true }).selectOption("50");
+  await page
+    .getByRole("button", { name: "Expand editor", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Close expanded editor", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Expand editor", exact: true }),
+  ).toBeFocused();
+  await expect(page.getByLabel("Layout zoom", { exact: true })).toHaveValue(
+    "fit",
+  );
+  await expect(surface(page).locator("ellipse")).toHaveCount(0);
   await surface(page).focus();
   await surface(page).press("Enter");
   await surface(page).press("Shift+ArrowRight");
   await surface(page).press("Shift+ArrowDown");
   await surface(page).press("Enter");
-  await expect(surface(page).locator(".omr-identity-frame")).toHaveCount(1);
+  await expect(page.getByLabel("Field label", { exact: true })).toBeVisible();
   await page
-    .getByRole("button", { name: "Clear identity boxes", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Snip student name", exact: true })
+    .getByRole("button", { name: "Discard frame", exact: true })
     .click();
   await draw(page, 0.06, 0.1, 0.72, 0.128);
+  await page
+    .getByLabel("Field label", { exact: true })
+    .selectOption("student_name");
+  await page.getByRole("button", { name: "Save frame", exact: true }).click();
   await draw(page, 0.06, 0.13, 0.4, 0.157);
   await page
-    .getByRole("button", { name: "Continue to answer boxes", exact: true })
-    .click();
+    .getByLabel("Field label", { exact: true })
+    .selectOption("roll_number");
+  await page.getByRole("button", { name: "Save frame", exact: true }).click();
   await draw(page, 150 / 1200, 0.45, 420 / 1200, 0.885);
+  await expect(surface(page).locator("ellipse")).toHaveCount(0);
+  await page.getByLabel("Field label", { exact: true }).selectOption("answers");
+  await expect(surface(page).locator("ellipse")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Mark first two rows", exact: true })
+    .click();
   await seed(page, 180);
   await draw(page, 710 / 1200, 0.45, 980 / 1200, 0.885);
+  await page.getByLabel("Field label", { exact: true }).selectOption("answers");
+  await page
+    .getByRole("button", { name: "Mark first two rows", exact: true })
+    .click();
   await seed(page, 740);
   await page
     .locator(".omr-designer")
@@ -108,10 +132,7 @@ test("name/roll snips and two clicked rows build a reusable native OMRChecker la
     .locator(".omr-designer")
     .screenshot({ path: ".local/screenshots/omr-visual-editor-mobile.png" });
   await page.setViewportSize({ width: 1440, height: 1100 });
-  await page.getByLabel("Layout zoom", { exact: true }).selectOption("50");
-  await page
-    .getByRole("button", { name: "Review layout", exact: true })
-    .click();
+  await page.getByLabel("Layout zoom", { exact: true }).selectOption("fit");
   await page
     .getByLabel("OMR layout name", { exact: true })
     .fill("Visual test layout");

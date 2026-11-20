@@ -15,9 +15,11 @@ export function OMRCheckerReader({
   papers,
   paper,
   onPaper,
+  courses,
 }: {
   api: EducationClient;
   papers: Paper[];
+  courses: A<"AcademicCourse">[];
   paper: Paper | null;
   onPaper: (paper: Paper | null) => void;
 }) {
@@ -36,32 +38,15 @@ export function OMRCheckerReader({
   const [revision, setRevision] = useState(0),
     [uploading, setUploading] = useState("");
   const paperID = paper?.state === "published" ? paper.id : "";
+  const creationCourse = paper?.course_id || courses[0]?.id || "";
   useEffect(() => {
     let active = true;
-    setTemplates([]);
-    setTemplate("");
-    setFiles([]);
-    setFailed([]);
-    setSample(null);
-    setNotice("");
-    setError("");
-    if (!paperID) {
-      setLoading(false);
-      return;
-    }
     setLoading(true);
+    setTemplates([]);
     void api
-      .list("omr-templates", { paper: paperID })
+      .list("omr-templates")
       .then((items) => {
-        if (!active) return;
-        setTemplates(items);
-        let previous = "";
-        try {
-          previous = localStorage.getItem("omr-template:" + paperID) ?? "";
-        } catch {
-          /* Template storage is on the server; browser preferences are optional. */
-        }
-        if (items.some((t) => t.id === previous)) setTemplate(previous);
+        if (active) setTemplates(items);
       })
       .catch((e) => {
         if (active) setError(e.message);
@@ -72,7 +57,31 @@ export function OMRCheckerReader({
     return () => {
       active = false;
     };
-  }, [api, paperID]);
+  }, [api]);
+  useEffect(() => {
+    setTemplate("");
+    setFiles([]);
+    setFailed([]);
+    setNotice("");
+    setError("");
+  }, [paperID]);
+  useEffect(() => {
+    if (!paperID) return;
+    let previous = "";
+    try {
+      previous = localStorage.getItem("omr-template:" + paperID) ?? "";
+    } catch {
+      /* Browser preferences are optional. */
+    }
+    if (
+      templates.some(
+        (t) =>
+          t.id === previous &&
+          (!paper || t.question_count >= questions(paper).length),
+      )
+    )
+      setTemplate(previous);
+  }, [paperID, templates, paper]);
   function selectTemplate(id: string) {
     setTemplate(id);
     if (paperID)
@@ -122,11 +131,12 @@ export function OMRCheckerReader({
     }
   }
   async function saveTemplate(profile: OMRProfile) {
-    if (!paperID) throw Error("Select an assessment before saving a template.");
+    if (!creationCourse)
+      throw Error("Active teaching access is required to save a template.");
     setSaving(true);
     try {
       const data = new FormData();
-      data.set("paper_id", paperID);
+      data.set("course_id", creationCourse);
       data.set("file", referenceFile(profile));
       data.set(
         "definition",
@@ -142,16 +152,20 @@ export function OMRCheckerReader({
       );
       const saved = await api.saveOMRTemplate(data);
       setTemplates((old) => [...old, saved]);
-      selectTemplate(saved.id);
+      const usable =
+        paperID && paper && saved.question_count >= questions(paper).length;
+      if (usable) selectTemplate(saved.id);
       setNotice(
-        `“${saved.name}” is saved and selected. Upload answer sheets above.`,
+        usable
+          ? `“${saved.name}” is saved to the library and selected. Upload answer sheets above.`
+          : `“${saved.name}” is saved to the shared template library for future assessments.`,
       );
     } finally {
       setSaving(false);
     }
   }
   const compatible = templates.filter(
-    (t) => paper && t.question_count === questions(paper).length,
+    (t) => paper && t.question_count >= questions(paper).length,
   );
   return (
     <>
@@ -200,9 +214,21 @@ export function OMRCheckerReader({
                   <option value="">
                     {loading ? "Loading templates…" : "Choose a saved template"}
                   </option>
-                  {compatible.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} · {t.question_count} questions
+                  {templates.map((t) => (
+                    <option
+                      key={t.id}
+                      value={t.id}
+                      disabled={
+                        !!paper && t.question_count < questions(paper).length
+                      }
+                    >
+                      {t.name} · {t.question_count} rows
+                      {templates.filter(
+                        (other) =>
+                          other.name.toLowerCase() === t.name.toLowerCase(),
+                      ).length > 1
+                        ? ` · ${t.created_in}`
+                        : ""}
                     </option>
                   ))}
                 </select>
@@ -210,10 +236,22 @@ export function OMRCheckerReader({
             </div>
             {paperID && !loading && !compatible.length && (
               <p className="muted">
-                No matching templates yet. Create and name one below; it will be
-                available here next time.
+                No template has enough answer rows yet. Create one below or
+                choose another assessment.
               </p>
             )}
+            {paper &&
+              templates.find(
+                (t) =>
+                  t.id === template &&
+                  t.question_count > questions(paper).length,
+              ) && (
+                <p className="muted">
+                  Only the first {questions(paper).length} answer rows are
+                  graded for this assessment. The remaining template rows are
+                  ignored.
+                </p>
+              )}
             <Field name="3. Answer sheets">
               <input
                 key={paperID}
@@ -277,13 +315,14 @@ export function OMRCheckerReader({
       )}
       <details className="card omr-template-creation">
         <summary>Create an OMR template</summary>
-        {!paperID ? (
-          <p>Select an assessment above to create a matching template.</p>
+        {!creationCourse ? (
+          <p>Active teaching access is required to save templates.</p>
         ) : (
           <>
             <p className="muted">
-              Upload a blank or sample sheet, draw and label its fields, then
-              save it with a name. The template is reusable for this batch.
+              Create a reusable sheet layout without choosing an assessment.
+              Upload a blank or sample sheet, label its fields and save it to
+              the shared template library.
             </p>
             <Field name="Template sheet image">
               <input
@@ -294,7 +333,6 @@ export function OMRCheckerReader({
               />
             </Field>
             <OMRTemplateBuilder
-              key={paperID}
               file={sample}
               onProfile={() => {}}
               onSave={saveTemplate}

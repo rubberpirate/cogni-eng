@@ -9,7 +9,7 @@ export const nativeExpected = JSON.parse(
     "utf8",
   ),
 ).responses as Record<string, string>;
-export async function originalOMRAssessment(page: Page) {
+export async function originalOMRAssessment(page: Page, count = 20) {
   const base = `/api/v1/institutions/${omrFixture.org}/education/`;
   const me = await (await page.request.get("/api/v1/me")).json();
   async function post(path: string, data: unknown) {
@@ -33,7 +33,7 @@ export async function originalOMRAssessment(page: Page) {
     outcome: "Read documented original marked responses",
     language: "en",
   });
-  const questions = Array.from({ length: 20 }, (_, i) => {
+  const questions = Array.from({ length: count }, (_, i) => {
     const key = nativeExpected[`q${i + 1}`] || "B";
     return {
       topic_id: topic.id,
@@ -118,7 +118,7 @@ export async function savedOMRTemplate(page: Page, paper: any, base: string) {
   const response = await page.request.post(base + "omr-templates", {
     headers: { "X-CSRF-Token": me.csrf, Origin: "http://localhost:3000" },
     multipart: {
-      paper_id: paper.id,
+      course_id: paper.course_id,
       definition: JSON.stringify({
         name: layout.name,
         ...files,

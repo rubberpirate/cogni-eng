@@ -13511,30 +13511,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "campus",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Bounded results; 200 maximum. Empty campus requires institution-wide entitlement."
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Bounded results; 200 maximum. Empty campus requires institution-wide entitlement."
-          },
-          {
-            "name": "paper",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
           }
         ]
       },
@@ -13658,7 +13634,7 @@
                     "type": "string",
                     "format": "binary"
                   },
-                  "paper_id": {
+                  "course_id": {
                     "type": "string"
                   },
                   "definition": {
@@ -13667,7 +13643,7 @@
                 },
                 "required": [
                   "file",
-                  "paper_id",
+                  "course_id",
                   "definition"
                 ]
               }
@@ -17423,6 +17399,9 @@
           "course_id": {
             "type": "string"
           },
+          "created_in": {
+            "type": "string"
+          },
           "question_count": {
             "type": "integer"
           },
@@ -17434,6 +17413,7 @@
           "id",
           "name",
           "course_id",
+          "created_in",
           "question_count",
           "created_at"
         ]

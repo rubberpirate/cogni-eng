@@ -104,10 +104,12 @@ route(base+'drafts/{id}/publish','post','AcademicAssessmentDraft','AcademicDraft
 
 for path,entity in [('omr-templates','OMRSavedTemplate'),('omr-checks','OMRCheck')]:
  route(base+path,'get','Academic'+entity,listed=True)
- paths['/api/v1'+base+path]['get']['parameters'].append({'name':'paper','in':'query','required':True,'schema':S})
+ if path=='omr-templates':
+  paths['/api/v1'+base+path]['get']['parameters']=[p for p in paths['/api/v1'+base+path]['get']['parameters'] if p['in']!='query']
+ if path=='omr-checks':paths['/api/v1'+base+path]['get']['parameters'].append({'name':'paper','in':'query','required':True,'schema':S})
 for path,entity in [('omr-checks','OMRCheck'),('omr-sheets','OMRCheckedSheet')]:route(base+path+'/{id}','get','Academic'+entity)
 route(base+'omr-sheets/{id}/review','post','AcademicOMRCheckedSheet','AcademicOMRReview')
-for path,entity,fields in [('omr-templates','OMRSavedTemplate',{'file':{'type':'string','format':'binary'},'paper_id':S,'definition':S}),('omr-checks','OMRCheck',{'file':{'type':'string','format':'binary'},'paper_id':S,'template_id':S})]:
+for path,entity,fields in [('omr-templates','OMRSavedTemplate',{'file':{'type':'string','format':'binary'},'course_id':S,'definition':S}),('omr-checks','OMRCheck',{'file':{'type':'string','format':'binary'},'paper_id':S,'template_id':S})]:
  route(base+path,'post','Academic'+entity)
  paths['/api/v1'+base+path]['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj(fields)}}}
 

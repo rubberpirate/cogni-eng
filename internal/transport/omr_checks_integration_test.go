@@ -16,6 +16,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"learning.local/workspace/internal/academic"
+	"learning.local/workspace/internal/access"
 	"learning.local/workspace/internal/scholar"
 )
 
@@ -91,11 +92,11 @@ func TestSavedOMRTemplatesGradeWithoutAccountsAndProtectReview(t *testing.T) {
 	var template scholar.OMRSavedTemplate
 	academicTx(t, h, func(tx pgx.Tx) error {
 		var e error
-		template, e = svc.SaveOMRTemplate(ctx, tx, h.owner, h.org, paper.ID, definition, image)
+		template, e = svc.SaveOMRTemplate(ctx, tx, h.owner, h.org, course, definition, image)
 		return e
 	})
 	academicTx(t, h, func(tx pgx.Tx) error {
-		list, e := svc.OMRTemplates(ctx, tx, h.owner, h.org, paper.ID)
+		list, e := svc.OMRTemplates(ctx, tx, h.owner, h.org)
 		if e != nil {
 			return e
 		}
@@ -118,7 +119,7 @@ func TestSavedOMRTemplatesGradeWithoutAccountsAndProtectReview(t *testing.T) {
 		return e
 	})
 	for _, actor := range []string{learner} {
-		if e := scholar.Tx(ctx, h.db, func(tx pgx.Tx) error { _, e := svc.OMRTemplates(ctx, tx, actor, h.org, paper.ID); return e }); e == nil {
+		if e := scholar.Tx(ctx, h.db, func(tx pgx.Tx) error { _, e := svc.OMRTemplates(ctx, tx, actor, h.org); return e }); e == nil {
 			t.Fatal("learner read templates")
 		}
 	}
@@ -354,5 +355,83 @@ func TestSavedOMRTemplatesGradeWithoutAccountsAndProtectReview(t *testing.T) {
 		return e
 	}); e == nil {
 		t.Fatal("invalid results cursor accepted")
+	}
+	// Layout geometry is shared across assessments and teaching batches; keys are not.
+	otherCourse, instructor := access.Random(), access.Random()
+	h.exec("INSERT INTO course(id,institution_id,campus_id,name,academic_year) VALUES($1,$2,$3,'Second teaching batch','2026')", otherCourse, h.org, h.campus)
+	h.exec("INSERT INTO person(id,email,name,password_hash,state,verified_at) VALUES($1,'second-instructor@example.invalid','Synthetic second instructor','test-only-not-a-login-hash','active',now())", instructor)
+	h.exec("INSERT INTO membership(id,institution_id,person_id,campus_id,role) VALUES($1,$2,$3,$4,'instructor')", access.Random(), h.org, instructor, h.campus)
+	h.exec("INSERT INTO responsibility(id,institution_id,staff_id,course_id,subject,starts_on) VALUES($1,$2,$3,$4,'Recognition reuse',current_date)", access.Random(), h.org, instructor, otherCourse)
+	var shorter scholar.PaperRecord
+	academicTx(t, h, func(tx pgx.Tx) error {
+		topic, e := svc.CreateTopic(ctx, tx, h.owner, h.org, scholar.Topic{CampusID: h.campus, CourseID: otherCourse, Subject: "Recognition reuse", Name: "Reuse a generic OMR layout", Outcome: "Grade a shorter assessment using its own key", Language: "en"})
+		if e != nil {
+			return e
+		}
+		qs := []academic.Question{}
+		for _, q := range paper.Spec.Sections[0].Questions[:3] {
+			q.ID = ""
+			q.TopicID = topic.ID
+			q.Stem += " Original second-assessment reuse."
+			qs = append(qs, q)
+		}
+		// A different key verifies that the template never supplies the answers.
+		qs[0].Key = []string{"B"}
+		d, e := svc.SaveDraft(ctx, tx, h.owner, h.org, "", scholar.DraftWrite{CampusID: h.campus, CourseID: otherCourse, Spec: scholar.DraftSpec{Title: "Three-question reuse", Method: "manual", TopicID: topic.ID, Exam: "Original reuse", StartsAt: time.Now(), DurationMinutes: 30, Instructions: "Independent assessment key", Questions: qs, Learners: []string{}}})
+		if e != nil {
+			return e
+		}
+		d, e = svc.PublishDraft(ctx, tx, h.owner, h.org, d.ID, d.Version)
+		if e != nil {
+			return e
+		}
+		shorter, e = svc.Paper(ctx, tx, h.owner, h.org, d.PaperID)
+		return e
+	})
+	var shared scholar.OMRCheck
+	academicTx(t, h, func(tx pgx.Tx) error {
+		items, e := svc.OMRTemplates(ctx, tx, instructor, h.org)
+		if e != nil {
+			return e
+		}
+		found := false
+		for _, v := range items {
+			if v.ID == template.ID {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatal("shared template missing for another batch's instructor")
+		}
+		shared, e = svc.StageOMRCheck(ctx, tx, instructor, h.org, shorter.ID, template.ID, "same-sheet-different-assessment.png", image)
+		return e
+	})
+	deadline = time.Now().Add(30 * time.Second)
+	for time.Now().Before(deadline) {
+		academicTx(t, h, func(tx pgx.Tx) error {
+			var e error
+			shared, e = svc.OMRCheck(ctx, tx, instructor, h.org, shared.ID)
+			return e
+		})
+		if shared.State == "completed" {
+			break
+		}
+		if shared.State == "failed" {
+			t.Fatal(shared.Error)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if len(shared.Sheets) != 1 || shared.TemplateID != template.ID || shared.Sheets[0].Maximum != "12" || shared.Sheets[0].Score != "7" || shared.Sheets[0].State != "graded" {
+		t.Fatalf("generic template or independent key failed: %+v", shared)
+	}
+	if e := scholar.Tx(ctx, h.db, func(tx pgx.Tx) error {
+		var reference string
+		if e := tx.QueryRow(ctx, "SELECT reference_asset_id FROM omr_template WHERE id=$1", template.ID).Scan(&reference); e != nil {
+			return e
+		}
+		_, e := svc.Asset(ctx, tx, instructor, h.org, reference)
+		return e
+	}); e == nil {
+		t.Fatal("shared metadata exposed another course's private reference image")
 	}
 }

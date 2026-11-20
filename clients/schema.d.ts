@@ -2479,6 +2479,7 @@ export interface components {
             id: string;
             name: string;
             course_id: string;
+            created_in: string;
             question_count: number;
             created_at: string;
         };
@@ -12783,13 +12784,7 @@ export interface operations {
     };
     "get__api_v1_institutions_org_education_omr-templates": {
         parameters: {
-            query: {
-                /** @description Bounded results; 200 maximum. Empty campus requires institution-wide entitlement. */
-                campus?: string;
-                /** @description Bounded results; 200 maximum. Empty campus requires institution-wide entitlement. */
-                q?: string;
-                paper: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 org: string;
@@ -12888,7 +12883,7 @@ export interface operations {
                 "multipart/form-data": {
                     /** Format: binary */
                     file: string;
-                    paper_id: string;
+                    course_id: string;
                     definition: string;
                 };
             };

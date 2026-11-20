@@ -32,7 +32,8 @@ type OMRTemplateWrite struct {
 type OMRSavedTemplate struct {
 	ID            string    `json:"id"`
 	Name          string    `json:"name"`
-	CourseID      string    `json:"course_id"`
+	CourseID      string    `json:"course_id"` // Private asset provenance, not assessment applicability.
+	Origin        string    `json:"created_in"`
 	QuestionCount int       `json:"question_count"`
 	CreatedAt     time.Time `json:"created_at"`
 }
@@ -209,8 +210,8 @@ func matchOMRPaper(p PaperRecord, definition OMRTemplateWrite) error {
 		return err
 	}
 	questions := omrQuestions(p.Spec)
-	if len(t.Blocks) != len(questions) {
-		return Problem(400, "omr_template_mismatch", "The template question count must match this assessment.")
+	if len(t.Blocks) < len(questions) {
+		return Problem(400, "omr_template_mismatch", "This template has too few answer rows for this assessment.")
 	}
 	blocks := map[string]nativeBlock{}
 	for _, b := range t.Blocks {
@@ -228,57 +229,68 @@ func matchOMRPaper(p PaperRecord, definition OMRTemplateWrite) error {
 	}
 	return nil
 }
-func (s *Service) SaveOMRTemplate(ctx context.Context, tx pgx.Tx, actor, org, paper string, in OMRTemplateWrite, reference []byte) (OMRSavedTemplate, error) {
-	p, err := s.Paper(ctx, tx, actor, org, paper)
+func (s *Service) SaveOMRTemplate(ctx context.Context, tx pgx.Tx, actor, org, course string, in OMRTemplateWrite, reference []byte) (OMRSavedTemplate, error) {
+	var campus, origin string
+	err := tx.QueryRow(ctx, "SELECT c.campus_id,concat_ws(' · ',c.name,c.academic_year,cp.name) FROM course c JOIN campus cp ON cp.institution_id=c.institution_id AND cp.id=c.campus_id WHERE c.institution_id=$1 AND c.id=$2 AND c.state='active'", org, course).Scan(&campus, &origin)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return OMRSavedTemplate{}, Problem(404, "course_unavailable", "Choose an available teaching batch for template storage.")
+	}
 	if err != nil {
+		return OMRSavedTemplate{}, err
+	}
+	if err = Scope(ctx, tx, actor, org, campus, course, ""); err != nil {
 		return OMRSavedTemplate{}, err
 	}
 	fields, err := validateOMRTemplate(in, reference)
 	if err != nil {
 		return OMRSavedTemplate{}, err
 	}
-	if err = matchOMRPaper(p, in); err != nil {
-		return OMRSavedTemplate{}, err
-	}
 	in.Name = strings.TrimSpace(in.Name)
-	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(hashtextextended($1,0))", org+p.CourseID+strings.ToLower(in.Name)); err != nil {
+	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(hashtextextended($1,0))", org+course+strings.ToLower(in.Name)); err != nil {
 		return OMRSavedTemplate{}, err
 	}
 	var exists bool
-	if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM omr_template WHERE institution_id=$1 AND course_id=$2 AND lower(name)=lower($3))", org, p.CourseID, in.Name).Scan(&exists); err != nil {
+	if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM omr_template WHERE institution_id=$1 AND course_id=$2 AND lower(name)=lower($3))", org, course, in.Name).Scan(&exists); err != nil {
 		return OMRSavedTemplate{}, err
 	}
 	if exists {
-		return OMRSavedTemplate{}, Problem(409, "template_name_exists", "A template with this name already exists in this batch. Choose another name or use the saved template.")
+		return OMRSavedTemplate{}, Problem(409, "template_name_exists", "A template with this name already exists. Choose another name or use the saved template.")
 	}
-	a, err := s.StoreAsset(ctx, tx, actor, org, p.CampusID, p.CourseID, "scan_page", "omr-reference", reference)
+	a, err := s.StoreAsset(ctx, tx, actor, org, campus, course, "scan_page", "omr-reference", reference)
 	if err != nil {
 		return OMRSavedTemplate{}, err
 	}
-	out := OMRSavedTemplate{ID: access.Random(), Name: in.Name, CourseID: p.CourseID, QuestionCount: len(fields)}
-	err = tx.QueryRow(ctx, `INSERT INTO omr_template(id,institution_id,campus_id,course_id,name,question_count,definition,reference_asset_id,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING created_at`, out.ID, org, p.CampusID, p.CourseID, in.Name, len(fields), Encode(in), a.ID, actor).Scan(&out.CreatedAt)
+	out := OMRSavedTemplate{ID: access.Random(), Name: in.Name, CourseID: course, Origin: origin, QuestionCount: len(fields)}
+	err = tx.QueryRow(ctx, `INSERT INTO omr_template(id,institution_id,campus_id,course_id,name,question_count,definition,reference_asset_id,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING created_at`, out.ID, org, campus, course, in.Name, len(fields), Encode(in), a.ID, actor).Scan(&out.CreatedAt)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		return out, Problem(409, "template_name_exists", "A template with this name already exists in this batch. Choose another name or use the saved template.")
+		return out, Problem(409, "template_name_exists", "A template with this name already exists. Choose another name or use the saved template.")
 	}
 	if err != nil {
 		return out, err
 	}
 	return out, Event(ctx, tx, org, actor, "omr.template_saved", out.ID, "Named reusable native template")
 }
-func (s *Service) OMRTemplates(ctx context.Context, tx pgx.Tx, actor, org, paper string) ([]OMRSavedTemplate, error) {
-	p, err := s.Paper(ctx, tx, actor, org, paper)
+func (s *Service) OMRTemplates(ctx context.Context, tx pgx.Tx, actor, org string) ([]OMRSavedTemplate, error) {
+	var campus, course string
+	err := tx.QueryRow(ctx, `SELECT c.campus_id,c.id FROM course c JOIN membership m ON m.institution_id=c.institution_id AND m.person_id=$2 AND m.state='active' AND (m.campus_id IS NULL OR m.campus_id=c.campus_id) WHERE c.institution_id=$1 AND c.state='active' AND (m.role IN ('owner','coordinator') OR (m.role='instructor' AND EXISTS(SELECT 1 FROM responsibility r WHERE r.institution_id=c.institution_id AND r.course_id=c.id AND r.staff_id=$2 AND r.starts_on<=current_date AND (r.ends_on IS NULL OR r.ends_on>=current_date)))) LIMIT 1`, org, actor).Scan(&campus, &course)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, Problem(403, "academic_forbidden", "Active teaching access is required for the template library.")
+	}
 	if err != nil {
 		return nil, err
 	}
-	return rows[OMRSavedTemplate](ctx, tx, `SELECT id,name,course_id,question_count,created_at FROM omr_template WHERE institution_id=$1 AND course_id=$2 ORDER BY lower(name)`, org, p.CourseID)
+	if err = Scope(ctx, tx, actor, org, campus, course, ""); err != nil {
+		return nil, err
+	}
+	return rows[OMRSavedTemplate](ctx, tx, `SELECT t.id,t.name,t.course_id,concat_ws(' · ',c.name,c.academic_year,cp.name),t.question_count,t.created_at FROM omr_template t JOIN course c ON c.institution_id=t.institution_id AND c.id=t.course_id JOIN campus cp ON cp.institution_id=c.institution_id AND cp.id=c.campus_id WHERE t.institution_id=$1 ORDER BY lower(t.name),t.created_at`, org)
 }
 func loadOMRTemplate(ctx context.Context, tx pgx.Tx, org, id string) (OMRSavedTemplate, OMRTemplateWrite, string, error) {
 	var meta OMRSavedTemplate
 	var definition OMRTemplateWrite
 	var raw []byte
 	var reference string
-	err := tx.QueryRow(ctx, `SELECT id,name,course_id,question_count,created_at,definition,reference_asset_id FROM omr_template WHERE institution_id=$1 AND id=$2`, org, id).Scan(&meta.ID, &meta.Name, &meta.CourseID, &meta.QuestionCount, &meta.CreatedAt, &raw, &reference)
+	err := tx.QueryRow(ctx, `SELECT t.id,t.name,t.course_id,concat_ws(' · ',c.name,c.academic_year,cp.name),t.question_count,t.created_at,t.definition,t.reference_asset_id FROM omr_template t JOIN course c ON c.institution_id=t.institution_id AND c.id=t.course_id JOIN campus cp ON cp.institution_id=c.institution_id AND cp.id=c.campus_id WHERE t.institution_id=$1 AND t.id=$2`, org, id).Scan(&meta.ID, &meta.Name, &meta.CourseID, &meta.Origin, &meta.QuestionCount, &meta.CreatedAt, &raw, &reference)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return meta, definition, reference, Problem(404, "omr_template_unavailable", "Choose an available saved template.")
 	}
@@ -292,12 +304,9 @@ func (s *Service) StageOMRCheck(ctx context.Context, tx pgx.Tx, actor, org, pape
 	if err != nil {
 		return OMRCheck{}, err
 	}
-	meta, definition, _, err := loadOMRTemplate(ctx, tx, org, template)
+	_, definition, _, err := loadOMRTemplate(ctx, tx, org, template)
 	if err != nil {
 		return OMRCheck{}, err
-	}
-	if meta.CourseID != p.CourseID {
-		return OMRCheck{}, Problem(400, "omr_template_mismatch", "Choose a template from this assessment's batch.")
 	}
 	if err = matchOMRPaper(p, definition); err != nil {
 		return OMRCheck{}, err

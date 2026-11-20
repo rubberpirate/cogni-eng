@@ -68,6 +68,7 @@ test("assessment then saved template grades an individual and batch without stud
   await expect(
     page.getByText("Advanced pixel-reader tools", { exact: true }),
   ).toHaveCount(0);
+  await page.getByLabel("1. Assessment", { exact: true }).selectOption("");
   await page.getByText("Create an OMR template", { exact: true }).click();
   await page
     .getByLabel("Template sheet image", { exact: true })
@@ -149,6 +150,15 @@ test("assessment then saved template grades an individual and batch without stud
   const savedResponse = await saveResponse;
   const saved = await savedResponse.json();
   expect(savedResponse.status(), JSON.stringify(saved.message ?? "")).toBe(200);
+  await expect(
+    page.getByLabel("3. Answer sheets", { exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByLabel("1. Assessment", { exact: true })
+    .selectOption(paper.id);
+  await page
+    .getByLabel("2. OMR template", { exact: true })
+    .selectOption(saved.id);
   await expect(page.getByLabel("2. OMR template", { exact: true })).toHaveValue(
     saved.id,
   );
@@ -156,7 +166,7 @@ test("assessment then saved template grades an individual and batch without stud
     page.getByLabel("3. Answer sheets", { exact: true }),
   ).toBeEnabled();
   const persisted = await (
-    await page.request.get(base + "omr-templates?paper=" + paper.id)
+    await page.request.get(base + "omr-templates")
   ).json();
   expect(
     persisted.some((t: any) => t.id === saved.id && t.name === saved.name),
@@ -287,6 +297,47 @@ b=io.BytesIO();im.save(b,format='PNG');sys.stdout.buffer.write(b.getvalue())`,
       exact: true,
     })
     .screenshot({ path: ".local/screenshots/omr-registration-grades.png" });
+  const shorter = await originalOMRAssessment(page, 3);
+  await page.reload();
+  await page
+    .getByLabel("1. Assessment", { exact: true })
+    .selectOption(shorter.paper.id);
+  await page
+    .getByLabel("2. OMR template", { exact: true })
+    .selectOption(saved.id);
+  await expect(
+    page.getByText(
+      "Only the first 3 answer rows are graded for this assessment. The remaining template rows are ignored.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await page
+    .getByLabel("3. Answer sheets", { exact: true })
+    .setInputFiles(sheet);
+  await page
+    .getByRole("button", { name: "Check answer sheets", exact: true })
+    .click();
+  await expect
+    .poll(
+      async () => {
+        const rows = await (
+          await page.request.get(base + "omr-checks?paper=" + shorter.paper.id)
+        ).json();
+        return rows[0]?.sheets[0]?.score;
+      },
+      { timeout: 30000 },
+    )
+    .toBe("12");
+  const reused = await (
+    await page.request.get(base + "omr-checks?paper=" + shorter.paper.id)
+  ).json();
+  expect(reused[0].template_id).toBe(saved.id);
+  expect(reused[0].sheets[0]).toMatchObject({
+    maximum: "12",
+    state: "graded",
+    correct_questions: [1, 2, 3],
+    uncertain_questions: [],
+  });
   await navigate(page, "Results");
   await page
     .getByLabel("Assessment to review", { exact: true })

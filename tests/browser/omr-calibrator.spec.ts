@@ -26,7 +26,7 @@ async function draw(
   });
   await page.mouse.up();
 }
-test("CTET frames stay fitted and a mismatched assessment cannot silently use the template", async ({
+test("a CTET template can be saved independently of the selected assessment", async ({
   page,
 }) => {
   test.skip(
@@ -142,7 +142,7 @@ test("CTET frames stay fitted and a mismatched assessment cannot silently use th
   }
   await page
     .getByLabel("OMR layout name", { exact: true })
-    .fill("CTET 150-question layout");
+    .fill("CTET 150-question layout " + paper.id.slice(0, 8));
   await dialog.screenshot({
     path: ".local/screenshots/omr-ctet-frame-editor.png",
   });
@@ -168,19 +168,19 @@ test("CTET frames stay fitted and a mismatched assessment cannot silently use th
     .getByRole("button", { name: "Save template", exact: true })
     .click();
   const response = await save;
-  expect(response.status()).toBe(400);
-  await expect(
-    page
-      .getByRole("alert")
-      .filter({
-        hasText: "template question count must match this assessment",
-      }),
-  ).toBeVisible();
-  await expect(page.getByLabel("OMR layout name", { exact: true })).toHaveValue(
-    "CTET 150-question layout",
+  const saved = await response.json();
+  expect(response.status(), saved.message ?? "").toBe(200);
+  expect(saved.question_count).toBe(150);
+  await expect(page.getByLabel("2. OMR template", { exact: true })).toHaveValue(
+    saved.id,
   );
-  await expect(surface(page).locator(".omr-block-frame")).toHaveCount(5);
   await expect(
     page.getByLabel("3. Answer sheets", { exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await expect(
+    page.getByText(
+      "Only the first 20 answer rows are graded for this assessment. The remaining template rows are ignored.",
+      { exact: true },
+    ),
+  ).toBeVisible();
 });

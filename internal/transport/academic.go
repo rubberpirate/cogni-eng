@@ -113,7 +113,7 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 				if len(raw) > 512<<10 || json.Unmarshal([]byte(raw), &definition) != nil {
 					return nil, fail(400, "invalid_omr_template", "Provide the generated visual template.")
 				}
-				return svc.SaveOMRTemplate(ctx, tx, a.ID, org, r.FormValue("paper_id"), definition, data)
+				return svc.SaveOMRTemplate(ctx, tx, a.ID, org, r.FormValue("course_id"), definition, data)
 			case "omr-checks":
 				return svc.StageOMRCheck(ctx, tx, a.ID, org, r.FormValue("paper_id"), r.FormValue("template_id"), header.Filename, data)
 			case "omrchecker-preview":
@@ -174,7 +174,7 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
 			switch kind {
 			case "omr-templates":
-				return svc.OMRTemplates(ctx, tx, a.ID, org, query.Get("paper"))
+				return svc.OMRTemplates(ctx, tx, a.ID, org)
 			case "omr-checks":
 				if id != "" {
 					return svc.OMRCheck(ctx, tx, a.ID, org, id)

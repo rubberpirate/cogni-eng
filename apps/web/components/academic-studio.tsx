@@ -1413,6 +1413,7 @@ export function AcademicStudio({
           )}
           {tab === "scan" && (
             <OMRCheckerReader
+              courses={courses}
               api={api}
               papers={
                 paper && !papers.some((p) => p.id === paper.id)

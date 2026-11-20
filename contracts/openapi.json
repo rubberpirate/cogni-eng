@@ -12648,6 +12648,156 @@
         }
       }
     },
+    "/api/v1/institutions/{org}/education/omrchecker-preview": {
+      "post": {
+        "operationId": "post__api_v1_institutions_org_education_omrchecker-preview",
+        "summary": "POST /api/v1/institutions/{org}/education/omrchecker-preview",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful committed operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademicOMRCheckerReading"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "org",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "course_id": {
+                    "type": "string"
+                  },
+                  "template": {
+                    "type": "string"
+                  },
+                  "config": {
+                    "type": "string"
+                  },
+                  "marker": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "reference": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file",
+                  "course_id",
+                  "template"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/institutions/{org}/education/drafts": {
       "get": {
         "operationId": "get__api_v1_institutions_org_education_drafts",
@@ -16216,6 +16366,79 @@
         "additionalProperties": false,
         "properties": {},
         "required": []
+      },
+      "AcademicOMRCheckerField": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "selection": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "uncertain": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value",
+          "selection",
+          "uncertain",
+          "reason"
+        ]
+      },
+      "AcademicOMRCheckerReading": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "engine": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "responses": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademicOMRCheckerField"
+            }
+          },
+          "multiple_marked": {
+            "type": "boolean"
+          },
+          "overlay": {
+            "type": "string"
+          },
+          "notice": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "engine",
+          "revision",
+          "responses",
+          "fields",
+          "multiple_marked",
+          "overlay",
+          "notice"
+        ]
       },
       "AcademicGeneration": {
         "type": "object",

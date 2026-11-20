@@ -2135,6 +2135,59 @@ details p {
 .omr-advanced {
   margin: 16px 0;
 }
+.omrchecker-inputs {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.omrchecker-inputs > button {
+  margin-top: 16px;
+}
+.omrchecker-sample-links {
+  margin-top: 16px;
+  font-size: 13px;
+}
+.omrchecker-results {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.omrchecker-table {
+  max-height: 72vh;
+  overflow: auto;
+}
+.omrchecker-results img {
+  width: 100%;
+  display: block;
+  max-height: 80vh;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.omrchecker-table table {
+  width: 100%;
+}
+.omrchecker-table td {
+  white-space: normal;
+}
+.omrchecker-table dl > div {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+}
+.omrchecker-table dt {
+  min-width: 90px;
+}
+.omrchecker-table dd {
+  margin: 0;
+}
+@media (max-width: 800px) {
+  .omrchecker-results {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 @media (max-width: 600px) {
   .omr-calibrator {
     padding: 12px;

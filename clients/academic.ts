@@ -83,6 +83,8 @@ export function educationClient(org: string, csrf: string) {
       request<A<"AcademicJob">>("grid-model", body),
     previewGrid: (body: FormData) =>
       request<A<"AcademicGridReading">>("grid-preview", body),
+    previewOMRChecker: (body: FormData) =>
+      request<A<"AcademicOMRCheckerReading">>("omrchecker-preview", body),
     uploadKey: (id: string, body: FormData) =>
       request<A<"AcademicJob">>(`imports/${id}/key-upload`, body),
     applyKey: (id: string, body: A<"AcademicApplyKey">) =>

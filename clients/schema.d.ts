@@ -1551,6 +1551,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/institutions/{org}/education/omrchecker-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** POST /api/v1/institutions/{org}/education/omrchecker-preview */
+        post: operations["post__api_v1_institutions_org_education_omrchecker-preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/institutions/{org}/education/drafts": {
         parameters: {
             query?: never;
@@ -2334,6 +2351,24 @@ export interface components {
             duration_ms: number;
         };
         AcademicVision: Record<string, never>;
+        AcademicOMRCheckerField: {
+            label: string;
+            value: string;
+            selection: string[];
+            uncertain: boolean;
+            reason: string;
+        };
+        AcademicOMRCheckerReading: {
+            engine: string;
+            revision: string;
+            responses: {
+                [key: string]: string;
+            };
+            fields: components["schemas"]["AcademicOMRCheckerField"][];
+            multiple_marked: boolean;
+            overlay: string;
+            notice: string;
+        };
         AcademicGeneration: {
             topic: components["schemas"]["AcademicTopic"];
             count: number;
@@ -11950,6 +11985,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcademicJob"];
+                };
+            };
+            /** @description Structured error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Structured error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    "post__api_v1_institutions_org_education_omrchecker-preview": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": string;
+            };
+            path: {
+                org: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    course_id: string;
+                    template: string;
+                    config?: string;
+                    /** Format: binary */
+                    marker?: string;
+                    /** Format: binary */
+                    reference?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful committed operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicOMRCheckerReading"];
                 };
             };
             /** @description Structured error */

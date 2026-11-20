@@ -23,6 +23,7 @@ import { QuestionEditor } from "./question-editor";
 import { AssessmentWorkspace, FacultyStudents } from "./assessment-workspace";
 import { TaskProgress } from "./task-progress";
 import { GridInspection } from "./grid-inspection";
+import { OMRCheckerReader } from "./omrchecker-reader";
 import { ImportChoiceRow, KeyImportPanel, MarkingRules } from "./import-review";
 import { FormField as Field } from "./form-field";
 type Q = A<"AcademicQuestion">;
@@ -1413,6 +1414,7 @@ export function AcademicStudio({
           )}
           {tab === "scan" && (
             <>
+              <OMRCheckerReader api={api} courses={courses} />
               <GridInspection api={api} courses={courses} />
               <Field name="Published assessment">
                 <select

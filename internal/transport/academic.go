@@ -73,7 +73,7 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	// Binary uploads have a bounded body and never expose an object-store URL.
-	if r.Method == "POST" && (kind == "imports" && (action == "upload" || action == "key-upload") || kind == "batches" && action == "upload" || kind == "assets" || kind == "grid-preview" || kind == "grid-model") {
+	if r.Method == "POST" && (kind == "imports" && (action == "upload" || action == "key-upload") || kind == "batches" && action == "upload" || kind == "assets" || kind == "grid-preview" || kind == "grid-model" || kind == "omrchecker-preview") {
 		if err = s.transaction(r, func(ctx context.Context, tx pgx.Tx) error { _, err := s.actor(ctx, tx, r, true); return err }); err != nil {
 			return err
 		}
@@ -95,6 +95,9 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		if kind == "imports" {
 			limit = 50 << 20
 		}
+		if kind == "omrchecker-preview" {
+			limit = 8 << 20
+		}
 		data, e := io.ReadAll(io.LimitReader(file, limit+1))
 		if e != nil {
 			return e
@@ -104,6 +107,31 @@ func (s *Server) academicAPI(w http.ResponseWriter, r *http.Request) error {
 		}
 		return s.authenticated(w, r, func(ctx context.Context, tx pgx.Tx, a Actor) (any, error) {
 			switch kind {
+			case "omrchecker-preview":
+				additional := func(name string) ([]byte, error) {
+					f, _, e := r.FormFile(name)
+					if e == http.ErrMissingFile {
+						return nil, nil
+					}
+					if e != nil {
+						return nil, e
+					}
+					defer func() { _ = f.Close() }()
+					b, e := io.ReadAll(io.LimitReader(f, (8<<20)+1))
+					if len(b) > 8<<20 {
+						return nil, fail(400, "file_too_large", "Marker and reference images must be at most 8 MiB.")
+					}
+					return b, e
+				}
+				marker, e := additional("marker")
+				if e != nil {
+					return nil, e
+				}
+				reference, e := additional("reference")
+				if e != nil {
+					return nil, e
+				}
+				return svc.OMRCheckerPreview(ctx, tx, a.ID, org, r.FormValue("course_id"), data, marker, reference, json.RawMessage(r.FormValue("template")), json.RawMessage(r.FormValue("config")))
 			case "grid-preview", "grid-model":
 				var c academic.GridCalibration
 				if json.Unmarshal([]byte(r.FormValue("calibration")), &c) != nil {

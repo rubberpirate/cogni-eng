@@ -1,7 +1,7 @@
 """Academic API schemas and operations, loaded by contract.py. Go tagged structs are the DTO source."""
 import re
 names={}
-for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/academic/grid.go','internal/academic/key.go','internal/scholar/draft.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go','internal/scholar/grid_model.go','internal/scholar/vision.go']:
+for source in ['internal/academic/model.go','internal/academic/import.go','internal/academic/omr.go','internal/academic/grid.go','internal/academic/key.go','internal/scholar/draft.go','internal/scholar/service.go','internal/scholar/import.go','internal/scholar/paper.go','internal/scholar/sitting.go','internal/scholar/scan.go','internal/scholar/jobs.go','internal/scholar/tutor.go','internal/scholar/evidence.go','internal/scholar/samples.go','internal/scholar/grid_model.go','internal/scholar/vision.go','internal/scholar/omrchecker.go']:
  for name,body in re.findall(r'type (\w+) struct \{\n(.*?)\n\}',Path(source).read_text(),re.S):
   names[name]=body
 
@@ -92,6 +92,8 @@ for path,response,fields in [('imports/{id}/key-upload','Job',{'file':{'type':'s
 
 route(base+'grid-model','post','AcademicJob')
 paths['/api/v1'+base+'grid-model']['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':{'type':'string','format':'binary'},'course_id':S,'calibration':S})}}}
+route(base+'omrchecker-preview','post','AcademicOMRCheckerReading')
+paths['/api/v1'+base+'omrchecker-preview']['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':{'type':'string','format':'binary'},'course_id':S,'template':S,'config':S,'marker':{'type':'string','format':'binary'},'reference':{'type':'string','format':'binary'}},('config','marker','reference'))}}}
 
 route(base+'drafts','get','AcademicAssessmentDraft',listed=True)
 route(base+'drafts/{id}','get','AcademicAssessmentDraft')

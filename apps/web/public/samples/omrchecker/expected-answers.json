@@ -1,0 +1,26 @@
+{
+  "notice": "Synthetic test only. These are filled responses, not a grading key.",
+  "responses": {
+    "Roll": "123456",
+    "q1": "A",
+    "q2": "C",
+    "q3": "D",
+    "q4": "B",
+    "q5": "A",
+    "q6": "D",
+    "q7": "",
+    "q8": "B",
+    "q9": "D",
+    "q10": "A",
+    "q11": "B",
+    "q12": "AC",
+    "q13": "A",
+    "q14": "D",
+    "q15": "C",
+    "q16": "B",
+    "q17": "A",
+    "q18": "C",
+    "q19": "D",
+    "q20": "B"
+  }
+}

@@ -1,0 +1,434 @@
+{
+  "pageDimensions": [
+    1200,
+    1600
+  ],
+  "bubbleDimensions": [
+    22,
+    22
+  ],
+  "preProcessors": [],
+  "customLabels": {
+    "Roll": [
+      "roll1..6"
+    ]
+  },
+  "fieldBlocks": {
+    "roll_1": {
+      "fieldType": "QTYPE_INT",
+      "origin": [
+        354,
+        259
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 35,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "roll1"
+      ]
+    },
+    "roll_2": {
+      "fieldType": "QTYPE_INT",
+      "origin": [
+        419,
+        259
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 35,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "roll2"
+      ]
+    },
+    "roll_3": {
+      "fieldType": "QTYPE_INT",
+      "origin": [
+        484,
+        259
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 35,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "roll3"
+      ]
+    },
+    "roll_4": {
+      "fieldType": "QTYPE_INT",
+      "origin": [
+        549,
+        259
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 35,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "roll4"
+      ]
+    },
+    "roll_5": {
+      "fieldType": "QTYPE_INT",
+      "origin": [
+        614,
+        259
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 35,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "roll5"
+      ]
+    },
+    "roll_6": {
+      "fieldType": "QTYPE_INT",
+      "origin": [
+        679,
+        259
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 35,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "roll6"
+      ]
+    },
+    "answer_1": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        739
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q1"
+      ]
+    },
+    "answer_2": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        809
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q2"
+      ]
+    },
+    "answer_3": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        879
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q3"
+      ]
+    },
+    "answer_4": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        949
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q4"
+      ]
+    },
+    "answer_5": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        1019
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q5"
+      ]
+    },
+    "answer_6": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        1089
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q6"
+      ]
+    },
+    "answer_7": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        1159
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q7"
+      ]
+    },
+    "answer_8": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        1229
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q8"
+      ]
+    },
+    "answer_9": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        1299
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q9"
+      ]
+    },
+    "answer_10": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        169,
+        1369
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q10"
+      ]
+    },
+    "answer_11": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        739
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q11"
+      ]
+    },
+    "answer_12": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        809
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q12"
+      ]
+    },
+    "answer_13": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        879
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q13"
+      ]
+    },
+    "answer_14": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        949
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q14"
+      ]
+    },
+    "answer_15": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        1019
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q15"
+      ]
+    },
+    "answer_16": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        1089
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q16"
+      ]
+    },
+    "answer_17": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        1159
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q17"
+      ]
+    },
+    "answer_18": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        1229
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q18"
+      ]
+    },
+    "answer_19": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        1299
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q19"
+      ]
+    },
+    "answer_20": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        729,
+        1369
+      ],
+      "bubbleDimensions": [
+        22,
+        22
+      ],
+      "bubblesGap": 70,
+      "labelsGap": 0,
+      "fieldLabels": [
+        "q20"
+      ]
+    }
+  }
+}

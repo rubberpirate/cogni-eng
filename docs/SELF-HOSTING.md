@@ -1,6 +1,7 @@
 # Personal server backend, Cloudflare Tunnel and Vercel frontend
 
-Run these steps on your **Linux server PC**, using a dedicated non-root account.
+These instructions target your **CachyOS/Arch Linux x86_64 server**, logged in as
+`ladmin` (`/home/ladmin`). Use that normal user for the application and PM2.
 Examples use `~/cogni-fresh`, frontend `https://learn.example.com` and backend
 `https://api.example.com`; replace those domains with your own. This guide adds a
 hosting path for the current increment; production release qualification remains
@@ -16,25 +17,66 @@ Browser → Vercel (learn.example.com)
 
 ## 1. Prepare the server
 
-Install Git, Bash, Go **1.27.4** (matching `go.mod`), Node.js LTS, npm and
-`cloudflared`. Install Bun **1.4.4** on machines building the frontend; the backend
-script only needs Go, Bash and PM2. Install PM2 under your server user:
+Your login shell is Fish. Open a Bash session for this guide so the bootstrap
+password prompt, exports and environment-file syntax work as written. This does
+not change your default shell. First run these commands **in Fish**:
 
-```sh
-npm install --global pm2
+```fish
+mkdir -p "$HOME/.local/bin"
+fish_add_path "$HOME/.local/bin"
+bash
 ```
 
-Install native document tools. On Debian/Ubuntu:
+Run **all remaining commands in Bash**, as `ladmin` unless a command explicitly
+uses `sudo`. Type `exit` when finished to return to Fish. Fish has different
+[variable and builtin syntax](https://fishshell.com/docs/current/fish_for_bash_users.html).
+
+Install dependencies with a full Arch upgrade:
 
 ```sh
-sudo apt-get update
-sudo apt-get install -y ca-certificates tzdata poppler-utils tesseract-ocr tesseract-ocr-eng tesseract-ocr-hin
+sudo pacman -Syu --needed git bash go nodejs npm cloudflared curl openssl ca-certificates tzdata poppler tesseract tesseract-data-eng tesseract-data-hin uv
+go version
+node --version
+npm --version
+cloudflared --version
+tesseract --list-langs
 ```
 
-Install `cloudflared` using [Cloudflare's OS-specific instructions](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/).
+If you already use a supported Node.js LTS package, keep it and omit `nodejs`
+from the install command. Review pacman's upgrade/conflict prompts before
+confirming. The backend requires Go **1.27.4** or newer (see `go.mod`). Arch's
+package versions change; check `go version` after installation. The native OMR
+environment uses its frozen Python dependencies through `uv`, rather than the
+system Python packages. Bun **1.4.4** is needed on machines building the frontend;
+the server script needs Go, Bash and PM2.
+
+Arch provides [cloudflared](https://archlinux.org/packages/extra/x86_64/cloudflared/),
+[Go](https://archlinux.org/packages/extra/x86_64/go/),
+[uv](https://archlinux.org/packages/extra/x86_64/uv/) and
+[Tesseract language data](https://archlinux.org/groups/x86_64/tesseract-data/)
+through its package repositories; no AUR helper is needed for these dependencies.
+Install PM2 into your user's home directory:
+
+```sh
+npm install --global --prefix "$HOME/.local" pm2
+export PATH="$HOME/.local/bin:$PATH"
+pm2 --version
+```
+
+This uses npm's [user-owned prefix approach](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally/)
+without `sudo npm`. The earlier `fish_add_path` keeps PM2 available in future
+Fish sessions, and PM2's startup command below records the path for systemd.
+
 Use a domain with DNS managed by Cloudflare for the named tunnel. The server must
 stay powered on with sleep disabled and outbound Internet access (including
 Cloudflare port 7844); no router port forwarding or public IP is required.
+In KDE Plasma, open **System Settings → Power Management** and turn off automatic
+suspend for the power profile used by this server. A sleeping PC cannot serve
+requests through the tunnel.
+
+Keep the checkout, Python environment and any local database/object data on the
+server's Linux filesystem, for example `/home/ladmin/cogni-fresh` on the Btrfs
+root disk. The mounted NTFS dataset drive is unnecessary for this deployment.
 
 Clone this repository on the server, then `cd ~/cogni-fresh`. Do not run
 `bun run dev` or copy your development `.env` here.
@@ -97,8 +139,9 @@ uv sync --project omr --frozen
 
 Set `OMRCHECKER_ROOT`, `OMRCHECKER_PYTHON` and `OMRCHECKER_ADAPTER` in
 `.env.production` to the absolute paths of that checkout,
-`~/cogni-fresh/omr/.venv/bin/python` and `~/cogni-fresh/omr/bridge.py`. Expand `~`
-to the full path when writing quoted values. See [OMR setup](../omr/README.md).
+`/home/ladmin/cogni-fresh/omr/.venv/bin/python` and
+`/home/ladmin/cogni-fresh/omr/bridge.py`. The checkout path is
+`/home/ladmin/OMRChecker`. See [OMR setup](../omr/README.md).
 Optional GPU OCR/Ollama services have their own [runtime setup](../inference/README.md);
 PM2 here manages the API, worker and tunnel, so separately supervise any model
 service you enable. Use loopback model endpoints.
@@ -115,7 +158,8 @@ after all builds succeed. `migrate` explicitly applies both application and Rive
 migrations; it does not start the API. Back up an existing database and review
 migrations before running it.
 
-On a **new, empty database**, bootstrap once:
+On a **new, empty database**, bootstrap once from the **Bash session** opened
+above:
 
 ```sh
 export BOOTSTRAP_EMAIL='you@example.com'
@@ -163,7 +207,8 @@ cp -n deploy/cloudflared.yml.example "$HOME/.cloudflared/config.yml"
 
 On a headless server, open the login URL on your own computer and authorize the
 correct Cloudflare zone. Edit `~/.cloudflared/config.yml`: replace the tunnel UUID,
-the credentials file's absolute path and `api.example.com`. The origin service
+the credentials file's absolute path
+(`/home/ladmin/.cloudflared/YOUR_TUNNEL_UUID.json`) and `api.example.com`. The origin service
 remains **HTTP** `http://127.0.0.1:8080`; Cloudflare handles public HTTPS.
 The catch-all 404 rule is required. Keep tunnel credentials outside the repo.
 
@@ -188,17 +233,21 @@ to Vercel. See [Cloudflare's named-tunnel guide](https://developers.cloudflare.c
 ## 6. Restore everything after reboot
 
 ```sh
-pm2 startup
+pm2 startup systemd -u ladmin --hp /home/ladmin
 # Execute the exact sudo command PM2 prints for your server user and PATH.
 pm2 save
+systemctl status pm2-ladmin --no-pager
 ```
 
-Run `pm2 startup` as the normal user first; only its printed installation command
+Run `pm2 startup` as `ladmin` first; only its printed installation command
 uses sudo. Do not also install `cloudflared` as a system service when this PM2
 entry manages it. Configure your backing services to start at boot too. Reboot
 the server and check `pm2 status`, all three logs and the public readiness URL.
 After changing your Node installation, regenerate PM2's startup integration.
 See [PM2 startup and persistence](https://pm2.keymetrics.io/docs/usage/startup/).
+If startup fails, inspect `journalctl -u pm2-ladmin -b --no-pager` and verify the
+generated service includes `/home/ladmin/.local/bin` in its PATH. Do not run
+`sudo pm2 start` or `sudo pm2 save`; that creates a separate root-owned PM2 setup.
 
 Keep logs bounded:
 

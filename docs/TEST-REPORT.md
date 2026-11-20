@@ -17,6 +17,13 @@ Vercel deployment were run. Live proxy/cookie, server reboot, external services,
 backup/restore and production qualification remain unverified. Follow
 [SELF-HOSTING.md](SELF-HOSTING.md) for the deployment and live acceptance steps.
 
+The CachyOS/Arch adaptation documents pacman dependencies, a Fish-to-Bash setup
+session, user-local PM2 installation and the `pm2-ladmin` systemd service. Package
+names and shell behavior were checked against the linked upstream documentation;
+the guide's Bash command blocks pass `bash -n`. No packages, desktop settings or
+services were changed on the user's server; Arch runtime/reboot qualification
+still requires the live checks in the guide.
+
 ## Original qualification environment
 
 2026-11-17 · partial milestone 1 · **not release qualification**.
